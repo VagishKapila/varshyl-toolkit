@@ -1,0 +1,21 @@
+{
+  "name": "varshyl-toolkit",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Varshyl shared module toolbox. Versioned packages installed by Varshyl products.",
+  "scripts": {
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "pnpm -r lint",
+    "verify": "pnpm typecheck && pnpm test && pnpm build && bash scripts/verify-no-cross-imports.sh"
+  },
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=9"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5"
+  },
+  "packageManager": "pnpm@9.1.0"
+}
