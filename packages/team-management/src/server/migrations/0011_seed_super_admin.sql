@@ -1,0 +1,15 @@
+-- Seed super-admin for vaakapila@gmail.com.
+-- This migration is ALWAYS run but only inserts if:
+--   1. A user with that email exists in the host app's user table.
+--   2. The row does not already exist in tm_super_admins.
+-- The host adapter is responsible for user existence; this migration
+-- does nothing if the user does not exist (host-managed users table
+-- is outside module scope). The demo-host seeds this user before
+-- running migrations.
+--
+-- Since tm_super_admins uses host user_id (INTEGER), and we cannot
+-- JOIN across host tables from inside the module, this seed is
+-- handled by the createServerModule boot sequence when
+-- enableSuperAdmin=true (see index.ts seedSuperAdmin()).
+-- This file is a no-op placeholder to reserve the migration slot.
+SELECT 1; -- placeholder: actual seed runs in application boot
