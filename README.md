@@ -16,9 +16,9 @@ Each module is independently versioned, tagged, and pinned by products via git t
 
 ## Modules
 
-| Module | Status | Latest tag |
-|---|---|---|
-| team-management | Stub | team-management-v0.0.1 |
+| Module | Status | Latest tag | QA |
+|---|---|---|---|
+| team-management | ✅ **Shipped v0.0.1** | [team-management-v0.0.1](https://github.com/VagishKapila/varshyl-toolkit/releases/tag/team-management-v0.0.1) | [Evidence](qa-evidence/v0.0.1/README.md) |
 
 ## Architecture
 
@@ -49,7 +49,7 @@ Then in product React client:
 ```tsx
 import { PlaceholderPage } from '@varshyl/team-management/client';
 
-<Route path="/team" element={<PlaceholderPage />} />
+<Route path='/team' element={<PlaceholderPage />} />
 ```
 
 ## Demo host
