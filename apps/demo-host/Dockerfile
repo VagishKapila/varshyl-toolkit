@@ -39,9 +39,9 @@ RUN pnpm install --frozen-lockfile --prod
 
 # Copy built artifacts
 COPY --from=build-app /app/packages/team-management/dist ./packages/team-management/dist
-COPY --from=build-app /app/packages/team-management/src/server/migrations ./packages/team-management/src/server/migrations
 COPY --from=build-app /app/apps/demo-host/dist ./apps/demo-host/dist
 
-EXPOSE 3000
+# Railway injects PORT=8080 for Node.js services via Nixpacks layer
+EXPOSE 8080
 WORKDIR /app/apps/demo-host
 CMD ["node", "dist/server/index.js"]
