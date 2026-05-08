@@ -60,13 +60,16 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Build team-management (required before downstream typecheck)
+        run: pnpm --filter @varshyl/team-management build
+
       - name: Typecheck
         run: pnpm typecheck
 
       - name: Lint
         run: pnpm lint
 
-      - name: Build
+      - name: Build all
         run: pnpm build
 
       - name: Test (with Postgres)
