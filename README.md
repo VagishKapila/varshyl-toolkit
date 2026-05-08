@@ -57,7 +57,7 @@ import { PlaceholderPage } from '@varshyl/team-management/client';
 `apps/demo-host` is the verification harness. It is **NOT** a product.
 It exists only to prove modules work against real Postgres before products consume them.
 
-Live at: *(Railway URL — populated after first deploy)*
+Live at: https://demo-host-production.up.railway.app
 
 ## Versioning
 
