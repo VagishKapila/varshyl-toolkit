@@ -1,6 +1,6 @@
 {
   "name": "@varshyl/team-management",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Team management shared module for Varshyl products.",
   "private": false,
   "main": "./dist/index.js",
@@ -48,4 +48,3 @@
   },
   "type": "module"
 }
-
