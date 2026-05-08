@@ -3,10 +3,18 @@ import type { Pool } from 'pg';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { createHealthRouter } from './routes/health.routes.js';
+import { createOrgsRouter } from './routes/orgs.routes.js';
+import { createInvitationsRouter } from './routes/invitations.routes.js';
+import { createMeRouter } from './routes/me.routes.js';
+import { createTransferRouter } from './routes/transfer.routes.js';
+import { createAuditRouter } from './routes/audit.routes.js';
+import { createAdminRouter } from './routes/admin.routes.js';
+import { seedSuperAdmin } from './services/super-admin.service.js';
 import type {
   ServerModuleAdapter,
   TeamManagementConfig,
   TeamManagementServerModule,
+  TeamManagementFeatureFlags,
 } from './types.js';
 
 // Ordered list of migration files. Add new migrations here in order.
@@ -16,6 +24,18 @@ const MIGRATIONS: Array<{ name: string; file: string }> = [
     file: join(new URL('.', import.meta.url).pathname, 'migrations', '0001_create_tm_schema_migrations.sql'),
   },
 ];
+
+// Default feature flags for v0.1.0
+const DEFAULT_FLAGS: Required<TeamManagementFeatureFlags> = {
+  enableInvites: true,
+  enableAuditLog: true,
+  enableOwnershipTransfer: true,
+  enableEmailChange: true,
+  enablePasswordReset: true,
+  enableSuperAdmin: false,
+  enableSharedAccess: false,
+  enableHardDelete: false,
+};
 
 /**
  * createServerModule — entry point for host products.
@@ -31,7 +51,14 @@ export function createServerModule(opts: {
   config: TeamManagementConfig;
 }): TeamManagementServerModule {
   const { adapter, db, config } = opts;
-  const flags = config.featureFlags ?? {};
+
+  // Merge defaults with provided flags
+  const flags: Required<TeamManagementFeatureFlags> = {
+    ...DEFAULT_FLAGS,
+    ...(config.featureFlags ?? {}),
+  };
+
+  const baseUrl = config.baseUrl ?? '';
 
   // ---- Migration runner ----
   const runMigrations = async (): Promise<{ applied: string[]; skipped: string[] }> => {
@@ -46,7 +73,6 @@ export function createServerModule(opts: {
     await db.query(ledgerSql);
 
     for (const migration of MIGRATIONS) {
-      // Check if already applied
       const result = await db.query(
         'SELECT id FROM tm_schema_migrations WHERE migration = $1',
         [migration.name]
@@ -58,11 +84,9 @@ export function createServerModule(opts: {
         continue;
       }
 
-      // Apply migration
       const sql = readFileSync(migration.file, 'utf-8');
       await db.query(sql);
 
-      // Record in ledger
       await db.query(
         'INSERT INTO tm_schema_migrations (migration) VALUES ($1)',
         [migration.name]
@@ -75,8 +99,25 @@ export function createServerModule(opts: {
     return { applied, skipped };
   };
 
-  // ---- Health handler ----
-  const { handler: health, router: healthRouter } = createHealthRouter(db);
+  // ---- Boot tasks ----
+  // Seed super admin on boot if enableSuperAdmin is true and SUPER_ADMIN_EMAIL is set
+  if (flags.enableSuperAdmin) {
+    const superAdminEmail = process.env.TM_SUPER_ADMIN_EMAIL;
+    if (superAdminEmail) {
+      seedSuperAdmin(db, adapter, superAdminEmail).catch((e) => {
+        adapter.logger.warn('[team-management] seedSuperAdmin failed', { error: (e as Error).message });
+      });
+    }
+  }
+
+  // ---- Routers ----
+  const { router: healthRouter } = createHealthRouter(db, config);
+  const orgsRouter = createOrgsRouter(db, adapter, flags);
+  const invitationsRouter = createInvitationsRouter(db, adapter, flags, baseUrl);
+  const meRouter = createMeRouter(db, adapter, flags, baseUrl);
+  const transferRouter = createTransferRouter(db, adapter, flags, baseUrl);
+  const auditRouter = createAuditRouter(db, adapter, flags);
+  const adminRouter = createAdminRouter(db, adapter, flags, baseUrl);
 
   // ---- Main router ----
   const router = Router();
@@ -84,40 +125,28 @@ export function createServerModule(opts: {
   // Health is always available
   router.use(healthRouter);
 
-  // --- Invites routes (flag-gated, returns 501 when flag is off) ---
-  router.get('/invites', (_req, res) => {
-    if (!flags.enableInvites) {
-      return res.status(501).json({
-        error: 'Not implemented',
-        detail: 'team-management: enableInvites feature flag is off',
-      });
-    }
-    // Placeholder — real implementation in Team Management design chat
-    return res.status(501).json({ error: 'Not implemented', detail: 'Stub — coming soon' });
-  });
+  // /me — self-service routes (auth checked inside each handler)
+  router.use('/me', meRouter);
 
-  router.post('/invites', (_req, res) => {
-    if (!flags.enableInvites) {
-      return res.status(501).json({
-        error: 'Not implemented',
-        detail: 'team-management: enableInvites feature flag is off',
-      });
-    }
-    return res.status(501).json({ error: 'Not implemented', detail: 'Stub — coming soon' });
-  });
+  // /orgs — org management (membership-gated inside router)
+  router.use('/orgs', orgsRouter);
 
-  // --- Audit log routes (flag-gated) ---
-  router.get('/audit', (_req, res) => {
-    if (!flags.enableAuditLog) {
-      return res.status(501).json({
-        error: 'Not implemented',
-        detail: 'team-management: enableAuditLog feature flag is off',
-      });
-    }
-    return res.status(501).json({ error: 'Not implemented', detail: 'Stub — coming soon' });
-  });
+  // /orgs - invitations sub-routes (mounted at /orgs/:orgId/invitations internally)
+  router.use('/orgs', invitationsRouter);
 
-  return { router, runMigrations, health };
+  // /orgs - transfer sub-routes
+  router.use('/orgs', transferRouter);
+
+  // /orgs - audit log sub-routes
+  router.use('/orgs', auditRouter);
+
+  // /invitations - public accept routes (no auth)
+  router.use('/invitations', invitationsRouter);
+
+  // /admin — super-admin gated
+  router.use('/admin', adminRouter);
+
+  return { router, runMigrations };
 }
 
 export type { ServerModuleAdapter, TeamManagementConfig, TeamManagementServerModule };
