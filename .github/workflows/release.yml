@@ -1,0 +1,79 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - '*-v[0-9]+.[0-9]+.[0-9]+'
+
+jobs:
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Parse tag
+        id: tag
+        shell: bash
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          # Extract package name: everything before the last -vX.Y.Z
+          PACKAGE=$(echo "$TAG" | sed 's/-v[0-9]*\.[0-9]*\.[0-9]*$//')
+          VERSION=$(echo "$TAG" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+$')
+          echo "package=$PACKAGE" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Tag: $TAG | Package: $PACKAGE | Version: $VERSION"
+
+      - name: Verify CHANGELOG entry exists
+        id: changelog
+        shell: bash
+        run: |
+          TAG="${{ steps.tag.outputs.tag }}"
+          PACKAGE="${{ steps.tag.outputs.package }}"
+          VERSION="${{ steps.tag.outputs.version }}"
+
+          # Locate CHANGELOG — packages/<name> or root for toolkit-v* tags
+          if [ "$PACKAGE" = "toolkit" ]; then
+            CHANGELOG="CHANGELOG.md"
+            # Root toolkit tag — no package CHANGELOG required
+            echo "notes=Toolkit root release $TAG — see individual package CHANGELOGs." >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          CHANGELOG="packages/$PACKAGE/CHANGELOG.md"
+
+          if [ ! -f "$CHANGELOG" ]; then
+            echo "ERROR: $CHANGELOG not found for tag $TAG"
+            exit 1
+          fi
+
+          # Extract the section for this version from CHANGELOG
+          NOTES=$(awk "/^## $VERSION/{found=1; next} found && /^## /{exit} found{print}" "$CHANGELOG")
+
+          if [ -z "$NOTES" ]; then
+            echo "ERROR: No CHANGELOG entry found for version $VERSION in $CHANGELOG"
+            exit 1
+          fi
+
+          echo "CHANGELOG entry found for $VERSION ✓"
+          # Write to file to handle multiline
+          echo "$NOTES" > /tmp/release_notes.txt
+          echo "notes_file=/tmp/release_notes.txt" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.tag }}
+          name: ${{ steps.tag.outputs.tag }}
+          body_path: ${{ steps.changelog.outputs.notes_file || '' }}
+          body: ${{ steps.changelog.outputs.notes || '' }}
+          draft: false
+          prerelease: ${{ contains(steps.tag.outputs.version, '-') }}
