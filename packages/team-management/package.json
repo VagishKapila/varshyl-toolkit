@@ -20,7 +20,7 @@
     }
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json && mkdir -p dist/server/migrations && cp src/server/migrations/*.sql dist/server/migrations/",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.client.json",
     "test": "vitest run",
     "lint": "eslint src --ext .ts,.tsx --max-warnings 0"
@@ -48,3 +48,4 @@
   },
   "type": "module"
 }
+
