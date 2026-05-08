@@ -61,7 +61,7 @@ async function boot(): Promise<void> {
   });
 
   // ── Step 5: Serve built React client ──────────────────────────────────────
-  const clientDist = path.join(__dirname, '../../client/dist');
+  const clientDist = path.join(__dirname, '../client'); // Vite outDir = dist/client/
 
   if (NODE_ENV === 'production') {
     app.use(express.static(clientDist));
