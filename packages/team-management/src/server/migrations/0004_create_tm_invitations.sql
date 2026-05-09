@@ -14,7 +14,9 @@ CREATE TABLE IF NOT EXISTS tm_invitations (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
--- Only one pending invite per email per org
-CREATE UNIQUE INDEX IF NOT EXISTS idx_tm_invitations_pending ON tm_invitations(org_id, email) WHERE accepted_at IS NULL AND revoked_at IS NULL AND expires_at > NOW();
+-- Only one pending (non-accepted, non-revoked) invite per email per org
+-- Note: expires_at check omitted from predicate (NOW() is not IMMUTABLE); enforced at query time
+CREATE UNIQUE INDEX IF NOT EXISTS idx_tm_invitations_pending ON tm_invitations(org_id, email) WHERE accepted_at IS NULL AND revoked_at IS NULL;
 CREATE INDEX IF NOT EXISTS idx_tm_invitations_org ON tm_invitations(org_id);
 CREATE INDEX IF NOT EXISTS idx_tm_invitations_email ON tm_invitations(email);
+
