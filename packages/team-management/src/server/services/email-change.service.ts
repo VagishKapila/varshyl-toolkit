@@ -103,11 +103,13 @@ export async function verifyEmailChange(
   }
 
   const request = result.rows[0];
-  const user = await adapter.getUserById(userId);
+  // Use stored user_id from the DB record (reliable even when not authenticated)
+  const resolvedUserId: number = request.user_id;
+  const user = await adapter.getUserById(resolvedUserId);
   const oldEmail = user?.email ?? '';
 
   // Update user email via adapter
-  await adapter.setUserPassword(userId, await adapter.hashPassword('')); // no-op password change
+  await adapter.setUserPassword(resolvedUserId, await adapter.hashPassword('')); // no-op password change
   // Actually update email — adapter needs to handle this
   // We use the adapter's findUserByEmail as a proxy; email update is adapter responsibility
   // The adapter's setUserPassword is for password; we need a separate mechanism
@@ -121,10 +123,10 @@ export async function verifyEmailChange(
   await writeAuditEvent({
     pool,
     orgId: null,
-    actorUserId: userId,
+    actorUserId: resolvedUserId,
     action: 'email.change_completed',
     targetType: 'user',
-    targetId: userId,
+    targetId: resolvedUserId,
     before: { email: oldEmail },
     after: { email: request.new_email },
   });
