@@ -2,7 +2,7 @@ import { createCipheriv, createDecipheriv, randomBytes, createHash } from 'crypt
 
 const ALGORITHM = 'aes-256-gcm';
 const IV_LENGTH = 12;
-const TAG_LENGTH = 16;
+const _TAG_LENGTH = 16;
 
 function getKey(): Buffer {
   const secret = process.env.TM_ENCRYPTION_KEY;
@@ -45,3 +45,4 @@ export function generateSixDigitCode(): string {
   const rand = randomBytes(4).readUInt32BE(0);
   return String(100000 + (rand % 900000));
 }
+

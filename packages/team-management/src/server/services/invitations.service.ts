@@ -27,7 +27,7 @@ export async function createInvitation(
 
   const token = generateToken(32);
   const code = generateSixDigitCode();
-  const tokenHash = sha256(token);
+  const _tokenHash = sha256(token);
   const codeEncrypted = encrypt(code);
 
   const expiresAt = new Date(Date.now() + INVITATION_EXPIRY_HOURS * 60 * 60 * 1000);
@@ -75,7 +75,7 @@ export async function acceptInvitationByToken(
   adapter: ServerModuleAdapter,
   { token, acceptingUserId }: { token: string; acceptingUserId?: number }
 ): Promise<{ orgId: number; role: OrgRole }> {
-  const tokenHash = sha256(token);
+  const _tokenHash = sha256(token);
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -188,7 +188,7 @@ export async function acceptInvitationByCode(
 
   // Delegate to token-based accept with the matched invitation
   const token = generateToken(32);
-  const tokenHash = sha256(token);
+  const _tokenHash = sha256(token);
 
   // Temporarily update token so we can use acceptInvitationByToken logic
   const client = await pool.connect();
@@ -316,3 +316,4 @@ export async function getInvitationWithDecryptedCode(
   const code = decrypt(inv.code_encrypted);
   return { ...inv, code };
 }
+

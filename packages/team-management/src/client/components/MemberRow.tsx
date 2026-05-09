@@ -13,7 +13,7 @@ interface MemberRowProps {
 const canManage = (currentRole: OrgRole): boolean =>
   currentRole === 'owner' || currentRole === 'admin';
 
-const canChangeRoleTo = (currentRole: OrgRole, targetRole: OrgRole): boolean => {
+const _canChangeRoleTo = (currentRole: OrgRole, targetRole: OrgRole): boolean => {
   if (currentRole === 'owner') return true;
   if (currentRole === 'admin') return targetRole !== 'owner';
   return false;
@@ -71,3 +71,4 @@ export function MemberRow({ member, currentUserRole, onRemove, onRoleChange }: M
     </tr>
   );
 }
+

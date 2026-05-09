@@ -75,7 +75,7 @@ export async function changeRole(
     orgId,
     userId,
     newRole,
-    changedByUserId,
+    changedByUserId: _changedByUserId,
   }: { orgId: number; userId: number; newRole: OrgRole; changedByUserId: number }
 ): Promise<TmMembership> {
   const result = await pool.query<TmMembership>(
@@ -122,3 +122,4 @@ export async function validateRoleChange(
     throw new Error('You cannot assign a role equal to or higher than your own');
   }
 }
+

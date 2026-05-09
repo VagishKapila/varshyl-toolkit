@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import type { Pool } from 'pg';
-import type { ServerModuleAdapter, TeamManagementFeatureFlags } from '../types.js';
+import type { ServerModuleAdapter, TeamManagementFeatureFlags, OrgRole } from '../types.js';
 import { requireSuperAdmin } from '../middleware/require-super-admin.js';
 import {
   listAllOrgs,
@@ -129,7 +129,7 @@ export function createAdminRouter(
     if (!userId || !role || !reason) { res.status(400).json({ error: 'userId, role, and reason are required' }); return; }
     const saUserId = (req as SARequest).superAdminUserId;
     try {
-      await addMemberAdmin(pool, { orgId, userId, role: role as any, superAdminUserId: saUserId, reason });
+      await addMemberAdmin(pool, { orgId, userId, role: role as OrgRole, superAdminUserId: saUserId, reason });
       res.json({ message: 'Member added' });
     } catch (e) {
       adapter.logger.error('[admin] POST /orgs/:id/members/add', { error: (e as Error).message });
@@ -205,3 +205,4 @@ export function createAdminRouter(
 
   return router;
 }
+

@@ -13,7 +13,7 @@ export async function requestPasswordReset(
   {
     email,
     baseUrl,
-    triggeredBySuperAdmin = false,
+    triggeredBySuperAdmin: _triggeredBySuperAdmin = false,
   }: { email: string; baseUrl: string; triggeredBySuperAdmin?: boolean }
 ): Promise<void> {
   // Always return success — do not leak whether email exists
@@ -91,3 +91,4 @@ export async function resetPassword(
     targetId: request.user_id,
   });
 }
+

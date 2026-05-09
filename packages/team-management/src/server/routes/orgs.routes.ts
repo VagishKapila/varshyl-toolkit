@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import type { Pool } from 'pg';
-import type { ServerModuleAdapter, TeamManagementFeatureFlags } from '../types.js';
+import type { ServerModuleAdapter, TeamManagementFeatureFlags, OrgRole } from '../types.js';
 import { requireMembership, type AuthenticatedRequest } from '../middleware/require-membership.js';
 import { requireRole } from '../middleware/require-role.js';
 import { getOrg, updateOrg, softDeleteOrg, listOrgMembers } from '../services/organizations.service.js';
@@ -217,12 +217,12 @@ export function createOrgsRouter(
     }
 
     try {
-      await validateRoleChange(pool, { orgId, actorRole: userRole, targetUserId, newRole: newRole as any });
+      await validateRoleChange(pool, { orgId, actorRole: userRole, targetUserId, newRole: newRole as OrgRole });
       const before = await pool.query(
         `SELECT role FROM tm_memberships WHERE org_id = $1 AND user_id = $2 AND removed_at IS NULL`,
         [orgId, targetUserId]
       );
-      const updated = await changeRole(pool, { orgId, userId: targetUserId, newRole: newRole as any, changedByUserId: actorId });
+      const updated = await changeRole(pool, { orgId, userId: targetUserId, newRole: newRole as OrgRole, changedByUserId: actorId });
 
       if (flags.enableAuditLog) {
         await writeAuditEvent({
@@ -253,3 +253,4 @@ export function createOrgsRouter(
 
   return router;
 }
+

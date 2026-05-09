@@ -8,7 +8,7 @@ interface AuditEventRowProps {
 function humanizeAction(action: string): string {
   return action
     .replace(/_/g, ' ')
-    .replace(/\w/g, (c) => c.toUpperCase());
+    .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 function formatTimestamp(iso: string): string {
@@ -56,3 +56,4 @@ export function AuditEventRow({ event }: AuditEventRowProps) {
     </tr>
   );
 }
+

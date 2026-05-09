@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { usePendingTransfer } from '../hooks/usePendingTransfer.js';
 import { useCurrentMembership } from '../hooks/useCurrentMembership.js';
 import { acceptTransfer, cancelTransfer } from '../api.js';
@@ -160,3 +160,4 @@ export function OwnershipTransferPage({ orgId }: OwnershipTransferPageProps) {
     </div>
   );
 }
+

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import type { Pool } from 'pg';
-import type { ServerModuleAdapter, TeamManagementFeatureFlags } from '../types.js';
+import type { ServerModuleAdapter, TeamManagementFeatureFlags, OrgRole } from '../types.js';
 import { requireMembership, type AuthenticatedRequest } from '../middleware/require-membership.js';
 import { requireRole } from '../middleware/require-role.js';
 import {
@@ -61,7 +61,7 @@ export function createInvitationsRouter(
         orgId,
         invitedByUserId: userId,
         email,
-        role: role as any,
+        role: role as OrgRole,
         baseUrl,
       });
 
@@ -218,3 +218,4 @@ export function createInvitationsRouter(
 
   return router;
 }
+

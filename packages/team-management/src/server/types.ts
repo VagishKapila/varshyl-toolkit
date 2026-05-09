@@ -1,5 +1,4 @@
 import type { Request } from 'express';
-import type { Pool } from 'pg';
 
 export type OrgRole = 'owner' | 'admin' | 'member' | 'viewer';
 export type AuditActorType = 'user' | 'super_admin';
@@ -142,3 +141,4 @@ export const ROLE_HIERARCHY: Record<OrgRole, number> = { viewer: 0, member: 1, a
 export function roleAtLeast(userRole: OrgRole, required: OrgRole): boolean {
   return ROLE_HIERARCHY[userRole] >= ROLE_HIERARCHY[required];
 }
+
