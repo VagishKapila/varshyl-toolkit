@@ -87,7 +87,7 @@ export async function requestEmailChange(
 export async function verifyEmailChange(
   pool: Pool,
   adapter: ServerModuleAdapter,
-  { token, userId }: { token: string; userId?: number | null }
+  { token, userId: _userId }: { token: string; userId?: number | null }
 ): Promise<void> {
   const tokenHash = sha256(token);
 
