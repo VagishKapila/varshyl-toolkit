@@ -13,11 +13,6 @@ interface MemberRowProps {
 const canManage = (currentRole: OrgRole): boolean =>
   currentRole === 'owner' || currentRole === 'admin';
 
-const _canChangeRoleTo = (currentRole: OrgRole, targetRole: OrgRole): boolean => {
-  if (currentRole === 'owner') return true;
-  if (currentRole === 'admin') return targetRole !== 'owner';
-  return false;
-};
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString(undefined, {

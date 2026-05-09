@@ -2,7 +2,6 @@ import { createCipheriv, createDecipheriv, randomBytes, createHash } from 'crypt
 
 const ALGORITHM = 'aes-256-gcm';
 const IV_LENGTH = 12;
-const _TAG_LENGTH = 16;
 
 function getKey(): Buffer {
   const secret = process.env.TM_ENCRYPTION_KEY;

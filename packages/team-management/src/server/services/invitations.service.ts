@@ -188,7 +188,6 @@ export async function acceptInvitationByCode(
 
   // Delegate to token-based accept with the matched invitation
   const token = generateToken(32);
-  const _tokenHash = sha256(token);
 
   // Temporarily update token so we can use acceptInvitationByToken logic
   const client = await pool.connect();
