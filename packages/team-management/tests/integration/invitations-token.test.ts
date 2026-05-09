@@ -60,12 +60,9 @@ describe.skipIf(!DATABASE_URL)('Invitations – Token Accept', () => {
   beforeAll(async () => {
     pool = new Pool({ connectionString: DATABASE_URL });
 
-    // Run migrations
-    const serverModule = createServerModule(pool, testAdapter, {
-      invitations: true,
-      memberships: true,
-      organizations: true,
-    });
+    // Create module with named opts (v0.1.0 API — positional form removed)
+    const serverModule = createServerModule({ adapter: testAdapter, pool });
+    // migrate() is idempotent — globalSetup already ran, but safe to repeat
     await serverModule.migrate();
 
     // Seed test data
@@ -207,3 +204,4 @@ describe.skipIf(!DATABASE_URL)('Invitations – Token Accept', () => {
     expect([400, 410]).toContain(res.status);
   });
 });
+

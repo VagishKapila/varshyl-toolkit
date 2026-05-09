@@ -133,6 +133,8 @@ export interface TeamManagementConfig {
 export interface TeamManagementServerModule {
   router: import('express').Router;
   runMigrations(): Promise<{ applied: string[]; skipped: string[] }>;
+  /** Alias for runMigrations — for test convenience */
+  migrate(): Promise<{ applied: string[]; skipped: string[] }>;
 }
 
 // Role permission helpers

@@ -46,65 +46,82 @@ const DEFAULT_FLAGS: Required<TeamManagementFeatureFlags> = {
   enableHardDelete: false,
 };
 
+// ── Standalone migration runner ─────────────────────────────────────────────
+// Exported so tests and globalSetup can call it directly without a full module.
+export async function runMigrations(
+  db: Pool,
+  logger: { info(msg: string): void } = { info: () => {} }
+): Promise<{ applied: string[]; skipped: string[] }> {
+  const applied: string[] = [];
+  const skipped: string[] = [];
+
+  // Boot step: ensure ledger table exists (idempotent — CREATE TABLE IF NOT EXISTS)
+  const ledgerSql = readFileSync(
+    join(migrationsDir, '0001_create_tm_schema_migrations.sql'),
+    'utf-8'
+  );
+  await db.query(ledgerSql);
+
+  for (const migration of MIGRATIONS) {
+    const result = await db.query(
+      'SELECT id FROM tm_schema_migrations WHERE migration = $1',
+      [migration.name]
+    );
+
+    if (result.rows.length > 0) {
+      skipped.push(migration.name);
+      logger.info(`[team-management] skipped: ${migration.name}`);
+      continue;
+    }
+
+    const sql = readFileSync(migration.file, 'utf-8');
+    await db.query(sql);
+    await db.query(
+      'INSERT INTO tm_schema_migrations (migration) VALUES ($1)',
+      [migration.name]
+    );
+
+    applied.push(migration.name);
+    logger.info(`[team-management] applied: ${migration.name}`);
+  }
+
+  return { applied, skipped };
+}
+
 /**
  * createServerModule — entry point for host products.
  *
- * Usage:
+ * Usage (production):
  *   const tm = createServerModule({ adapter, db, config });
  *   await tm.runMigrations();
  *   app.use('/api/team', tm.router);
+ *
+ * Usage (test shorthand — pool and features accepted as aliases):
+ *   const tm = createServerModule({ adapter, pool, features });
  */
 export function createServerModule(opts: {
   adapter: ServerModuleAdapter;
-  db: Pool;
-  config: TeamManagementConfig;
+  /** pg Pool — use `db` or `pool` interchangeably */
+  db?: Pool;
+  /** Alias for db */
+  pool?: Pool;
+  /** Full config object (takes precedence over individual fields below) */
+  config?: TeamManagementConfig;
+  /** Shorthand for config.featureFlags */
+  features?: Partial<TeamManagementFeatureFlags>;
+  /** Shorthand for config.baseUrl */
+  baseUrl?: string;
 }): TeamManagementServerModule {
-  const { adapter, db, config } = opts;
+  const db = (opts.db ?? opts.pool)!;
+  const featureFlags: Partial<TeamManagementFeatureFlags> =
+    opts.config?.featureFlags ?? opts.features ?? {};
+  const baseUrl = opts.config?.baseUrl ?? opts.baseUrl ?? '';
+  const config: TeamManagementConfig = { featureFlags, baseUrl };
+  const { adapter } = opts;
 
   const flags: Required<TeamManagementFeatureFlags> = {
     ...DEFAULT_FLAGS,
-    ...(config.featureFlags ?? {}),
-  };
-
-  const baseUrl = config.baseUrl ?? '';
-
-  // ── Migration runner ────────────────────────────────────────────────────────
-
-  const runMigrations = async (): Promise<{ applied: string[]; skipped: string[] }> => {
-    const applied: string[] = [];
-    const skipped: string[] = [];
-
-    // Boot step: ensure ledger table exists (idempotent — CREATE TABLE IF NOT EXISTS)
-    const ledgerSql = readFileSync(
-      join(migrationsDir, '0001_create_tm_schema_migrations.sql'),
-      'utf-8'
-    );
-    await db.query(ledgerSql);
-
-    for (const migration of MIGRATIONS) {
-      const result = await db.query(
-        'SELECT id FROM tm_schema_migrations WHERE migration = $1',
-        [migration.name]
-      );
-
-      if (result.rows.length > 0) {
-        skipped.push(migration.name);
-        adapter.logger.info(`[team-management] skipped: ${migration.name}`);
-        continue;
-      }
-
-      const sql = readFileSync(migration.file, 'utf-8');
-      await db.query(sql);
-      await db.query(
-        'INSERT INTO tm_schema_migrations (migration) VALUES ($1)',
-        [migration.name]
-      );
-
-      applied.push(migration.name);
-      adapter.logger.info(`[team-management] applied: ${migration.name}`);
-    }
-
-    return { applied, skipped };
+    ...featureFlags,
   };
 
   // ── Super-admin seed on boot ────────────────────────────────────────────────
@@ -141,7 +158,9 @@ export function createServerModule(opts: {
   router.use('/invitations', invitationsRouter);
   router.use('/admin', adminRouter);
 
-  return { router, runMigrations };
+  const migrate = () => runMigrations(db, adapter.logger);
+
+  return { router, runMigrations: migrate, migrate };
 }
 
 export type { ServerModuleAdapter, TeamManagementConfig, TeamManagementServerModule };
