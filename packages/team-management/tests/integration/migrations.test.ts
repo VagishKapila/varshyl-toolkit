@@ -1,98 +1,112 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { Pool } from 'pg';
-import { createServerModule } from '../../src/server/index.js';
-import type { ServerModuleAdapter } from '../../src/server/types.js';
+import { runMigrations } from '../../src/db/migrations.js';
 
-// Integration test: runs real migrations against an ephemeral Postgres.
-// Requires DATABASE_URL env var (set by CI service container or local dev).
+const describeWithDb = process.env.DATABASE_URL ? describe : describe.skip;
 
-const DATABASE_URL = process.env.DATABASE_URL;
-
-// Skip gracefully if no DB is available (unit-only runs)
-const describeWithDb = DATABASE_URL ? describe : describe.skip;
-
-describeWithDb('team-management migrations (integration)', () => {
+describeWithDb('migrations integration', () => {
   let pool: Pool;
 
-  const testAdapter: ServerModuleAdapter = {
-    getCurrentUserId: async () => 1,
-    getOrganizationIdForUser: async () => 1,
-    isUserOrgAdmin: async () => true,
-    logger: {
-      info: (msg) => process.stdout.write(`[info] ${msg}\n`),
-      warn: (msg) => process.stdout.write(`[warn] ${msg}\n`),
-      error: (msg) => process.stderr.write(`[error] ${msg}\n`),
-    },
-  };
-
   beforeAll(async () => {
-    pool = new Pool({ connectionString: DATABASE_URL });
-    // Clean up any leftover state from previous test runs
-    await pool.query('DROP TABLE IF EXISTS tm_schema_migrations CASCADE');
+    pool = new Pool({ connectionString: process.env.DATABASE_URL });
   });
 
   afterAll(async () => {
-    await pool.query('DROP TABLE IF EXISTS tm_schema_migrations CASCADE');
     await pool.end();
   });
 
-  it('runMigrations() creates the tm_schema_migrations ledger table', async () => {
-    const tm = createServerModule({
-      adapter: testAdapter,
-      db: pool,
-      config: {},
-    });
+  it('runs all 11 migrations successfully', async () => {
+    await runMigrations(pool);
 
-    const result = await tm.runMigrations();
-
-    // The bootstrap migration should be applied
-    expect(result.applied).toContain('0001_create_tm_schema_migrations');
-    expect(result.skipped).toHaveLength(0);
-
-    // Verify the table exists and has the ledger row
-    const rows = await pool.query(
-      "SELECT migration FROM tm_schema_migrations WHERE migration = '0001_create_tm_schema_migrations'"
+    const result = await pool.query(
+      `SELECT COUNT(*) as cnt FROM tm_schema_migrations`
     );
-    expect(rows.rows).toHaveLength(1);
-    expect(rows.rows[0].migration).toBe('0001_create_tm_schema_migrations');
+    expect(parseInt(result.rows[0].cnt, 10)).toBe(11);
   });
 
-  it('runMigrations() is idempotent — second call skips all migrations', async () => {
-    const tm = createServerModule({
-      adapter: testAdapter,
-      db: pool,
-      config: {},
+  it('is idempotent — re-running skips all 11 migrations', async () => {
+    const before = await pool.query(
+      `SELECT applied_at FROM tm_schema_migrations ORDER BY version`
+    );
+
+    await runMigrations(pool);
+
+    const after = await pool.query(
+      `SELECT applied_at FROM tm_schema_migrations ORDER BY version`
+    );
+
+    expect(after.rows.length).toBe(11);
+    // applied_at timestamps must not have changed
+    before.rows.forEach((row, i) => {
+      expect(after.rows[i].applied_at.getTime()).toBe(row.applied_at.getTime());
     });
-
-    const result = await tm.runMigrations();
-
-    expect(result.applied).toHaveLength(0);
-    expect(result.skipped).toContain('0001_create_tm_schema_migrations');
   });
 
-  it('GET /health returns 200 with db: connected after migrations', async () => {
-    const tm = createServerModule({
-      adapter: testAdapter,
-      db: pool,
-      config: {},
-    });
+  it('creates tm_organizations table', async () => {
+    const res = await pool.query(
+      `SELECT to_regclass('public.tm_organizations') as tbl`
+    );
+    expect(res.rows[0].tbl).not.toBeNull();
+  });
 
-    // Invoke the health handler directly (no HTTP needed)
-    const mockRes = {
-      json: (body: unknown) => body,
-      status: (_code: number) => ({ json: (body: unknown) => body }),
-    } as unknown as import('express').Response;
+  it('creates tm_memberships table', async () => {
+    const res = await pool.query(
+      `SELECT to_regclass('public.tm_memberships') as tbl`
+    );
+    expect(res.rows[0].tbl).not.toBeNull();
+  });
 
-    let responseBody: Record<string, unknown> | null = null;
-    const capturingRes = {
-      json: (body: Record<string, unknown>) => { responseBody = body; return mockRes; },
-      status: (_code: number) => ({ json: (body: Record<string, unknown>) => { responseBody = body; } }),
-    } as unknown as import('express').Response;
+  it('creates tm_invitations table', async () => {
+    const res = await pool.query(
+      `SELECT to_regclass('public.tm_invitations') as tbl`
+    );
+    expect(res.rows[0].tbl).not.toBeNull();
+  });
 
-    await (tm.health as Function)({} as import('express').Request, capturingRes, () => {});
+  it('creates tm_audit_events table', async () => {
+    const res = await pool.query(
+      `SELECT to_regclass('public.tm_audit_events') as tbl`
+    );
+    expect(res.rows[0].tbl).not.toBeNull();
+  });
 
-    expect(responseBody).not.toBeNull();
-    expect((responseBody as Record<string, unknown>).status).toBe('ok');
-    expect((responseBody as Record<string, unknown>).db).toBe('connected');
+  it('creates tm_ownership_transfers table', async () => {
+    const res = await pool.query(
+      `SELECT to_regclass('public.tm_ownership_transfers') as tbl`
+    );
+    expect(res.rows[0].tbl).not.toBeNull();
+  });
+
+  it('creates tm_super_admins table', async () => {
+    const res = await pool.query(
+      `SELECT to_regclass('public.tm_super_admins') as tbl`
+    );
+    expect(res.rows[0].tbl).not.toBeNull();
+  });
+
+  it('creates tm_password_reset_requests table', async () => {
+    const res = await pool.query(
+      `SELECT to_regclass('public.tm_password_reset_requests') as tbl`
+    );
+    expect(res.rows[0].tbl).not.toBeNull();
+  });
+
+  it('creates tm_email_change_requests table', async () => {
+    const res = await pool.query(
+      `SELECT to_regclass('public.tm_email_change_requests') as tbl`
+    );
+    expect(res.rows[0].tbl).not.toBeNull();
+  });
+
+  it('creates tm_shared_access table', async () => {
+    const res = await pool.query(
+      `SELECT to_regclass('public.tm_shared_access') as tbl`
+    );
+    expect(res.rows[0].tbl).not.toBeNull();
+  });
+
+  it('tm_schema_migrations has exactly 11 rows', async () => {
+    const res = await pool.query(`SELECT COUNT(*) as cnt FROM tm_schema_migrations`);
+    expect(parseInt(res.rows[0].cnt, 10)).toBe(11);
   });
 });
