@@ -240,7 +240,7 @@ export function createInvitationsRouter(
     } catch (e) {
       const msg = (e as Error).message;
       adapter.logger.error('[invitations] POST accept/code', { error: msg });
-      if (msg.includes('not found') || msg.includes('Invalid')) {
+      if (msg.includes('not found') || msg.includes('Invalid') || msg.includes('No valid')) {
         res.status(404).json({ error: msg });
       } else {
         res.status(500).json({ error: 'Failed to accept invitation' });

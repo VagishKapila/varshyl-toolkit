@@ -57,9 +57,9 @@ export function createMeRouter(
     const token = req.query.token as string;
     if (!token) { res.status(400).json({ error: 'token query parameter is required' }); return; }
     try {
+      // Token-based verification — no authentication required; token is self-authenticating
       const userId = await adapter.getCurrentUserId(req);
-      if (!userId) { res.status(401).json({ error: 'Authentication required' }); return; }
-      await verifyEmailChange(pool, adapter, { token, userId });
+      await verifyEmailChange(pool, adapter, { token, userId: userId ?? null });
       res.json({ message: 'Email address updated successfully' });
     } catch (e) {
       const msg = (e as Error).message;

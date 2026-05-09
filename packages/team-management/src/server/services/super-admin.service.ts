@@ -95,7 +95,7 @@ export async function appointOwner(
     await client.query(
       `INSERT INTO tm_memberships (org_id, user_id, role, joined_at)
        VALUES ($1, $2, 'owner', NOW())
-       ON CONFLICT (org_id, user_id)
+       ON CONFLICT (org_id, user_id) WHERE removed_at IS NULL
        DO UPDATE SET role = 'owner', removed_at = NULL, updated_at = NOW()`,
       [orgId, targetUserId]
     );

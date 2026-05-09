@@ -96,16 +96,16 @@ export async function acceptTransfer(
       throw new Error('Only the designated recipient can accept this transfer');
     }
 
-    // Atomic: new owner gets owner role, old owner gets admin role
-    await client.query(
-      `UPDATE tm_memberships SET role = 'owner', updated_at = NOW()
-       WHERE org_id = $1 AND user_id = $2 AND removed_at IS NULL`,
-      [orgId, transfer.to_user_id]
-    );
+    // Atomic: demote old owner first (avoids two-owner constraint), then promote new owner
     await client.query(
       `UPDATE tm_memberships SET role = 'admin', updated_at = NOW()
        WHERE org_id = $1 AND user_id = $2 AND removed_at IS NULL`,
       [orgId, transfer.from_user_id]
+    );
+    await client.query(
+      `UPDATE tm_memberships SET role = 'owner', updated_at = NOW()
+       WHERE org_id = $1 AND user_id = $2 AND removed_at IS NULL`,
+      [orgId, transfer.to_user_id]
     );
 
     // Update denormalized owner_user_id on org
@@ -117,7 +117,7 @@ export async function acceptTransfer(
     // Mark transfer as accepted
     await client.query(
       `UPDATE tm_ownership_transfers
-       SET status = 'completed', accepted_at = NOW()
+       SET status = 'accepted', accepted_at = NOW()
        WHERE id = $1`,
       [transfer.id]
     );

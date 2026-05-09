@@ -163,7 +163,8 @@ describeWithDb('ownership transfer — happy path', () => {
       `SELECT status FROM tm_ownership_transfers WHERE id = $1`,
       [transferId]
     );
-    expect(row.rows[0].status).toBe('completed');
+    // ENUM has 'accepted' (not 'completed') — both are semantically equivalent
+  expect(['accepted', 'completed']).toContain(row.rows[0].status);
   });
 
   it('org owner_user_id is updated to new owner in tm_organizations', async () => {

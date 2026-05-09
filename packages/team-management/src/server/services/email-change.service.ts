@@ -87,15 +87,16 @@ export async function requestEmailChange(
 export async function verifyEmailChange(
   pool: Pool,
   adapter: ServerModuleAdapter,
-  { token, userId }: { token: string; userId: number }
+  { token, userId }: { token: string; userId?: number | null }
 ): Promise<void> {
   const tokenHash = sha256(token);
 
+  // Query by token only — token is cryptographically unique and self-authenticating
   const result = await pool.query<TmEmailChangeRequest>(
     `SELECT * FROM tm_email_change_requests
-     WHERE verify_token_hash = $1 AND user_id = $2
+     WHERE verify_token_hash = $1
        AND cancelled_at IS NULL AND verified_at IS NULL AND expires_at > NOW()`,
-    [tokenHash, userId]
+    [tokenHash]
   );
   if (result.rows.length === 0) {
     throw new Error('Invalid or expired email change token');
