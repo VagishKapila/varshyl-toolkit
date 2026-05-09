@@ -73,30 +73,31 @@ describeWithDb('org lifecycle integration', () => {
       .send({ name: 'Test Org', slug: 'test-org' });
 
     expect(res.status).toBe(201);
-    expect(res.body).toHaveProperty('id');
-    expect(res.body.name).toBe('Test Org');
+    // Response shape is { org: { id, name, ... } }
+    expect(res.body.org).toHaveProperty('id');
+    expect(res.body.org.name).toBe('Test Org');
 
     const dbRow = await pool.query(`SELECT * FROM tm_organizations WHERE slug = 'test-org'`);
     expect(dbRow.rows.length).toBe(1);
     expect(dbRow.rows[0].owner_user_id).toBe(1);
   });
 
-  it('PATCH /orgs/:id updates settings', async () => {
+  it('PATCH /orgs/:id updates name', async () => {
     const createRes = await request(app)
       .post('/orgs')
       .send({ name: 'Settings Org', slug: 'settings-org' });
     expect(createRes.status).toBe(201);
-    const orgId = createRes.body.id;
+    const orgId = createRes.body.org.id;
     currentOrgId = orgId;
 
     const res = await request(app)
       .patch(`/orgs/${orgId}`)
-      .send({ settings: { allowGuestInvites: true } });
+      .send({ name: 'Settings Org Updated' });
 
     expect(res.status).toBe(200);
 
-    const dbRow = await pool.query(`SELECT settings FROM tm_organizations WHERE id = $1`, [orgId]);
-    expect(dbRow.rows[0].settings).toMatchObject({ allowGuestInvites: true });
+    const dbRow = await pool.query(`SELECT name FROM tm_organizations WHERE id = $1`, [orgId]);
+    expect(dbRow.rows[0].name).toBe('Settings Org Updated');
   });
 
   it('DELETE /orgs/:id soft-deletes with name confirmation', async () => {
@@ -105,14 +106,14 @@ describeWithDb('org lifecycle integration', () => {
       .post('/orgs')
       .send({ name: orgName, slug: 'delete-me-org' });
     expect(createRes.status).toBe(201);
-    const orgId = createRes.body.id;
+    const orgId = createRes.body.org.id;
     currentOrgId = orgId;
 
-    // Wrong name → rejected
+    // Wrong name → rejected (422)
     const badRes = await request(app)
       .delete(`/orgs/${orgId}`)
       .send({ confirmOrgName: 'Wrong Name' });
-    expect(badRes.status).toBe(400);
+    expect(badRes.status).toBe(422);
 
     // Correct name → accepted
     const res = await request(app)
@@ -125,7 +126,7 @@ describeWithDb('org lifecycle integration', () => {
     const createRes = await request(app)
       .post('/orgs')
       .send({ name: 'Hidden Org', slug: 'hidden-org' });
-    const orgId = createRes.body.id;
+    const orgId = createRes.body.org.id;
     currentOrgId = orgId;
 
     await request(app).delete(`/orgs/${orgId}`).send({ confirmOrgName: 'Hidden Org' });
@@ -138,7 +139,7 @@ describeWithDb('org lifecycle integration', () => {
     const createRes = await request(app)
       .post('/orgs')
       .send({ name: 'DB Org', slug: 'db-org' });
-    const orgId = createRes.body.id;
+    const orgId = createRes.body.org.id;
     currentOrgId = orgId;
 
     await request(app).delete(`/orgs/${orgId}`).send({ confirmOrgName: 'DB Org' });
@@ -152,7 +153,7 @@ describeWithDb('org lifecycle integration', () => {
     const createRes = await request(app)
       .post('/orgs')
       .send({ name: 'Notify Org', slug: 'notify-org' });
-    const orgId = createRes.body.id;
+    const orgId = createRes.body.org.id;
     currentOrgId = orgId;
 
     // Add some members

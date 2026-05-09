@@ -42,7 +42,9 @@ export function createMeRouter(
     } catch (e) {
       const msg = (e as Error).message;
       adapter.logger.error('[me] POST /email-change', { error: msg });
-      if (msg.includes('Too many') || msg.includes('already in use')) {
+      if (msg.includes('Too many')) {
+        res.status(429).json({ error: msg });
+      } else if (msg.includes('already in use')) {
         res.status(422).json({ error: msg });
       } else {
         res.status(500).json({ error: 'Failed to request email change' });

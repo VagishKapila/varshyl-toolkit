@@ -137,10 +137,9 @@ export interface TeamManagementServerModule {
   migrate(): Promise<{ applied: string[]; skipped: string[] }>;
 }
 
-// Role permission helpers
-export const ROLE_HIERARCHY: Record<OrgRole, number> = { viewer: 0, member: 1, admin: 2, owner: 3 };
+// Role permission helpers — values are spaced by 10 so future roles can be inserted
+export const ROLE_HIERARCHY: Record<OrgRole, number> = { viewer: 10, member: 20, admin: 30, owner: 40 };
 
 export function roleAtLeast(userRole: OrgRole, required: OrgRole): boolean {
   return ROLE_HIERARCHY[userRole] >= ROLE_HIERARCHY[required];
 }
-

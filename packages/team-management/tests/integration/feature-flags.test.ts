@@ -126,11 +126,12 @@ describeWithDb('feature flags', () => {
   });
 
   describe('enableSuperAdmin = false', () => {
-    it('GET /admin/orgs → 501 or 403', async () => {
+    it('GET /admin/orgs → 403, 404, or 501', async () => {
       const app = buildApp(pool, { enableSuperAdmin: false });
       const res = await request(app).get('/admin/orgs');
-      // Either 501 (feature disabled) or 403 (user not super-admin)
-      expect([403, 501]).toContain(res.status);
+      // 404 when feature disabled (middleware returns 404 to obscure admin routes)
+      // 403 if user not super-admin, 501 if feature check first
+      expect([403, 404, 501]).toContain(res.status);
     });
   });
 

@@ -70,10 +70,13 @@ const mockAdapter: ServerModuleAdapter = {
   async sendOrgDeletionNotice(_params: {
     to: string;
     orgName: string;
-    scheduledFor: string;
+    scheduledFor: Date;
   }) {},
-  async emitNotification(_params: { userId: number; type: string; payload: unknown }) {},
+  async emitNotification(_params: { userId: number; type: string; payload: Record<string, unknown> }) {},
 };
+
+// Suppress unused variable warning
+void mockAdapter;
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -166,7 +169,6 @@ describe('ServerModuleAdapter — shape (v0.1.0)', () => {
 describe('TeamManagementConfig — feature flags', () => {
   it('accepts config with all flags enabled', () => {
     const config: TeamManagementConfig = {
-      adapter: mockAdapter,
       featureFlags: {
         enableInvites: true,
         enableAuditLog: true,
@@ -190,7 +192,6 @@ describe('TeamManagementConfig — feature flags', () => {
 
   it('accepts config with all flags disabled', () => {
     const config: TeamManagementConfig = {
-      adapter: mockAdapter,
       featureFlags: {
         enableInvites: false,
         enableAuditLog: false,
@@ -207,14 +208,12 @@ describe('TeamManagementConfig — feature flags', () => {
 
   it('accepts config with no featureFlags (all optional)', () => {
     const config: TeamManagementConfig = {
-      adapter: mockAdapter,
     };
     expect(config.featureFlags).toBeUndefined();
   });
 
   it('accepts config with partial featureFlags', () => {
     const config: TeamManagementConfig = {
-      adapter: mockAdapter,
       featureFlags: {
         enableInvites: true,
       },

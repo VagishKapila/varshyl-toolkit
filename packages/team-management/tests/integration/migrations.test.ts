@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { Pool } from 'pg';
-import { runMigrations } from '../../src/db/migrations.js';
+import { runMigrations } from '../../src/server/index.js';
 
 const describeWithDb = process.env.DATABASE_URL ? describe : describe.skip;
 
@@ -26,13 +26,13 @@ describeWithDb('migrations integration', () => {
 
   it('is idempotent — re-running skips all 11 migrations', async () => {
     const before = await pool.query(
-      `SELECT applied_at FROM tm_schema_migrations ORDER BY version`
+      `SELECT applied_at FROM tm_schema_migrations ORDER BY id`
     );
 
     await runMigrations(pool);
 
     const after = await pool.query(
-      `SELECT applied_at FROM tm_schema_migrations ORDER BY version`
+      `SELECT applied_at FROM tm_schema_migrations ORDER BY id`
     );
 
     expect(after.rows.length).toBe(11);

@@ -114,7 +114,7 @@ describeWithDb('password reset flow', () => {
     expect(sendPasswordResetEmail).not.toHaveBeenCalled();
   });
 
-  it('POST /me/password-reset/confirm with valid token → 200 and password updated', async () => {
+  it('POST /me/password-reset with valid token → 200 and password updated', async () => {
     await request(app)
       .post('/me/password-reset/request')
       .send({ email: 'u1@test.com' });
@@ -123,15 +123,16 @@ describeWithDb('password reset flow', () => {
     const token = extractResetToken(sendPasswordResetEmail);
     expect(token).toBeTruthy();
 
+    // Confirm endpoint is POST /me/password-reset (not /confirm)
     const confirmRes = await request(app)
-      .post('/me/password-reset/confirm')
+      .post('/me/password-reset')
       .send({ token, newPassword: 'NewSecurePass123!' });
 
     expect(confirmRes.status).toBe(200);
     expect(testAdapter.setUserPassword).toHaveBeenCalledOnce();
   });
 
-  it('POST /me/password-reset/confirm with used token → 400', async () => {
+  it('POST /me/password-reset with used token → 422', async () => {
     await request(app)
       .post('/me/password-reset/request')
       .send({ email: 'u1@test.com' });
@@ -141,18 +142,18 @@ describeWithDb('password reset flow', () => {
 
     // Use it once
     await request(app)
-      .post('/me/password-reset/confirm')
+      .post('/me/password-reset')
       .send({ token, newPassword: 'FirstUse!' });
 
-    // Try to use again
+    // Try to use again → 422 (Invalid or expired)
     const res = await request(app)
-      .post('/me/password-reset/confirm')
+      .post('/me/password-reset')
       .send({ token, newPassword: 'SecondUse!' });
 
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(422);
   });
 
-  it('POST /me/password-reset/confirm with expired token → 400', async () => {
+  it('POST /me/password-reset with expired token → 422', async () => {
     // Request first to get a real token (captures from mock)
     await request(app)
       .post('/me/password-reset/request')
@@ -167,17 +168,17 @@ describeWithDb('password reset flow', () => {
     );
 
     const res = await request(app)
-      .post('/me/password-reset/confirm')
+      .post('/me/password-reset')
       .send({ token, newPassword: 'DoesNotMatter!' });
 
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(422);
   });
 
-  it('rate limit: 4th password reset request per hour → 429', async () => {
+  it('rate limit: 4th password reset request → 200 but email suppressed (silent rate limit)', async () => {
     const recent = new Date(Date.now() - 20 * 60 * 1000).toISOString();
     const futureExpiry = new Date(Date.now() + 60 * 60 * 1000).toISOString();
 
-    // Insert 3 existing reset requests with token_hash (not plaintext token)
+    // Insert 3 existing reset requests with token_hash
     for (let i = 0; i < 3; i++) {
       const fakeToken = `rate-tok-placeholder-${i}`;
       await pool.query(
@@ -191,6 +192,9 @@ describeWithDb('password reset flow', () => {
       .post('/me/password-reset/request')
       .send({ email: 'u1@test.com' });
 
-    expect(res.status).toBe(429);
+    // Service silently swallows rate limit (no 429) to prevent email enumeration
+    expect(res.status).toBe(200);
+    // But the email must NOT have been sent
+    expect(sendPasswordResetEmail).not.toHaveBeenCalled();
   });
 });

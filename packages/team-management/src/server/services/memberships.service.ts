@@ -114,6 +114,11 @@ export async function validateRoleChange(
 
   const targetCurrentRole = result.rows[0].role;
 
+  // Protect the owner role — must use ownership transfer flow to change it
+  if (targetCurrentRole === 'owner') {
+    throw new Error('Cannot change the owner role. Use the ownership transfer flow to transfer ownership first.');
+  }
+
   if (actorRole !== 'owner' && ROLE_HIERARCHY[targetCurrentRole] >= ROLE_HIERARCHY[actorRole]) {
     throw new Error('You cannot change the role of a member with equal or higher permissions');
   }
@@ -122,4 +127,3 @@ export async function validateRoleChange(
     throw new Error('You cannot assign a role equal to or higher than your own');
   }
 }
-

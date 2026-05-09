@@ -29,6 +29,7 @@ jobs:
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/varshyl_test
       TMPDIR: /tmp
+      TM_ENCRYPTION_KEY: test-encryption-key-for-ci-only!
 
     steps:
       - name: Checkout

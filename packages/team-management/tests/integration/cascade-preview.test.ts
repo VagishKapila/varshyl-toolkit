@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
+import { createHash } from 'crypto';
 import express from 'express';
 import request from 'supertest';
 import { Pool } from 'pg';
@@ -6,6 +7,10 @@ import { createServerModule } from '../../src/server/index.js';
 import type { ServerModuleAdapter, OrgRole } from '../../src/server/types.js';
 
 const describeWithDb = process.env.DATABASE_URL ? describe : describe.skip;
+
+function sha256(s: string): string {
+  return createHash('sha256').update(s).digest('hex');
+}
 
 let currentUserId: number | null = null;
 let currentOrgId: number | null = null;
@@ -74,10 +79,12 @@ describeWithDb('cascade preview', () => {
   });
 
   it('returns cascade preview for member who has sent invitations', async () => {
-    // Member 2 sends an invitation
-    currentUserId = 2;
-    await pool.query(`INSERT INTO tm_invitations (org_id, inviter_user_id, email, role, token)
-      VALUES (1, 2, 'invited@example.com', 'member', 'tok-abc123')`);
+    // Member 2 sends an invitation — insert directly with correct column names
+    await pool.query(
+      `INSERT INTO tm_invitations (org_id, invited_by_user_id, email, role, token_hash, code_encrypted, expires_at)
+       VALUES (1, 2, 'invited@example.com', 'member', $1, 'fake-enc-abc123', NOW() + INTERVAL '7 days')`,
+      [sha256('tok-abc123')]
+    );
 
     currentUserId = 1; // admin calling on behalf
 
@@ -93,7 +100,7 @@ describeWithDb('cascade preview', () => {
 
     // Must include pending invitations they sent
     expect(body).toHaveProperty('pendingInvitations');
-    const invitations = body.pendingInvitations as Array<{ inviter_user_id?: number; inviterUserId?: number }>;
+    const invitations = body.pendingInvitations as Array<{ invited_by_user_id?: number; invitedByUserId?: number }>;
     expect(Array.isArray(invitations)).toBe(true);
     expect(invitations.length).toBeGreaterThanOrEqual(1);
   });
@@ -131,11 +138,14 @@ describeWithDb('cascade preview', () => {
   });
 
   it('preview for member with multiple pending invitations lists all of them', async () => {
-    await pool.query(`INSERT INTO tm_invitations (org_id, inviter_user_id, email, role, token)
-      VALUES 
-        (1, 2, 'a@example.com', 'member', 'tok-001'),
-        (1, 2, 'b@example.com', 'viewer', 'tok-002'),
-        (1, 2, 'c@example.com', 'admin', 'tok-003')`);
+    await pool.query(
+      `INSERT INTO tm_invitations (org_id, invited_by_user_id, email, role, token_hash, code_encrypted, expires_at)
+       VALUES
+         (1, 2, 'a@example.com', 'member', $1, 'fake-enc-001', NOW() + INTERVAL '7 days'),
+         (1, 2, 'b@example.com', 'viewer', $2, 'fake-enc-002', NOW() + INTERVAL '7 days'),
+         (1, 2, 'c@example.com', 'admin', $3, 'fake-enc-003', NOW() + INTERVAL '7 days')`,
+      [sha256('tok-001'), sha256('tok-002'), sha256('tok-003')]
+    );
 
     const res = await request(app)
       .get('/orgs/1/members/2/cascade-preview');
