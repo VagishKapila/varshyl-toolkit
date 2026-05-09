@@ -70,7 +70,7 @@ export function createInvitationsRouter(
           pool,
           orgId,
           actorUserId: userId,
-          action: 'org.invitation_sent',
+          action: 'member.invited',
           targetType: 'invitation',
           targetId: invitation.id,
           after: { email, role },
@@ -108,7 +108,7 @@ export function createInvitationsRouter(
           pool,
           orgId,
           actorUserId: userId,
-          action: 'org.invitation_revoked',
+          action: 'member.invite_revoked',
           targetType: 'invitation',
           targetId: invitationId,
           ip: getClientIp(req),
@@ -172,7 +172,7 @@ export function createInvitationsRouter(
     }
   });
 
-  // POST /invitations/accept/token — public, no auth
+  // POST /invitations/accept/token — public, token in body
   router.post('/accept/token', async (req, res) => {
     if (!featureCheck(res)) return;
     const { token } = req.body as { token?: string };
@@ -181,7 +181,23 @@ export function createInvitationsRouter(
       return;
     }
     try {
-      const result = await acceptInvitationByToken(pool, adapter, { token });
+      const userId = await adapter.getCurrentUserId(req as import('express').Request);
+      const result = await acceptInvitationByToken(pool, adapter, { token, acceptingUserId: userId ?? undefined });
+
+      if (flags.enableAuditLog) {
+        await writeAuditEvent({
+          pool,
+          orgId: result.orgId,
+          actorUserId: userId ?? null,
+          action: 'member.invite_accepted',
+          targetType: 'org',
+          targetId: result.orgId,
+          after: { role: result.role },
+          ip: getClientIp(req),
+          userAgent: req.headers['user-agent'] ?? null,
+        });
+      }
+
       res.json({ message: 'Invitation accepted', orgId: result.orgId, role: result.role });
     } catch (e) {
       const msg = (e as Error).message;
@@ -194,7 +210,7 @@ export function createInvitationsRouter(
     }
   });
 
-  // POST /invitations/accept/code — public, no auth
+  // POST /invitations/accept/code — public, code in body
   router.post('/accept/code', async (req, res) => {
     if (!featureCheck(res)) return;
     const { email, code } = req.body as { email?: string; code?: string };
@@ -203,7 +219,23 @@ export function createInvitationsRouter(
       return;
     }
     try {
-      const result = await acceptInvitationByCode(pool, adapter, { email, code });
+      const userId = await adapter.getCurrentUserId(req as import('express').Request);
+      const result = await acceptInvitationByCode(pool, adapter, { email, code, acceptingUserId: userId ?? undefined });
+
+      if (flags.enableAuditLog) {
+        await writeAuditEvent({
+          pool,
+          orgId: result.orgId,
+          actorUserId: userId ?? null,
+          action: 'member.invite_accepted',
+          targetType: 'org',
+          targetId: result.orgId,
+          after: { role: result.role },
+          ip: getClientIp(req),
+          userAgent: req.headers['user-agent'] ?? null,
+        });
+      }
+
       res.json({ message: 'Invitation accepted', orgId: result.orgId, role: result.role });
     } catch (e) {
       const msg = (e as Error).message;
@@ -218,4 +250,3 @@ export function createInvitationsRouter(
 
   return router;
 }
-

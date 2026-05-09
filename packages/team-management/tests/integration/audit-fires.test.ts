@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest';
 import express from 'express';
 import request from 'supertest';
 import { Pool } from 'pg';
@@ -9,6 +9,23 @@ const describeWithDb = process.env.DATABASE_URL ? describe : describe.skip;
 
 let currentUserId: number | null = null;
 let currentOrgId: number | null = null;
+
+function extractToken(spy: ReturnType<typeof vi.fn>): string {
+  const callArg = spy.mock.calls[0]?.[0] as { magicLinkUrl?: string } | undefined;
+  const url = callArg?.magicLinkUrl ?? '';
+  const qs = url.includes('?') ? url.split('?')[1] : '';
+  return new URLSearchParams(qs).get('token') ?? '';
+}
+
+function extractEmailChangeToken(spy: ReturnType<typeof vi.fn>): string {
+  const callArg = spy.mock.calls[0]?.[0] as { verifyUrl?: string } | undefined;
+  const url = callArg?.verifyUrl ?? '';
+  const qs = url.includes('?') ? url.split('?')[1] : '';
+  return new URLSearchParams(qs).get('token') ?? '';
+}
+
+const sendInviteEmail = vi.fn(async () => {});
+const sendEmailChangeVerification = vi.fn(async () => {});
 
 const testAdapter: ServerModuleAdapter = {
   getCurrentUserId: async () => currentUserId,
@@ -26,9 +43,9 @@ const testAdapter: ServerModuleAdapter = {
   hashPassword: async (p) => `h:${p}`,
   verifyPassword: async (p, h) => h === `h:${p}`,
   invalidateAllUserSessions: async () => {},
-  sendInviteEmail: async () => {},
+  sendInviteEmail,
   sendOwnershipTransferEmail: async () => {},
-  sendEmailChangeVerification: async () => {},
+  sendEmailChangeVerification,
   sendEmailChangeOldNotice: async () => {},
   sendEmailChangedFinalNotice: async () => {},
   sendPasswordResetEmail: async () => {},
@@ -76,6 +93,8 @@ describeWithDb('audit events fire for all 13 event types', () => {
 
   beforeEach(async () => {
     await cleanAll(pool);
+    sendInviteEmail.mockClear();
+    sendEmailChangeVerification.mockClear();
     currentUserId = 1;
     currentOrgId = 1;
   });
@@ -96,7 +115,7 @@ describeWithDb('audit events fire for all 13 event types', () => {
 
     const res = await request(app)
       .patch('/orgs/1')
-      .send({ settings: { featureX: true } });
+      .send({ name: 'Updated Name' });
     expect(res.status).toBeLessThan(500);
 
     const event = await getLatestAuditEvent(pool, 'org.settings.updated');
@@ -108,7 +127,7 @@ describeWithDb('audit events fire for all 13 event types', () => {
 
     const res = await request(app)
       .delete('/orgs/1')
-      .send({ confirmOrgName: 'Test Org 1' });
+      .send({ confirmName: 'Test Org 1' });
     expect(res.status).toBeLessThan(500);
 
     const event = await getLatestAuditEvent(pool, 'org.deleted');
@@ -135,18 +154,14 @@ describeWithDb('audit events fire for all 13 event types', () => {
       .send({ email: 'u99@test.com', role: 'member' });
     expect(invRes.status).toBeLessThan(500);
 
-    // Get the invitation token
-    const inv = await pool.query(`SELECT token FROM tm_invitations ORDER BY created_at DESC LIMIT 1`);
-    if (!inv.rows.length) {
-      return; // Can't test without an invitation
-    }
-    const token = inv.rows[0].token;
+    const token = extractToken(sendInviteEmail);
+    if (!token) return; // Can't test without a token
 
-    // Switch to invited user
     currentUserId = 99;
     currentOrgId = null;
     const acceptRes = await request(app)
-      .post(`/orgs/1/invitations/${token}/accept`);
+      .post('/invitations/accept/token')
+      .send({ token });
     expect(acceptRes.status).toBeLessThan(500);
 
     const event = await getLatestAuditEvent(pool, 'member.invite_accepted');
@@ -182,11 +197,11 @@ describeWithDb('audit events fire for all 13 event types', () => {
     expect(event).not.toBeNull();
   });
 
-  it('member.role_changed fires on PATCH /orgs/:id/members/:userId', async () => {
+  it('member.role_changed fires on PATCH /orgs/:id/members/:userId/role', async () => {
     await seedOrg(pool);
 
     const res = await request(app)
-      .patch('/orgs/1/members/3')
+      .patch('/orgs/1/members/3/role')
       .send({ role: 'admin' });
     expect(res.status).toBeLessThan(500);
 
@@ -266,15 +281,13 @@ describeWithDb('audit events fire for all 13 event types', () => {
       .post('/me/email-change')
       .send({ newEmail: 'verified@test.com', currentPassword: 'pass' });
 
-    const changeReq = await pool.query(
-      `SELECT verify_token FROM tm_email_change_requests WHERE user_id = 1 ORDER BY created_at DESC LIMIT 1`
-    );
-    if (!changeReq.rows.length) return;
-    const token = changeReq.rows[0].verify_token;
+    // Extract verify token from spy (service calls sendEmailChangeVerification({ to, verifyUrl }))
+    const verifyToken = extractEmailChangeToken(sendEmailChangeVerification);
+    if (!verifyToken) return; // skip if email change not triggered
 
     currentUserId = null; // token-based route
     const verifyRes = await request(app)
-      .get(`/me/email-change/verify?token=${token}`);
+      .get(`/me/email-change/verify?token=${verifyToken}`);
     expect(verifyRes.status).toBeLessThan(500);
 
     const event = await getLatestAuditEvent(pool, 'email.change_completed');

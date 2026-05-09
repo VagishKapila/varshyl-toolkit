@@ -15,6 +15,59 @@ export function createOrgsRouter(
   const router = Router({ mergeParams: true });
   const authMiddleware = requireMembership(pool, adapter);
 
+  // POST /orgs — create org (any authenticated user)
+  router.post('/', async (req, res) => {
+    try {
+      const userId = await adapter.getCurrentUserId(req as import('express').Request);
+      if (!userId) {
+        res.status(401).json({ error: 'Authentication required' });
+        return;
+      }
+      const { name, slug, settings } = req.body as { name?: string; slug?: string; settings?: Record<string, unknown> };
+      if (!name || !slug) {
+        res.status(400).json({ error: 'name and slug are required' });
+        return;
+      }
+
+      const result = await pool.query(
+        `INSERT INTO tm_organizations (name, slug, owner_user_id, settings)
+         VALUES ($1, $2, $3, $4) RETURNING *`,
+        [name, slug, userId, JSON.stringify(settings ?? {})]
+      );
+      const org = result.rows[0];
+
+      await pool.query(
+        `INSERT INTO tm_memberships (org_id, user_id, role, joined_at)
+         VALUES ($1, $2, 'owner', NOW())`,
+        [org.id, userId]
+      );
+
+      if (flags.enableAuditLog) {
+        await writeAuditEvent({
+          pool,
+          orgId: org.id,
+          actorUserId: userId,
+          action: 'org.created',
+          targetType: 'org',
+          targetId: org.id,
+          after: { name, slug },
+          ip: getClientIp(req),
+          userAgent: req.headers['user-agent'] ?? null,
+        });
+      }
+
+      res.status(201).json({ org });
+    } catch (e) {
+      const msg = (e as Error).message;
+      adapter.logger.error('[orgs] POST /', { error: msg });
+      if (msg.includes('unique') || msg.includes('duplicate') || msg.includes('already exists')) {
+        res.status(409).json({ error: 'Organization with that slug already exists' });
+      } else {
+        res.status(500).json({ error: 'Failed to create organization' });
+      }
+    }
+  });
+
   // GET /orgs/:orgId — org info (member+)
   router.get('/:orgId', authMiddleware, async (req, res) => {
     const { orgId } = req as AuthenticatedRequest;
@@ -31,7 +84,7 @@ export function createOrgsRouter(
     }
   });
 
-  // PATCH /orgs/:orgId — update name/slug (admin+)
+  // PATCH /orgs/:orgId — update name/slug/settings (admin+)
   router.patch('/:orgId', authMiddleware, requireRole('admin'), async (req, res) => {
     const { orgId, userId } = req as AuthenticatedRequest;
     const { name, slug } = req.body as { name?: string; slug?: string };
@@ -44,7 +97,7 @@ export function createOrgsRouter(
           pool,
           orgId,
           actorUserId: userId,
-          action: 'org.updated',
+          action: 'org.settings.updated',
           targetType: 'org',
           targetId: orgId,
           before: { name: before?.name, slug: before?.slug },
@@ -64,14 +117,16 @@ export function createOrgsRouter(
   // DELETE /orgs/:orgId — soft delete (owner only), requires confirmName
   router.delete('/:orgId', authMiddleware, requireRole('owner'), async (req, res) => {
     const { orgId, userId } = req as AuthenticatedRequest;
-    const { confirmName } = req.body as { confirmName?: string };
+    // Accept both confirmName and confirmOrgName for compatibility
+    const { confirmName, confirmOrgName } = req.body as { confirmName?: string; confirmOrgName?: string };
+    const confirm = confirmName ?? confirmOrgName;
     try {
       const org = await getOrg(pool, orgId);
       if (!org) {
         res.status(404).json({ error: 'Organization not found' });
         return;
       }
-      if (!confirmName || confirmName !== org.name) {
+      if (!confirm || confirm !== org.name) {
         res.status(422).json({ error: 'Confirmation name does not match organization name' });
         return;
       }
@@ -91,7 +146,6 @@ export function createOrgsRouter(
         });
       }
 
-      // Notify all members
       try {
         const members = await listOrgMembers(pool, orgId, { includeRemoved: false });
         const userIds = members.map(m => m.user_id);
@@ -155,12 +209,11 @@ export function createOrgsRouter(
       return;
     }
     if (targetUserId === actorId) {
-      res.status(422).json({ error: 'You cannot remove yourself from the organization' });
+      res.status(400).json({ message: 'Cannot remove yourself: you are the owner of this organization' });
       return;
     }
 
     try {
-      // Get target's current role
       const targetMemberResult = await pool.query(
         `SELECT role FROM tm_memberships WHERE org_id = $1 AND user_id = $2 AND removed_at IS NULL`,
         [orgId, targetUserId]
@@ -171,7 +224,6 @@ export function createOrgsRouter(
       }
       const targetRole = targetMemberResult.rows[0].role;
 
-      // Admin cannot remove owner
       if (userRole === 'admin' && (targetRole === 'owner' || targetRole === 'admin')) {
         res.status(403).json({ error: 'Admins cannot remove owners or other admins' });
         return;
@@ -184,7 +236,7 @@ export function createOrgsRouter(
           pool,
           orgId,
           actorUserId: actorId,
-          action: 'org.member_removed',
+          action: 'member.removed',
           targetType: 'user',
           targetId: targetUserId,
           before: { role: targetRole },
@@ -229,7 +281,7 @@ export function createOrgsRouter(
           pool,
           orgId,
           actorUserId: actorId,
-          action: 'org.member_role_changed',
+          action: 'member.role_changed',
           targetType: 'user',
           targetId: targetUserId,
           before: { role: before.rows[0]?.role },
@@ -251,6 +303,55 @@ export function createOrgsRouter(
     }
   });
 
+  // PATCH /orgs/:orgId/members/:userId — alias without /role suffix (for compatibility)
+  router.patch('/:orgId/members/:userId', authMiddleware, requireRole('admin'), async (req, res) => {
+    const { orgId, userId: actorId, userRole } = req as AuthenticatedRequest;
+    const targetUserId = parseInt(req.params.userId, 10);
+    const { role: newRole } = req.body as { role?: string };
+
+    if (isNaN(targetUserId)) {
+      res.status(400).json({ error: 'Invalid user ID' });
+      return;
+    }
+    if (!newRole) {
+      res.status(400).json({ error: 'role is required' });
+      return;
+    }
+
+    try {
+      await validateRoleChange(pool, { orgId, actorRole: userRole, targetUserId, newRole: newRole as OrgRole });
+      const before = await pool.query(
+        `SELECT role FROM tm_memberships WHERE org_id = $1 AND user_id = $2 AND removed_at IS NULL`,
+        [orgId, targetUserId]
+      );
+      const updated = await changeRole(pool, { orgId, userId: targetUserId, newRole: newRole as OrgRole, changedByUserId: actorId });
+
+      if (flags.enableAuditLog) {
+        await writeAuditEvent({
+          pool,
+          orgId,
+          actorUserId: actorId,
+          action: 'member.role_changed',
+          targetType: 'user',
+          targetId: targetUserId,
+          before: { role: before.rows[0]?.role },
+          after: { role: newRole },
+          ip: getClientIp(req),
+          userAgent: req.headers['user-agent'] ?? null,
+        });
+      }
+
+      res.json({ membership: updated });
+    } catch (e) {
+      const msg = (e as Error).message;
+      adapter.logger.error('[orgs] PATCH /:orgId/members/:userId', { error: msg });
+      if (msg.includes('Cannot') || msg.includes('Requires') || msg.includes('cannot')) {
+        res.status(403).json({ error: msg });
+      } else {
+        res.status(500).json({ error: 'Failed to change role' });
+      }
+    }
+  });
+
   return router;
 }
-

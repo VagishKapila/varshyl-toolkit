@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest';
+import { createHash } from 'crypto';
 import express from 'express';
 import request from 'supertest';
 import { Pool } from 'pg';
@@ -6,6 +7,17 @@ import { createServerModule } from '../../src/server/index.js';
 import type { ServerModuleAdapter, OrgRole } from '../../src/server/types.js';
 
 const describeWithDb = process.env.DATABASE_URL ? describe : describe.skip;
+
+function sha256(s: string): string {
+  return createHash('sha256').update(s).digest('hex');
+}
+
+function extractResetToken(spy: ReturnType<typeof vi.fn>): string {
+  const callArg = spy.mock.calls[0]?.[0] as { resetUrl?: string } | undefined;
+  const url = callArg?.resetUrl ?? '';
+  const qs = url.includes('?') ? url.split('?')[1] : '';
+  return new URLSearchParams(qs).get('token') ?? '';
+}
 
 let currentUserId: number | null = null;
 let currentOrgId: number | null = null;
@@ -72,7 +84,7 @@ describeWithDb('password reset flow', () => {
     await cleanAll(pool);
     sendPasswordResetEmail.mockClear();
     (testAdapter.setUserPassword as ReturnType<typeof vi.fn>).mockClear?.();
-    currentUserId = null; // password reset is unauthenticated
+    currentUserId = null;
     currentOrgId = null;
     await seedOrg(pool);
   });
@@ -89,7 +101,8 @@ describeWithDb('password reset flow', () => {
       `SELECT * FROM tm_password_reset_requests WHERE user_id = 1 ORDER BY created_at DESC LIMIT 1`
     );
     expect(dbRow.rows.length).toBe(1);
-    expect(dbRow.rows[0].used).toBe(false);
+    // used_at is NULL when not yet used
+    expect(dbRow.rows[0].used_at).toBeNull();
   });
 
   it('POST /me/password-reset/request with unknown email → 200 (no user enumeration)', async () => {
@@ -97,23 +110,18 @@ describeWithDb('password reset flow', () => {
       .post('/me/password-reset/request')
       .send({ email: 'nonexistent@example.com' });
 
-    // Must return 200 even for unknown emails — prevents user enumeration
     expect(res.status).toBe(200);
-    // Email must NOT be sent for unknown users
     expect(sendPasswordResetEmail).not.toHaveBeenCalled();
   });
 
   it('POST /me/password-reset/confirm with valid token → 200 and password updated', async () => {
-    // Request first to get a token
     await request(app)
       .post('/me/password-reset/request')
       .send({ email: 'u1@test.com' });
 
-    const row = await pool.query(
-      `SELECT token FROM tm_password_reset_requests WHERE user_id = 1 ORDER BY created_at DESC LIMIT 1`
-    );
-    expect(row.rows.length).toBe(1);
-    const token: string = row.rows[0].token;
+    // Extract plaintext token from the reset URL sent via mock
+    const token = extractResetToken(sendPasswordResetEmail);
+    expect(token).toBeTruthy();
 
     const confirmRes = await request(app)
       .post('/me/password-reset/confirm')
@@ -128,10 +136,8 @@ describeWithDb('password reset flow', () => {
       .post('/me/password-reset/request')
       .send({ email: 'u1@test.com' });
 
-    const row = await pool.query(
-      `SELECT token FROM tm_password_reset_requests WHERE user_id = 1 ORDER BY created_at DESC LIMIT 1`
-    );
-    const token: string = row.rows[0].token;
+    const token = extractResetToken(sendPasswordResetEmail);
+    expect(token).toBeTruthy();
 
     // Use it once
     await request(app)
@@ -147,30 +153,37 @@ describeWithDb('password reset flow', () => {
   });
 
   it('POST /me/password-reset/confirm with expired token → 400', async () => {
-    // Insert an expired token directly
-    const expiredAt = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(); // 2 hours ago
+    // Request first to get a real token (captures from mock)
+    await request(app)
+      .post('/me/password-reset/request')
+      .send({ email: 'u1@test.com' });
+    const token = extractResetToken(sendPasswordResetEmail);
+    expect(token).toBeTruthy();
+
+    // Force-expire it in DB
     await pool.query(
-      `INSERT INTO tm_password_reset_requests (user_id, token, expires_at, used, created_at)
-       VALUES (1, 'expired-tok-xyz', $1, false, NOW())`,
-      [expiredAt]
+      `UPDATE tm_password_reset_requests SET expires_at = NOW() - INTERVAL '3 hours' WHERE token_hash = $1`,
+      [sha256(token)]
     );
 
     const res = await request(app)
       .post('/me/password-reset/confirm')
-      .send({ token: 'expired-tok-xyz', newPassword: 'DoesNotMatter!' });
+      .send({ token, newPassword: 'DoesNotMatter!' });
 
     expect(res.status).toBe(400);
   });
 
   it('rate limit: 4th password reset request per hour → 429', async () => {
-    const recent = new Date(Date.now() - 20 * 60 * 1000).toISOString(); // 20 min ago
+    const recent = new Date(Date.now() - 20 * 60 * 1000).toISOString();
     const futureExpiry = new Date(Date.now() + 60 * 60 * 1000).toISOString();
 
+    // Insert 3 existing reset requests with token_hash (not plaintext token)
     for (let i = 0; i < 3; i++) {
+      const fakeToken = `rate-tok-placeholder-${i}`;
       await pool.query(
-        `INSERT INTO tm_password_reset_requests (user_id, token, expires_at, used, created_at)
-         VALUES (1, $1, $2, false, $3)`,
-        [`rate-tok-${i}`, futureExpiry, recent]
+        `INSERT INTO tm_password_reset_requests (user_id, token_hash, expires_at, created_at)
+         VALUES (1, $1, $2, $3)`,
+        [sha256(fakeToken), futureExpiry, recent]
       );
     }
 

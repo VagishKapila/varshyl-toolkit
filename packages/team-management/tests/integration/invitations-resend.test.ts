@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest';
 import express from 'express';
 import request from 'supertest';
 import { Pool } from 'pg';
@@ -7,11 +7,19 @@ import type { ServerModuleAdapter, OrgRole } from '../../src/server/types.js';
 
 const DATABASE_URL = process.env.DATABASE_URL;
 
+function extractToken(spy: ReturnType<typeof vi.fn>): string {
+  const callArg = spy.mock.calls[0]?.[0] as { magicLinkUrl?: string } | undefined;
+  const url = callArg?.magicLinkUrl ?? '';
+  const qs = url.includes('?') ? url.split('?')[1] : '';
+  return new URLSearchParams(qs).get('token') ?? '';
+}
+
 describe.skipIf(!DATABASE_URL)('Invitations – Resend', () => {
   let pool: Pool;
   let app: express.Express;
   let currentUserId: number | null = null;
   let currentOrgId: number | null = null;
+  const sendInviteEmail = vi.fn(async () => {});
 
   const testAdapter: ServerModuleAdapter = {
     getCurrentUserId: async () => currentUserId,
@@ -48,7 +56,7 @@ describe.skipIf(!DATABASE_URL)('Invitations – Resend', () => {
     hashPassword: async (p) => `h:${p}`,
     verifyPassword: async (p, h) => h === `h:${p}`,
     invalidateAllUserSessions: async () => {},
-    sendInviteEmail: async () => {},
+    sendInviteEmail,
     sendOwnershipTransferEmail: async () => {},
     sendEmailChangeVerification: async () => {},
     sendEmailChangeOldNotice: async () => {},
@@ -61,12 +69,10 @@ describe.skipIf(!DATABASE_URL)('Invitations – Resend', () => {
   beforeAll(async () => {
     pool = new Pool({ connectionString: DATABASE_URL });
 
-    const serverModule = createServerModule(pool, testAdapter, {
-      invitations: true,
-      memberships: true,
-      organizations: true,
-    });
-    await serverModule.migrate();
+    const serverModule = createServerModule({ adapter: testAdapter, pool, features: {
+      enableInvites: true,
+      enableAuditLog: false,
+    } });
 
     await pool.query(`DELETE FROM tm_memberships WHERE org_id = 1`);
     await pool.query(`DELETE FROM tm_organizations WHERE id = 1`);
@@ -92,6 +98,7 @@ describe.skipIf(!DATABASE_URL)('Invitations – Resend', () => {
   beforeEach(async () => {
     currentUserId = null;
     currentOrgId = null;
+    sendInviteEmail.mockClear();
     await pool.query(`DELETE FROM tm_invitations WHERE org_id = 1`);
     await pool.query(`DELETE FROM tm_memberships WHERE org_id = 1 AND user_id = 5`);
   });
@@ -104,7 +111,7 @@ describe.skipIf(!DATABASE_URL)('Invitations – Resend', () => {
       .post('/orgs/1/invitations')
       .send({ email: 'outsider@test.com', role: 'member' });
     expect(createRes.status).toBe(201);
-    const inviteId = createRes.body.id;
+    const inviteId = createRes.body.invitation?.id ?? createRes.body.id;
 
     const resendRes = await request(app).post(`/orgs/1/invitations/${inviteId}/resend`);
     expect(resendRes.status).toBe(200);
@@ -114,30 +121,23 @@ describe.skipIf(!DATABASE_URL)('Invitations – Resend', () => {
     currentUserId = 2;
     currentOrgId = 1;
 
+    // Create and capture original token
     const createRes = await request(app)
       .post('/orgs/1/invitations')
       .send({ email: 'outsider@test.com', role: 'member' });
     expect(createRes.status).toBe(201);
-    const inviteId = createRes.body.id;
+    const inviteId = createRes.body.invitation?.id ?? createRes.body.id;
+    const oldToken = extractToken(sendInviteEmail);
+    expect(oldToken).toBeTruthy();
 
-    // Capture the original token before resend
-    const tokenRow = await pool.query(
-      `SELECT token FROM tm_invitations WHERE id = $1`,
-      [inviteId]
-    );
-    const oldToken = tokenRow.rows[0]?.token;
-    expect(oldToken).toBeDefined();
+    sendInviteEmail.mockClear();
 
     // Resend — should regenerate token
     const resendRes = await request(app).post(`/orgs/1/invitations/${inviteId}/resend`);
     expect(resendRes.status).toBe(200);
 
-    // Verify token was rotated
-    const newTokenRow = await pool.query(
-      `SELECT token FROM tm_invitations WHERE id = $1`,
-      [inviteId]
-    );
-    const newToken = newTokenRow.rows[0]?.token;
+    const newToken = extractToken(sendInviteEmail);
+    expect(newToken).toBeTruthy();
 
     if (newToken !== oldToken) {
       // Token was rotated — old token should fail
@@ -145,19 +145,18 @@ describe.skipIf(!DATABASE_URL)('Invitations – Resend', () => {
       currentOrgId = null;
 
       const acceptRes = await request(app)
-        .post(`/invitations/accept/${oldToken}`)
-        .send({});
+        .post('/invitations/accept/token')
+        .send({ token: oldToken });
 
       expect([400, 404, 410]).toContain(acceptRes.status);
     } else {
-      // Token was not rotated (implementation choice), skip old-token failure check
-      // but ensure new token still works
+      // Token not rotated — new token still works
       currentUserId = 5;
       currentOrgId = null;
 
       const acceptRes = await request(app)
-        .post(`/invitations/accept/${newToken}`)
-        .send({});
+        .post('/invitations/accept/token')
+        .send({ token: newToken });
 
       expect(acceptRes.status).toBe(200);
     }
@@ -171,31 +170,25 @@ describe.skipIf(!DATABASE_URL)('Invitations – Resend', () => {
       .post('/orgs/1/invitations')
       .send({ email: 'outsider@test.com', role: 'member' });
     expect(createRes.status).toBe(201);
-    const inviteId = createRes.body.id;
+    const inviteId = createRes.body.invitation?.id ?? createRes.body.id;
 
-    // Resend
+    sendInviteEmail.mockClear();
+
     const resendRes = await request(app).post(`/orgs/1/invitations/${inviteId}/resend`);
     expect(resendRes.status).toBe(200);
 
-    // Get the current (possibly new) token
-    const tokenRow = await pool.query(
-      `SELECT token FROM tm_invitations WHERE id = $1`,
-      [inviteId]
-    );
-    const token = tokenRow.rows[0]?.token;
-    expect(token).toBeDefined();
+    const newToken = extractToken(sendInviteEmail);
+    expect(newToken).toBeTruthy();
 
-    // New token should be valid
     currentUserId = 5;
     currentOrgId = null;
 
     const acceptRes = await request(app)
-      .post(`/invitations/accept/${token}`)
-      .send({});
+      .post('/invitations/accept/token')
+      .send({ token: newToken });
 
     expect(acceptRes.status).toBe(200);
 
-    // Verify membership
     const membershipRow = await pool.query(
       `SELECT * FROM tm_memberships WHERE org_id = 1 AND user_id = 5`
     );
@@ -210,18 +203,15 @@ describe.skipIf(!DATABASE_URL)('Invitations – Resend', () => {
       .post('/orgs/1/invitations')
       .send({ email: 'outsider@test.com', role: 'member' });
     expect(createRes.status).toBe(201);
-    const inviteId = createRes.body.id;
+    const inviteId = createRes.body.invitation?.id ?? createRes.body.id;
 
-    // Resend
     await request(app).post(`/orgs/1/invitations/${inviteId}/resend`);
 
-    // Fetch the new code
     const codeRes = await request(app).get(`/orgs/1/invitations/${inviteId}/code`);
     expect(codeRes.status).toBe(200);
     const newCode = codeRes.body.code;
     expect(/^\d{6}$/.test(String(newCode))).toBe(true);
 
-    // Accept with new code
     currentUserId = 5;
     currentOrgId = null;
 
@@ -240,7 +230,7 @@ describe.skipIf(!DATABASE_URL)('Invitations – Resend', () => {
       .post('/orgs/1/invitations')
       .send({ email: 'outsider@test.com', role: 'member' });
     expect(createRes.status).toBe(201);
-    const inviteId = createRes.body.id;
+    const inviteId = createRes.body.invitation?.id ?? createRes.body.id;
 
     currentUserId = 3;
     currentOrgId = 1;
