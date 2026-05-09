@@ -298,7 +298,7 @@ export function createOrgsRouter(
       }
 
       const before = await pool.query(
-        \`SELECT role FROM tm_memberships WHERE org_id = $1 AND user_id = $2 AND removed_at IS NULL\`,
+        `SELECT role FROM tm_memberships WHERE org_id = $1 AND user_id = $2 AND removed_at IS NULL`,
         [orgId, targetUserId]
       );
       const updated = await changeRole(pool, { orgId, userId: targetUserId, newRole: newRole as OrgRole, changedByUserId: actorId });
@@ -358,7 +358,7 @@ export function createOrgsRouter(
       }
 
       const before = await pool.query(
-        \`SELECT role FROM tm_memberships WHERE org_id = $1 AND user_id = $2 AND removed_at IS NULL\`,
+        `SELECT role FROM tm_memberships WHERE org_id = $1 AND user_id = $2 AND removed_at IS NULL`,
         [orgId, targetUserId]
       );
       const updated = await changeRole(pool, { orgId, userId: targetUserId, newRole: newRole as OrgRole, changedByUserId: actorId });
