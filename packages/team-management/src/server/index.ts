@@ -32,6 +32,7 @@ const MIGRATIONS: Array<{ name: string; file: string }> = [
   { name: '0009_create_tm_password_reset_requests',file: join(migrationsDir, '0009_create_tm_password_reset_requests.sql') },
   { name: '0010_create_tm_shared_access',          file: join(migrationsDir, '0010_create_tm_shared_access.sql') },
   { name: '0011_seed_super_admin',                 file: join(migrationsDir, '0011_seed_super_admin.sql') },
+  { name: '0012_create_tm_user_locks',             file: join(migrationsDir, '0012_create_tm_user_locks.sql') },
 ];
 
 // Default feature flags for v0.1.0

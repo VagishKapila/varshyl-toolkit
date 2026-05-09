@@ -116,13 +116,12 @@ describeWithDb('super admin', () => {
     const org = await pool.query(`SELECT owner_user_id FROM tm_organizations WHERE id = 1`);
     expect(org.rows[0].owner_user_id).toBe(2);
 
-    // Reason is stored in audit metadata
+    // Reason is stored in audit reason column
     const adminEvent = await pool.query(
-      `SELECT metadata FROM tm_audit_events WHERE actor_type = 'super_admin' ORDER BY created_at DESC LIMIT 1`
+      `SELECT reason FROM tm_audit_events WHERE actor_type = 'super_admin' ORDER BY created_at DESC LIMIT 1`
     );
     if (adminEvent.rows.length > 0) {
-      const metadata = adminEvent.rows[0].metadata;
-      expect(JSON.stringify(metadata)).toContain('test');
+      expect(adminEvent.rows[0].reason).toContain('test');
     }
   });
 
