@@ -38,7 +38,7 @@ export function createInvitationsRouter(
     const { orgId } = req as AuthenticatedRequest;
     try {
       const invitations = await listPendingInvitations(pool, orgId);
-      res.json({ invitations });
+      res.json({ invitations: invitations.map(inv => ({ ...inv, status: 'pending' })) });
     } catch (e) {
       adapter.logger.error('[invitations] GET list', { error: (e as Error).message });
       res.status(500).json({ error: 'Failed to fetch invitations' });
@@ -79,7 +79,7 @@ export function createInvitationsRouter(
         });
       }
 
-      res.status(201).json({ invitation });
+      res.status(201).json({ invitation: { ...invitation, status: 'pending' } });
     } catch (e) {
       const msg = (e as Error).message;
       adapter.logger.error('[invitations] POST create', { error: msg });

@@ -54,9 +54,9 @@ async function initiateTransfer(app: express.Express): Promise<number> {
   currentUserId = 1;
   const res = await request(app)
     .post('/orgs/1/transfer')
-    .send({ toUserId: 2, confirmOrgName: 'Test Org 1' });
+    .send({ toUserId: 2 });
   expect(res.status).toBe(201);
-  return res.body.id as number;
+  return res.body.transfer.id as number;
 }
 
 describeWithDb('ownership transfer — cancellation', () => {
@@ -83,92 +83,89 @@ describeWithDb('ownership transfer — cancellation', () => {
   });
 
   it('owner (initiator) can cancel a pending transfer → 200, status = cancelled', async () => {
-    const transferId = await initiateTransfer(app);
+    await initiateTransfer(app);
 
     currentUserId = 1;
     const cancelRes = await request(app)
-      .post(`/orgs/1/transfer/${transferId}/cancel`);
+      .delete('/orgs/1/transfer');
 
     expect(cancelRes.status).toBe(200);
 
     const row = await pool.query(
-      `SELECT status FROM tm_ownership_transfers WHERE id = $1`,
-      [transferId]
+      `SELECT status FROM tm_ownership_transfers WHERE org_id = 1 ORDER BY id DESC LIMIT 1`
     );
     expect(row.rows[0].status).toBe('cancelled');
   });
 
   it('after owner cancels, a new transfer can be initiated → 201', async () => {
-    const transferId = await initiateTransfer(app);
+    await initiateTransfer(app);
 
     currentUserId = 1;
-    await request(app).post(`/orgs/1/transfer/${transferId}/cancel`);
+    await request(app).delete('/orgs/1/transfer');
 
     // Should be able to start a fresh transfer
     const newRes = await request(app)
       .post('/orgs/1/transfer')
-      .send({ toUserId: 2, confirmOrgName: 'Test Org 1' });
+      .send({ toUserId: 2 });
 
     expect(newRes.status).toBe(201);
-    expect(newRes.body.id).not.toBe(transferId);
-    expect(newRes.body.status).toBe('pending');
+    expect(newRes.body.transfer.status).toBe('pending');
   });
 
   it('recipient (admin) can cancel a pending transfer → 200, status = cancelled', async () => {
-    const transferId = await initiateTransfer(app);
+    await initiateTransfer(app);
 
     currentUserId = 2; // recipient cancels
     const cancelRes = await request(app)
-      .post(`/orgs/1/transfer/${transferId}/cancel`);
+      .delete('/orgs/1/transfer');
 
     expect(cancelRes.status).toBe(200);
 
     const row = await pool.query(
-      `SELECT status FROM tm_ownership_transfers WHERE id = $1`,
-      [transferId]
+      `SELECT status FROM tm_ownership_transfers WHERE org_id = 1 ORDER BY id DESC LIMIT 1`
     );
     expect(row.rows[0].status).toBe('cancelled');
   });
 
   it('after recipient cancels, a new transfer can be initiated → 201', async () => {
-    const transferId = await initiateTransfer(app);
+    await initiateTransfer(app);
 
     currentUserId = 2;
-    await request(app).post(`/orgs/1/transfer/${transferId}/cancel`);
+    await request(app).delete('/orgs/1/transfer');
 
     currentUserId = 1;
     const newRes = await request(app)
       .post('/orgs/1/transfer')
-      .send({ toUserId: 2, confirmOrgName: 'Test Org 1' });
+      .send({ toUserId: 2 });
 
     expect(newRes.status).toBe(201);
   });
 
   it('unrelated member cannot cancel a transfer → 403', async () => {
-    const transferId = await initiateTransfer(app);
+    await initiateTransfer(app);
 
     currentUserId = 3; // plain member, not party to the transfer
     const cancelRes = await request(app)
-      .post(`/orgs/1/transfer/${transferId}/cancel`);
+      .delete('/orgs/1/transfer');
 
     expect(cancelRes.status).toBe(403);
 
     // Status should still be pending
     const row = await pool.query(
-      `SELECT status FROM tm_ownership_transfers WHERE id = $1`,
-      [transferId]
+      `SELECT status FROM tm_ownership_transfers WHERE org_id = 1 ORDER BY id DESC LIMIT 1`
     );
     expect(row.rows[0].status).toBe('pending');
   });
 
-  it('cancelling an already-cancelled transfer → 400 or 409', async () => {
-    const transferId = await initiateTransfer(app);
+  it('cancelling when no pending transfer exists → 404', async () => {
+    await initiateTransfer(app);
 
     currentUserId = 1;
-    await request(app).post(`/orgs/1/transfer/${transferId}/cancel`);
+    // Cancel once
+    await request(app).delete('/orgs/1/transfer');
 
-    // Try to cancel again
-    const res = await request(app).post(`/orgs/1/transfer/${transferId}/cancel`);
-    expect([400, 409]).toContain(res.status);
+    // Try to cancel again — no pending transfer
+    const res = await request(app).delete('/orgs/1/transfer');
+    expect([400, 404, 409]).toContain(res.status);
   });
 });

@@ -181,18 +181,18 @@ describe.skipIf(!DATABASE_URL)('Invitations – Expiry', () => {
 
     const invitations = listRes.body.invitations ?? listRes.body;
     expect(Array.isArray(invitations)).toBe(true);
-    // The invite may or may not appear depending on implementation
-    // If it does, it should have some expiry indicator
+    // Expired invites are filtered out from the pending list — not found is acceptable
     const found = Array.isArray(invitations)
       ? invitations.find((inv: { id: number }) => inv.id === inviteId)
       : null;
+    // Either the expired invite is not in the list (correct behavior), or it has a status indicator
     if (found) {
       expect(['expired', 'pending'].includes(found.status) || found.isExpired === true).toBe(true);
     }
-    // If not found (filtered out), that's also acceptable
+    // Not found is the expected behavior (pending list filters out expired invites)
   });
 
-  it('Non-expired invite is still pending in the list', async () => {
+  it('Non-expired invite is in the pending list', async () => {
     currentUserId = 1;
     currentOrgId = 1;
 
@@ -210,6 +210,7 @@ describe.skipIf(!DATABASE_URL)('Invitations – Expiry', () => {
       ? invitations.find((inv: { id: number }) => inv.id === inviteId)
       : null;
     expect(found).toBeDefined();
+    // The pending list returns invitations with status: 'pending'
     expect(found?.status).toBe('pending');
   });
 });

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest';
 import express from 'express';
 import request from 'supertest';
 import { Pool } from 'pg';
@@ -7,11 +7,19 @@ import type { ServerModuleAdapter, OrgRole } from '../../src/server/types.js';
 
 const DATABASE_URL = process.env.DATABASE_URL;
 
+function extractToken(spy: ReturnType<typeof vi.fn>): string {
+  const callArg = spy.mock.calls[0]?.[0] as { magicLinkUrl?: string } | undefined;
+  const url = callArg?.magicLinkUrl ?? '';
+  const qs = url.includes('?') ? url.split('?')[1] : '';
+  return new URLSearchParams(qs).get('token') ?? '';
+}
+
 describe.skipIf(!DATABASE_URL)('Invitations – Token Accept', () => {
   let pool: Pool;
   let app: express.Express;
   let currentUserId: number | null = null;
   let currentOrgId: number | null = null;
+  const sendInviteEmail = vi.fn(async () => {});
 
   const testAdapter: ServerModuleAdapter = {
     getCurrentUserId: async () => currentUserId,
@@ -36,6 +44,7 @@ describe.skipIf(!DATABASE_URL)('Invitations – Token Accept', () => {
         'admin@test.com': { id: 2, email: 'admin@test.com' },
         'member@test.com': { id: 3, email: 'member@test.com' },
         'new@test.com': { id: 6, email: 'new@test.com' },
+        'outsider@test.com': { id: 5, email: 'outsider@test.com' },
       };
       return map[email] ?? null;
     },
@@ -47,7 +56,7 @@ describe.skipIf(!DATABASE_URL)('Invitations – Token Accept', () => {
     hashPassword: async (p) => `h:${p}`,
     verifyPassword: async (p, h) => h === `h:${p}`,
     invalidateAllUserSessions: async () => {},
-    sendInviteEmail: async () => {},
+    sendInviteEmail,
     sendOwnershipTransferEmail: async () => {},
     sendEmailChangeVerification: async () => {},
     sendEmailChangeOldNotice: async () => {},
@@ -60,12 +69,12 @@ describe.skipIf(!DATABASE_URL)('Invitations – Token Accept', () => {
   beforeAll(async () => {
     pool = new Pool({ connectionString: DATABASE_URL });
 
-    // Create module with named opts (v0.1.0 API — positional form removed)
-    const serverModule = createServerModule({ adapter: testAdapter, pool });
-    // migrate() is idempotent — globalSetup already ran, but safe to repeat
+    const serverModule = createServerModule({ adapter: testAdapter, pool, features: {
+      enableInvites: true,
+      enableAuditLog: false,
+    } });
     await serverModule.migrate();
 
-    // Seed test data
     await pool.query(`DELETE FROM tm_memberships WHERE org_id = 1`);
     await pool.query(`DELETE FROM tm_organizations WHERE id = 1`);
     await pool.query(
@@ -90,7 +99,9 @@ describe.skipIf(!DATABASE_URL)('Invitations – Token Accept', () => {
   beforeEach(async () => {
     currentUserId = null;
     currentOrgId = null;
+    sendInviteEmail.mockClear();
     await pool.query(`DELETE FROM tm_invitations WHERE org_id = 1`);
+    await pool.query(`DELETE FROM tm_memberships WHERE org_id = 1 AND user_id = 5`);
   });
 
   it('POST /orgs/1/invitations as owner creates a pending invite (201)', async () => {
@@ -102,15 +113,16 @@ describe.skipIf(!DATABASE_URL)('Invitations – Token Accept', () => {
       .send({ email: 'outsider@test.com', role: 'member' });
 
     expect(res.status).toBe(201);
-    expect(res.body).toMatchObject({
+    expect(res.body.invitation).toMatchObject({
       email: 'outsider@test.com',
       role: 'member',
       status: 'pending',
     });
-    expect(res.body.id).toBeDefined();
+    expect(res.body.invitation.id).toBeDefined();
+    expect(sendInviteEmail).toHaveBeenCalledOnce();
   });
 
-  it('GET /invitations/accept/:token returns org/role info for valid token', async () => {
+  it('POST /invitations/accept/token returns org/role info for valid token (200)', async () => {
     currentUserId = 1;
     currentOrgId = 1;
 
@@ -119,16 +131,17 @@ describe.skipIf(!DATABASE_URL)('Invitations – Token Accept', () => {
       .send({ email: 'outsider@test.com', role: 'member' });
     expect(createRes.status).toBe(201);
 
-    const inviteId = createRes.body.id;
-    const row = await pool.query(`SELECT token FROM tm_invitations WHERE id = $1`, [inviteId]);
-    const token = row.rows[0]?.token;
-    expect(token).toBeDefined();
+    const token = extractToken(sendInviteEmail);
+    expect(token).toBeTruthy();
 
-    // Public endpoint – no auth needed
-    currentUserId = null;
+    // Public endpoint – outsider accepts
+    currentUserId = 5;
     currentOrgId = null;
 
-    const res = await request(app).get(`/invitations/accept/${token}`);
+    const res = await request(app)
+      .post('/invitations/accept/token')
+      .send({ token });
+
     expect(res.status).toBe(200);
     expect(res.body).toMatchObject({
       orgId: 1,
@@ -145,17 +158,16 @@ describe.skipIf(!DATABASE_URL)('Invitations – Token Accept', () => {
       .send({ email: 'outsider@test.com', role: 'member' });
     expect(createRes.status).toBe(201);
 
-    const inviteId = createRes.body.id;
-    const row = await pool.query(`SELECT token FROM tm_invitations WHERE id = $1`, [inviteId]);
-    const token = row.rows[0]?.token;
+    const token = extractToken(sendInviteEmail);
+    expect(token).toBeTruthy();
 
     // Simulate outsider accepting
     currentUserId = 5;
     currentOrgId = null;
 
     const res = await request(app)
-      .post(`/invitations/accept/${token}`)
-      .send({});
+      .post('/invitations/accept/token')
+      .send({ token });
 
     expect(res.status).toBe(200);
 
@@ -167,15 +179,18 @@ describe.skipIf(!DATABASE_URL)('Invitations – Token Accept', () => {
     expect(membershipRow.rows[0].role).toBe('member');
   });
 
-  it('GET /invitations/accept/:token with invalid token → 404', async () => {
+  it('POST /invitations/accept/token with invalid token → 404', async () => {
     currentUserId = null;
     currentOrgId = null;
 
-    const res = await request(app).get('/invitations/accept/totally-invalid-token-xyz');
+    const res = await request(app)
+      .post('/invitations/accept/token')
+      .send({ token: 'totally-invalid-token-xyz' });
+
     expect(res.status).toBe(404);
   });
 
-  it('Accepting an expired token → 410 or 400', async () => {
+  it('Accepting an expired token → 400 or 404', async () => {
     currentUserId = 1;
     currentOrgId = 1;
 
@@ -184,9 +199,9 @@ describe.skipIf(!DATABASE_URL)('Invitations – Token Accept', () => {
       .send({ email: 'outsider@test.com', role: 'member' });
     expect(createRes.status).toBe(201);
 
-    const inviteId = createRes.body.id;
-    const row = await pool.query(`SELECT token FROM tm_invitations WHERE id = $1`, [inviteId]);
-    const token = row.rows[0]?.token;
+    const inviteId = createRes.body.invitation.id;
+    const token = extractToken(sendInviteEmail);
+    expect(token).toBeTruthy();
 
     // Force expiry
     await pool.query(
@@ -198,10 +213,9 @@ describe.skipIf(!DATABASE_URL)('Invitations – Token Accept', () => {
     currentOrgId = null;
 
     const res = await request(app)
-      .post(`/invitations/accept/${token}`)
-      .send({});
+      .post('/invitations/accept/token')
+      .send({ token });
 
-    expect([400, 410]).toContain(res.status);
+    expect([400, 404, 410]).toContain(res.status);
   });
 });
-

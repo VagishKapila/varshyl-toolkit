@@ -48,7 +48,7 @@ export function createTransferRouter(
     try {
       const transfer = await initiateTransfer(pool, adapter, { orgId, fromUserId: userId, toUserId, baseUrl });
       if (flags.enableAuditLog) {
-        await writeAuditEvent({ pool, orgId, actorUserId: userId, action: 'org.transfer_initiated',
+        await writeAuditEvent({ pool, orgId, actorUserId: userId, action: 'ownership.transfer_initiated',
           targetType: 'user', targetId: toUserId, ip: getClientIp(req), userAgent: req.headers['user-agent'] ?? null });
       }
       res.status(201).json({ transfer });
@@ -69,7 +69,7 @@ export function createTransferRouter(
     try {
       await acceptTransfer(pool, adapter, { orgId, acceptingUserId: userId });
       if (flags.enableAuditLog) {
-        await writeAuditEvent({ pool, orgId, actorUserId: userId, action: 'org.transfer_accepted',
+        await writeAuditEvent({ pool, orgId, actorUserId: userId, action: 'ownership.transfer_accepted',
           targetType: 'org', targetId: orgId, ip: getClientIp(req), userAgent: req.headers['user-agent'] ?? null });
       }
       res.json({ message: 'Ownership transfer accepted. You are now the owner.' });
@@ -96,7 +96,7 @@ export function createTransferRouter(
       }
       await cancelTransfer(pool, { orgId, cancelledByUserId: userId });
       if (flags.enableAuditLog) {
-        await writeAuditEvent({ pool, orgId, actorUserId: userId, action: 'org.transfer_cancelled',
+        await writeAuditEvent({ pool, orgId, actorUserId: userId, action: 'ownership.transfer_cancelled',
           targetType: 'org', targetId: orgId, ip: getClientIp(req), userAgent: req.headers['user-agent'] ?? null });
       }
       res.json({ message: 'Transfer cancelled' });

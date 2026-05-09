@@ -77,25 +77,25 @@ describeWithDb('ownership transfer — happy path', () => {
     currentUserId = 1;
     const res = await request(app)
       .post('/orgs/1/transfer')
-      .send({ toUserId: 2, confirmOrgName: 'Test Org 1' });
+      .send({ toUserId: 2 });
 
     expect(res.status).toBe(201);
-    expect(res.body).toHaveProperty('id');
-    expect(res.body.status).toBe('pending');
+    expect(res.body.transfer).toHaveProperty('id');
+    expect(res.body.transfer.status).toBe('pending');
   });
 
   it('recipient can GET /orgs/1/transfer and sees pending transfer', async () => {
     currentUserId = 1;
     await request(app)
       .post('/orgs/1/transfer')
-      .send({ toUserId: 2, confirmOrgName: 'Test Org 1' });
+      .send({ toUserId: 2 });
 
     currentUserId = 2;
     const res = await request(app).get('/orgs/1/transfer');
 
     expect(res.status).toBe(200);
-    expect(res.body.status).toBe('pending');
-    expect([res.body.to_user_id, res.body.toUserId]).toContain(2);
+    expect(res.body.transfer.status).toBe('pending');
+    expect([res.body.transfer.to_user_id, res.body.transfer.toUserId]).toContain(2);
   });
 
   it('recipient accepts → 200, roles are swapped', async () => {
@@ -103,15 +103,14 @@ describeWithDb('ownership transfer — happy path', () => {
     currentUserId = 1;
     const initRes = await request(app)
       .post('/orgs/1/transfer')
-      .send({ toUserId: 2, confirmOrgName: 'Test Org 1' });
+      .send({ toUserId: 2 });
     expect(initRes.status).toBe(201);
-    const transferId = initRes.body.id;
 
     // Accept
     currentUserId = 2;
     const acceptRes = await request(app)
-      .post(`/orgs/1/transfer/${transferId}/accept`)
-      .send({ confirmEmail: 'u2@test.com' });
+      .post('/orgs/1/transfer/accept')
+      .send({});
 
     expect(acceptRes.status).toBe(200);
 
@@ -130,15 +129,14 @@ describeWithDb('ownership transfer — happy path', () => {
 
   it('both audit events are present after complete transfer', async () => {
     currentUserId = 1;
-    const initRes = await request(app)
+    await request(app)
       .post('/orgs/1/transfer')
-      .send({ toUserId: 2, confirmOrgName: 'Test Org 1' });
-    const transferId = initRes.body.id;
+      .send({ toUserId: 2 });
 
     currentUserId = 2;
     await request(app)
-      .post(`/orgs/1/transfer/${transferId}/accept`)
-      .send({ confirmEmail: 'u2@test.com' });
+      .post('/orgs/1/transfer/accept')
+      .send({});
 
     const events = await pool.query(
       `SELECT action FROM tm_audit_events WHERE action IN ('ownership.transfer_initiated', 'ownership.transfer_accepted')`
@@ -153,13 +151,13 @@ describeWithDb('ownership transfer — happy path', () => {
     currentUserId = 1;
     const initRes = await request(app)
       .post('/orgs/1/transfer')
-      .send({ toUserId: 2, confirmOrgName: 'Test Org 1' });
-    const transferId = initRes.body.id;
+      .send({ toUserId: 2 });
+    const transferId = initRes.body.transfer.id;
 
     currentUserId = 2;
     await request(app)
-      .post(`/orgs/1/transfer/${transferId}/accept`)
-      .send({ confirmEmail: 'u2@test.com' });
+      .post('/orgs/1/transfer/accept')
+      .send({});
 
     const row = await pool.query(
       `SELECT status FROM tm_ownership_transfers WHERE id = $1`,
@@ -170,15 +168,14 @@ describeWithDb('ownership transfer — happy path', () => {
 
   it('org owner_user_id is updated to new owner in tm_organizations', async () => {
     currentUserId = 1;
-    const initRes = await request(app)
+    await request(app)
       .post('/orgs/1/transfer')
-      .send({ toUserId: 2, confirmOrgName: 'Test Org 1' });
-    const transferId = initRes.body.id;
+      .send({ toUserId: 2 });
 
     currentUserId = 2;
     await request(app)
-      .post(`/orgs/1/transfer/${transferId}/accept`)
-      .send({ confirmEmail: 'u2@test.com' });
+      .post('/orgs/1/transfer/accept')
+      .send({});
 
     const org = await pool.query(`SELECT owner_user_id FROM tm_organizations WHERE id = 1`);
     expect(org.rows[0].owner_user_id).toBe(2);

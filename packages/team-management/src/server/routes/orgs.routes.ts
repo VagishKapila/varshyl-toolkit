@@ -353,5 +353,39 @@ export function createOrgsRouter(
     }
   });
 
+
+  // GET /orgs/:orgId/members/:userId/cascade-preview — preview cascade effects of removing a member (admin+)
+  router.get('/:orgId/members/:userId/cascade-preview', authMiddleware, requireRole('admin'), async (req, res) => {
+    const { orgId } = req as AuthenticatedRequest;
+    const targetUserId = parseInt(req.params.userId, 10);
+    if (isNaN(targetUserId)) {
+      res.status(400).json({ error: 'Invalid user ID' });
+      return;
+    }
+    try {
+      const membershipResult = await pool.query(
+        `SELECT * FROM tm_memberships WHERE org_id = $1 AND user_id = $2 AND removed_at IS NULL`,
+        [orgId, targetUserId]
+      );
+      if (membershipResult.rows.length === 0) {
+        res.status(404).json({ error: 'Member not found' });
+        return;
+      }
+      const membership = membershipResult.rows[0];
+
+      const invitationsResult = await pool.query(
+        `SELECT * FROM tm_invitations
+         WHERE org_id = $1 AND invited_by_user_id = $2
+           AND revoked_at IS NULL AND accepted_at IS NULL AND expires_at > NOW()`,
+        [orgId, targetUserId]
+      );
+
+      res.json({ membership, pendingInvitations: invitationsResult.rows });
+    } catch (e) {
+      adapter.logger.error('[orgs] GET cascade-preview', { error: (e as Error).message });
+      res.status(500).json({ error: 'Failed to fetch cascade preview' });
+    }
+  });
+
   return router;
 }

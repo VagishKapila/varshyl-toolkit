@@ -214,48 +214,40 @@ describeWithDb('audit events fire for all 13 event types', () => {
 
     const res = await request(app)
       .post('/orgs/1/transfer')
-      .send({ toUserId: 2, confirmOrgName: 'Test Org 1' });
+      .send({ toUserId: 2 });
     expect(res.status).toBeLessThan(500);
 
     const event = await getLatestAuditEvent(pool, 'ownership.transfer_initiated');
     expect(event).not.toBeNull();
   });
 
-  it('ownership.transfer_accepted fires on POST /orgs/:id/transfer/:id/accept', async () => {
+  it('ownership.transfer_accepted fires on POST /orgs/:id/transfer/accept', async () => {
     await seedOrg(pool);
 
     const initRes = await request(app)
       .post('/orgs/1/transfer')
-      .send({ toUserId: 2, confirmOrgName: 'Test Org 1' });
+      .send({ toUserId: 2 });
     expect(initRes.status).toBeLessThan(500);
-
-    const transfer = await pool.query(`SELECT id FROM tm_ownership_transfers WHERE org_id = 1 AND status = 'pending' LIMIT 1`);
-    if (!transfer.rows.length) return;
-    const transferId = transfer.rows[0].id;
 
     currentUserId = 2;
     const acceptRes = await request(app)
-      .post(`/orgs/1/transfer/${transferId}/accept`)
-      .send({ confirmEmail: 'u2@test.com' });
+      .post('/orgs/1/transfer/accept')
+      .send({});
     expect(acceptRes.status).toBeLessThan(500);
 
     const event = await getLatestAuditEvent(pool, 'ownership.transfer_accepted');
     expect(event).not.toBeNull();
   });
 
-  it('ownership.transfer_cancelled fires on POST /orgs/:id/transfer/:id/cancel', async () => {
+  it('ownership.transfer_cancelled fires on DELETE /orgs/:id/transfer', async () => {
     await seedOrg(pool);
 
     await request(app)
       .post('/orgs/1/transfer')
-      .send({ toUserId: 2, confirmOrgName: 'Test Org 1' });
-
-    const transfer = await pool.query(`SELECT id FROM tm_ownership_transfers WHERE org_id = 1 AND status = 'pending' LIMIT 1`);
-    if (!transfer.rows.length) return;
-    const transferId = transfer.rows[0].id;
+      .send({ toUserId: 2 });
 
     const cancelRes = await request(app)
-      .post(`/orgs/1/transfer/${transferId}/cancel`);
+      .delete('/orgs/1/transfer');
     expect(cancelRes.status).toBeLessThan(500);
 
     const event = await getLatestAuditEvent(pool, 'ownership.transfer_cancelled');
