@@ -17,12 +17,21 @@ import type {
   TeamManagementFeatureFlags,
 } from './types.js';
 
-// Ordered list of migration files. Add new migrations here in order.
+const migrationsDir = join(new URL('.', import.meta.url).pathname, 'migrations');
+
+// All migrations in order. Append new migrations here — never reorder or remove.
 const MIGRATIONS: Array<{ name: string; file: string }> = [
-  {
-    name: '0001_create_tm_schema_migrations',
-    file: join(new URL('.', import.meta.url).pathname, 'migrations', '0001_create_tm_schema_migrations.sql'),
-  },
+  { name: '0001_create_tm_schema_migrations', file: join(migrationsDir, '0001_create_tm_schema_migrations.sql') },
+  { name: '0002_create_tm_organizations',    file: join(migrationsDir, '0002_create_tm_organizations.sql') },
+  { name: '0003_create_tm_memberships',      file: join(migrationsDir, '0003_create_tm_memberships.sql') },
+  { name: '0004_create_tm_invitations',      file: join(migrationsDir, '0004_create_tm_invitations.sql') },
+  { name: '0005_create_tm_audit_events',     file: join(migrationsDir, '0005_create_tm_audit_events.sql') },
+  { name: '0006_create_tm_email_change_requests',  file: join(migrationsDir, '0006_create_tm_email_change_requests.sql') },
+  { name: '0007_create_tm_ownership_transfers',    file: join(migrationsDir, '0007_create_tm_ownership_transfers.sql') },
+  { name: '0008_create_tm_super_admins',           file: join(migrationsDir, '0008_create_tm_super_admins.sql') },
+  { name: '0009_create_tm_password_reset_requests',file: join(migrationsDir, '0009_create_tm_password_reset_requests.sql') },
+  { name: '0010_create_tm_shared_access',          file: join(migrationsDir, '0010_create_tm_shared_access.sql') },
+  { name: '0011_seed_super_admin',                 file: join(migrationsDir, '0011_seed_super_admin.sql') },
 ];
 
 // Default feature flags for v0.1.0
@@ -40,7 +49,7 @@ const DEFAULT_FLAGS: Required<TeamManagementFeatureFlags> = {
 /**
  * createServerModule — entry point for host products.
  *
- * Usage in host product:
+ * Usage:
  *   const tm = createServerModule({ adapter, db, config });
  *   await tm.runMigrations();
  *   app.use('/api/team', tm.router);
@@ -52,7 +61,6 @@ export function createServerModule(opts: {
 }): TeamManagementServerModule {
   const { adapter, db, config } = opts;
 
-  // Merge defaults with provided flags
   const flags: Required<TeamManagementFeatureFlags> = {
     ...DEFAULT_FLAGS,
     ...(config.featureFlags ?? {}),
@@ -60,14 +68,15 @@ export function createServerModule(opts: {
 
   const baseUrl = config.baseUrl ?? '';
 
-  // ---- Migration runner ----
+  // ── Migration runner ────────────────────────────────────────────────────────
+
   const runMigrations = async (): Promise<{ applied: string[]; skipped: string[] }> => {
     const applied: string[] = [];
     const skipped: string[] = [];
 
-    // Ensure ledger table exists (idempotent — safe to run on every boot)
+    // Boot step: ensure ledger table exists (idempotent — CREATE TABLE IF NOT EXISTS)
     const ledgerSql = readFileSync(
-      join(new URL('.', import.meta.url).pathname, 'migrations', '0001_create_tm_schema_migrations.sql'),
+      join(migrationsDir, '0001_create_tm_schema_migrations.sql'),
       'utf-8'
     );
     await db.query(ledgerSql);
@@ -80,70 +89,56 @@ export function createServerModule(opts: {
 
       if (result.rows.length > 0) {
         skipped.push(migration.name);
-        adapter.logger.info(`[team-management] migration skipped (already applied): ${migration.name}`);
+        adapter.logger.info(`[team-management] skipped: ${migration.name}`);
         continue;
       }
 
       const sql = readFileSync(migration.file, 'utf-8');
       await db.query(sql);
-
       await db.query(
         'INSERT INTO tm_schema_migrations (migration) VALUES ($1)',
         [migration.name]
       );
 
       applied.push(migration.name);
-      adapter.logger.info(`[team-management] migration applied: ${migration.name}`);
+      adapter.logger.info(`[team-management] applied: ${migration.name}`);
     }
 
     return { applied, skipped };
   };
 
-  // ---- Boot tasks ----
-  // Seed super admin on boot if enableSuperAdmin is true and SUPER_ADMIN_EMAIL is set
+  // ── Super-admin seed on boot ────────────────────────────────────────────────
+
   if (flags.enableSuperAdmin) {
     const superAdminEmail = process.env.TM_SUPER_ADMIN_EMAIL;
     if (superAdminEmail) {
-      seedSuperAdmin(db, adapter, superAdminEmail).catch((e) => {
-        adapter.logger.warn('[team-management] seedSuperAdmin failed', { error: (e as Error).message });
+      seedSuperAdmin(db, adapter, superAdminEmail).catch(e => {
+        adapter.logger.warn('[team-management] seedSuperAdmin failed', {
+          error: (e as Error).message,
+        });
       });
     }
   }
 
-  // ---- Routers ----
-  const { router: healthRouter } = createHealthRouter(db, config);
-  const orgsRouter = createOrgsRouter(db, adapter, flags);
-  const invitationsRouter = createInvitationsRouter(db, adapter, flags, baseUrl);
-  const meRouter = createMeRouter(db, adapter, flags, baseUrl);
-  const transferRouter = createTransferRouter(db, adapter, flags, baseUrl);
-  const auditRouter = createAuditRouter(db, adapter, flags);
-  const adminRouter = createAdminRouter(db, adapter, flags, baseUrl);
+  // ── Routers ─────────────────────────────────────────────────────────────────
 
-  // ---- Main router ----
+  const { router: healthRouter } = createHealthRouter(db, config);
+  const orgsRouter        = createOrgsRouter(db, adapter, flags);
+  const invitationsRouter = createInvitationsRouter(db, adapter, flags, baseUrl);
+  const meRouter          = createMeRouter(db, adapter, flags, baseUrl);
+  const transferRouter    = createTransferRouter(db, adapter, flags, baseUrl);
+  const auditRouter       = createAuditRouter(db, adapter, flags);
+  const adminRouter       = createAdminRouter(db, adapter, flags, baseUrl);
+
   const router = Router();
 
-  // Health is always available
   router.use(healthRouter);
-
-  // /me — self-service routes (auth checked inside each handler)
   router.use('/me', meRouter);
-
-  // /orgs — org management (membership-gated inside router)
   router.use('/orgs', orgsRouter);
-
-  // /orgs - invitations sub-routes (mounted at /orgs/:orgId/invitations internally)
   router.use('/orgs', invitationsRouter);
-
-  // /orgs - transfer sub-routes
   router.use('/orgs', transferRouter);
-
-  // /orgs - audit log sub-routes
   router.use('/orgs', auditRouter);
-
-  // /invitations - public accept routes (no auth)
   router.use('/invitations', invitationsRouter);
-
-  // /admin — super-admin gated
   router.use('/admin', adminRouter);
 
   return { router, runMigrations };
