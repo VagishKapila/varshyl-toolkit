@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, Link, useNavigate, Navigate } from 'react-router-dom';
+import {
+  Routes,
+  Route,
+  Link,
+  useNavigate,
+  useParams,
+  useSearchParams,
+  Navigate,
+} from 'react-router-dom';
 import {
   MembersPage,
   OrgSettingsPage,
@@ -21,7 +29,9 @@ interface DemoUser {
   email: string;
 }
 
-// ── Demo Login Page ────────────────────────────────────────────────────────────
+// ── Demo constants ─────────────────────────────────────────────────────────────
+// Demo org is always ID 1 (seeded on boot)
+const DEMO_ORG_ID = 1;
 
 const ROLE_LABELS: Record<number, string> = {
   1: 'Owner',
@@ -31,6 +41,8 @@ const ROLE_LABELS: Record<number, string> = {
   5: 'Unaffiliated',
 };
 
+// ── Demo Login Page ────────────────────────────────────────────────────────────
+
 function DemoLoginPage(): React.ReactElement {
   const navigate = useNavigate();
   const [users, setUsers] = useState<DemoUser[]>([]);
@@ -38,7 +50,7 @@ function DemoLoginPage(): React.ReactElement {
 
   useEffect(() => {
     fetch('/api/demo/users')
-      .then(r => r.json())
+      .then(r => r.json() as Promise<DemoUser[]>)
       .then(setUsers)
       .catch(console.error);
   }, []);
@@ -52,9 +64,7 @@ function DemoLoginPage(): React.ReactElement {
         body: JSON.stringify({ userId }),
         credentials: 'include',
       });
-      if (res.ok) {
-        navigate('/team/members');
-      }
+      if (res.ok) navigate('/team/members');
     } finally {
       setLoading(false);
     }
@@ -65,11 +75,10 @@ function DemoLoginPage(): React.ReactElement {
       <div className="text-center mb-2">
         <h1 className="text-2xl font-bold text-slate-900 mb-1">Demo Login</h1>
         <p className="text-slate-500 text-sm">
-          Select a user to log in as. All users share password:{' '}
+          Select a user to log in as. Password:{' '}
           <code className="bg-slate-100 px-1 rounded text-xs">demo1234</code>
         </p>
       </div>
-
       <div className="flex flex-col gap-3 w-full max-w-sm">
         {users.map(u => (
           <button
@@ -88,7 +97,6 @@ function DemoLoginPage(): React.ReactElement {
           </button>
         ))}
       </div>
-
       <Link to="/" className="text-xs text-slate-400 hover:text-slate-600 transition-colors">
         ← Back to home
       </Link>
@@ -98,20 +106,11 @@ function DemoLoginPage(): React.ReactElement {
 
 // ── Nav ────────────────────────────────────────────────────────────────────────
 
-function DemoNav(): React.ReactElement {
+function DemoNav({ whoami }: { whoami: DemoUser | null }): React.ReactElement {
   const navigate = useNavigate();
-  const [whoami, setWhoami] = useState<DemoUser | null>(null);
-
-  useEffect(() => {
-    fetch('/api/demo/whoami', { credentials: 'include' })
-      .then(r => (r.ok ? r.json() : null))
-      .then(setWhoami)
-      .catch(() => setWhoami(null));
-  }, []);
 
   const logout = async () => {
     await fetch('/api/demo/logout', { method: 'POST', credentials: 'include' });
-    setWhoami(null);
     navigate('/login');
   };
 
@@ -127,16 +126,17 @@ function DemoNav(): React.ReactElement {
         <Link to="/team/audit" className="text-sm text-slate-300 hover:text-white transition-colors">
           Audit
         </Link>
-        <Link to="/admin" className="text-sm text-slate-300 hover:text-white transition-colors">
-          Admin
-        </Link>
+        {/* Admin nav only shown to super-admin (user 1 = Sarah in demo) */}
+        {whoami?.id === 1 && (
+          <Link to="/admin" className="text-sm text-slate-300 hover:text-white transition-colors">
+            Admin
+          </Link>
+        )}
       </div>
       <div className="flex items-center gap-4">
         {whoami ? (
           <>
-            <span className="text-xs text-slate-400">
-              {whoami.name}
-            </span>
+            <span className="text-xs text-slate-400">{whoami.name}</span>
             <button
               onClick={logout}
               className="text-xs text-slate-400 hover:text-white transition-colors"
@@ -156,13 +156,51 @@ function DemoNav(): React.ReactElement {
 
 // ── Layout with Nav ────────────────────────────────────────────────────────────
 
-function WithNav({ children }: { children: React.ReactNode }): React.ReactElement {
+function WithNav({
+  children,
+  whoami,
+}: {
+  children: React.ReactNode;
+  whoami: DemoUser | null;
+}): React.ReactElement {
   return (
     <div className="min-h-screen bg-slate-50">
-      <DemoNav />
+      <DemoNav whoami={whoami} />
       <main>{children}</main>
     </div>
   );
+}
+
+// ── Route wrappers (extract URL params and pass as props) ──────────────────────
+
+function InvitationAcceptRoute({ isAuthenticated }: { isAuthenticated: boolean }): React.ReactElement {
+  const { token } = useParams<{ token: string }>();
+  return (
+    <InvitationAcceptPage
+      token={token ?? ''}
+      isAuthenticated={isAuthenticated}
+      loginUrl="/login"
+      signupUrl="/login"
+    />
+  );
+}
+
+function EmailChangeVerifyRoute(): React.ReactElement {
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get('token') ?? '';
+  return <EmailChangePage mode="verify" token={token} />;
+}
+
+function EmailChangeCancelRoute(): React.ReactElement {
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get('token') ?? '';
+  return <EmailChangePage mode="cancel" token={token} />;
+}
+
+function PasswordResetConfirmRoute(): React.ReactElement {
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get('token') ?? '';
+  return <PasswordResetPage token={token} />;
 }
 
 // ── Home Page ──────────────────────────────────────────────────────────────────
@@ -177,7 +215,6 @@ function HomePage(): React.ReactElement {
           <code className="text-orange-600 text-xs">@varshyl/team-management</code> v0.1.0
         </p>
       </div>
-
       <div className="flex gap-4 flex-wrap justify-center">
         <a
           href="/api/health"
@@ -208,13 +245,9 @@ function HomePage(): React.ReactElement {
           Team Members →
         </Link>
       </div>
-
-      <div className="mt-4 text-center text-xs text-slate-400 space-y-1">
-        <p>varshyl-toolkit v0.1.0 · @varshyl/team-management first feature release</p>
-        <p>
-          Demo users: sarah / mike / jane / tom / alex @ demo.varshyl.com · password: demo1234
-        </p>
-      </div>
+      <p className="text-xs text-slate-400 mt-4">
+        varshyl-toolkit v0.1.0 · @varshyl/team-management first feature release
+      </p>
     </div>
   );
 }
@@ -222,30 +255,84 @@ function HomePage(): React.ReactElement {
 // ── App ────────────────────────────────────────────────────────────────────────
 
 export default function App(): React.ReactElement {
+  const [whoami, setWhoami] = useState<DemoUser | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
+
+  // Load session on mount and after navigation
+  useEffect(() => {
+    fetch('/api/demo/whoami', { credentials: 'include' })
+      .then(r => (r.ok ? r.json() as Promise<DemoUser> : null))
+      .then(u => { setWhoami(u); setAuthChecked(true); })
+      .catch(() => { setWhoami(null); setAuthChecked(true); });
+  }, []);
+
+  if (!authChecked) return <div className="min-h-screen bg-slate-50" />;
+
+  const isAuthenticated = whoami !== null;
+
   return (
     <Routes>
       {/* Auth */}
       <Route path="/login" element={<DemoLoginPage />} />
 
       {/* Home */}
-      <Route path="/" element={<WithNav><HomePage /></WithNav>} />
+      <Route
+        path="/"
+        element={<WithNav whoami={whoami}><HomePage /></WithNav>}
+      />
 
-      {/* Team */}
+      {/* Team — redirect /team → /team/members */}
       <Route path="/team" element={<Navigate to="/team/members" replace />} />
-      <Route path="/team/members" element={<WithNav><MembersPage /></WithNav>} />
-      <Route path="/team/settings" element={<WithNav><OrgSettingsPage /></WithNav>} />
-      <Route path="/team/invites/accept" element={<WithNav><InvitationAcceptPage /></WithNav>} />
-      <Route path="/team/invites/code" element={<WithNav><InvitationCodePage /></WithNav>} />
-      <Route path="/team/audit" element={<WithNav><AuditLogPage /></WithNav>} />
-      <Route path="/team/transfer" element={<WithNav><OwnershipTransferPage /></WithNav>} />
-      <Route path="/team/email-change" element={<WithNav><EmailChangePage /></WithNav>} />
 
-      {/* Password reset (no nav — standalone pages) */}
+      {/* Team pages — all need orgId */}
+      <Route
+        path="/team/members"
+        element={<WithNav whoami={whoami}><MembersPage orgId={DEMO_ORG_ID} /></WithNav>}
+      />
+      <Route
+        path="/team/settings"
+        element={<WithNav whoami={whoami}><OrgSettingsPage orgId={DEMO_ORG_ID} /></WithNav>}
+      />
+      <Route
+        path="/team/invites/accept/:token"
+        element={<WithNav whoami={whoami}><InvitationAcceptRoute isAuthenticated={isAuthenticated} /></WithNav>}
+      />
+      <Route
+        path="/team/invites/code"
+        element={<WithNav whoami={whoami}><InvitationCodePage /></WithNav>}
+      />
+      <Route
+        path="/team/audit"
+        element={<WithNav whoami={whoami}><AuditLogPage orgId={DEMO_ORG_ID} /></WithNav>}
+      />
+      <Route
+        path="/team/transfer"
+        element={<WithNav whoami={whoami}><OwnershipTransferPage orgId={DEMO_ORG_ID} /></WithNav>}
+      />
+
+      {/* Email change — 3 modes */}
+      <Route
+        path="/team/email-change"
+        element={<WithNav whoami={whoami}><EmailChangePage mode="request" /></WithNav>}
+      />
+      <Route
+        path="/team/email-change/verify"
+        element={<WithNav whoami={whoami}><EmailChangeVerifyRoute /></WithNav>}
+      />
+      <Route
+        path="/team/email-change/cancel"
+        element={<WithNav whoami={whoami}><EmailChangeCancelRoute /></WithNav>}
+      />
+
+      {/* Password reset (standalone, no nav) */}
       <Route path="/password-reset" element={<PasswordResetRequestPage />} />
-      <Route path="/password-reset/confirm" element={<PasswordResetPage />} />
+      <Route path="/password-reset/confirm" element={<PasswordResetConfirmRoute />} />
 
       {/* Super admin */}
-      <Route path="/admin" element={<WithNav><SuperAdminDashboard /></WithNav>} />
+      <Route
+        path="/admin"
+        element={<WithNav whoami={whoami}><SuperAdminDashboard /></WithNav>}
+      />
     </Routes>
   );
 }
