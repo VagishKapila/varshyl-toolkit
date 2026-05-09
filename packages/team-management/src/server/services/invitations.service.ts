@@ -128,7 +128,7 @@ export async function acceptInvitationByToken(
     await client.query(
       `INSERT INTO tm_memberships (org_id, user_id, role, joined_at)
        VALUES ($1, $2, $3, NOW())
-       ON CONFLICT (org_id, user_id)
+       ON CONFLICT (org_id, user_id) WHERE removed_at IS NULL
        DO UPDATE SET role = EXCLUDED.role, removed_at = NULL, removed_by_user_id = NULL,
                      removal_reason = NULL, updated_at = NOW()`,
       [invitation.org_id, userId, invitation.role]
@@ -210,7 +210,7 @@ export async function acceptInvitationByCode(
     await client.query(
       `INSERT INTO tm_memberships (org_id, user_id, role, joined_at)
        VALUES ($1, $2, $3, NOW())
-       ON CONFLICT (org_id, user_id)
+       ON CONFLICT (org_id, user_id) WHERE removed_at IS NULL
        DO UPDATE SET role = EXCLUDED.role, removed_at = NULL, removed_by_user_id = NULL,
                      removal_reason = NULL, updated_at = NOW()`,
       [matchedInvitation.org_id, userId, matchedInvitation.role]

@@ -5,6 +5,7 @@ import { requireMembership, type AuthenticatedRequest } from '../middleware/requ
 import { requireRole } from '../middleware/require-role.js';
 import { getOrg, updateOrg, softDeleteOrg, listOrgMembers } from '../services/organizations.service.js';
 import { removeMember, changeRole, validateRoleChange } from '../services/memberships.service.js';
+import { getPendingTransfer } from '../services/ownership.service.js';
 import { writeAuditEvent, getClientIp } from '../services/audit.service.js';
 
 export function createOrgsRouter(
@@ -131,6 +132,13 @@ export function createOrgsRouter(
         return;
       }
 
+      // Transfer lock: cannot delete org while ownership transfer is pending
+      const pendingTransfer = await getPendingTransfer(pool, orgId);
+      if (pendingTransfer) {
+        res.status(409).json({ error: 'Cannot delete organization while an ownership transfer is pending. Cancel the transfer first.' });
+        return;
+      }
+
       await softDeleteOrg(pool, orgId, userId);
 
       if (flags.enableAuditLog) {
@@ -229,6 +237,15 @@ export function createOrgsRouter(
         return;
       }
 
+      // Transfer lock: cannot remove a user involved in a pending transfer
+      const pendingTransferForRemove = await getPendingTransfer(pool, orgId);
+      if (pendingTransferForRemove &&
+          (pendingTransferForRemove.from_user_id === targetUserId ||
+           pendingTransferForRemove.to_user_id === targetUserId)) {
+        res.status(409).json({ error: 'Cannot remove a member involved in a pending ownership transfer. Cancel the transfer first.' });
+        return;
+      }
+
       await removeMember(pool, { orgId, userId: targetUserId, removedByUserId: actorId, reason });
 
       if (flags.enableAuditLog) {
@@ -270,8 +287,18 @@ export function createOrgsRouter(
 
     try {
       await validateRoleChange(pool, { orgId, actorRole: userRole, targetUserId, newRole: newRole as OrgRole });
+
+      // Transfer lock: cannot change role of a user involved in a pending transfer
+      const pendingTransferForPatch = await getPendingTransfer(pool, orgId);
+      if (pendingTransferForPatch &&
+          (pendingTransferForPatch.from_user_id === targetUserId ||
+           pendingTransferForPatch.to_user_id === targetUserId)) {
+        res.status(409).json({ error: 'Cannot change role of a member involved in a pending ownership transfer. Cancel the transfer first.' });
+        return;
+      }
+
       const before = await pool.query(
-        `SELECT role FROM tm_memberships WHERE org_id = $1 AND user_id = $2 AND removed_at IS NULL`,
+        \`SELECT role FROM tm_memberships WHERE org_id = $1 AND user_id = $2 AND removed_at IS NULL\`,
         [orgId, targetUserId]
       );
       const updated = await changeRole(pool, { orgId, userId: targetUserId, newRole: newRole as OrgRole, changedByUserId: actorId });
@@ -320,8 +347,18 @@ export function createOrgsRouter(
 
     try {
       await validateRoleChange(pool, { orgId, actorRole: userRole, targetUserId, newRole: newRole as OrgRole });
+
+      // Transfer lock: cannot change role of a user involved in a pending transfer
+      const pendingTransferForPatch = await getPendingTransfer(pool, orgId);
+      if (pendingTransferForPatch &&
+          (pendingTransferForPatch.from_user_id === targetUserId ||
+           pendingTransferForPatch.to_user_id === targetUserId)) {
+        res.status(409).json({ error: 'Cannot change role of a member involved in a pending ownership transfer. Cancel the transfer first.' });
+        return;
+      }
+
       const before = await pool.query(
-        `SELECT role FROM tm_memberships WHERE org_id = $1 AND user_id = $2 AND removed_at IS NULL`,
+        \`SELECT role FROM tm_memberships WHERE org_id = $1 AND user_id = $2 AND removed_at IS NULL\`,
         [orgId, targetUserId]
       );
       const updated = await changeRole(pool, { orgId, userId: targetUserId, newRole: newRole as OrgRole, changedByUserId: actorId });

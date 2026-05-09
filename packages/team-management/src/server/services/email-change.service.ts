@@ -72,6 +72,16 @@ export async function requestEmailChange(
 
   await adapter.sendEmailChangeVerification({ to: newEmail, verifyUrl });
   await adapter.sendEmailChangeOldNotice({ to: currentEmail, newEmail, cancelUrl });
+
+  await writeAuditEvent({
+    pool,
+    orgId: null,
+    actorUserId: userId,
+    action: 'email.change_requested',
+    targetType: 'user',
+    targetId: userId,
+    after: { newEmail },
+  });
 }
 
 export async function verifyEmailChange(
@@ -111,7 +121,7 @@ export async function verifyEmailChange(
     pool,
     orgId: null,
     actorUserId: userId,
-    action: 'user.email_changed',
+    action: 'email.change_completed',
     targetType: 'user',
     targetId: userId,
     before: { email: oldEmail },

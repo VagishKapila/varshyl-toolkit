@@ -117,7 +117,7 @@ export async function acceptTransfer(
     // Mark transfer as accepted
     await client.query(
       `UPDATE tm_ownership_transfers
-       SET status = 'accepted', accepted_at = NOW()
+       SET status = 'completed', accepted_at = NOW()
        WHERE id = $1`,
       [transfer.id]
     );
