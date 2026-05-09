@@ -15,16 +15,16 @@ describeWithDb('migrations integration', () => {
     await pool.end();
   });
 
-  it('runs all 11 migrations successfully', async () => {
+  it('runs all 12 migrations successfully', async () => {
     await runMigrations(pool);
 
     const result = await pool.query(
       `SELECT COUNT(*) as cnt FROM tm_schema_migrations`
     );
-    expect(parseInt(result.rows[0].cnt, 10)).toBe(11);
+    expect(parseInt(result.rows[0].cnt, 10)).toBe(12);
   });
 
-  it('is idempotent — re-running skips all 11 migrations', async () => {
+  it('is idempotent — re-running skips all 12 migrations', async () => {
     const before = await pool.query(
       `SELECT applied_at FROM tm_schema_migrations ORDER BY id`
     );
@@ -35,7 +35,7 @@ describeWithDb('migrations integration', () => {
       `SELECT applied_at FROM tm_schema_migrations ORDER BY id`
     );
 
-    expect(after.rows.length).toBe(11);
+    expect(after.rows.length).toBe(12);
     // applied_at timestamps must not have changed
     before.rows.forEach((row, i) => {
       expect(after.rows[i].applied_at.getTime()).toBe(row.applied_at.getTime());
@@ -105,8 +105,15 @@ describeWithDb('migrations integration', () => {
     expect(res.rows[0].tbl).not.toBeNull();
   });
 
-  it('tm_schema_migrations has exactly 11 rows', async () => {
+  it('creates tm_user_locks table', async () => {
+    const res = await pool.query(
+      `SELECT to_regclass('public.tm_user_locks') as tbl`
+    );
+    expect(res.rows[0].tbl).not.toBeNull();
+  });
+
+  it('tm_schema_migrations has exactly 12 rows', async () => {
     const res = await pool.query(`SELECT COUNT(*) as cnt FROM tm_schema_migrations`);
-    expect(parseInt(res.rows[0].cnt, 10)).toBe(11);
+    expect(parseInt(res.rows[0].cnt, 10)).toBe(12);
   });
 });
