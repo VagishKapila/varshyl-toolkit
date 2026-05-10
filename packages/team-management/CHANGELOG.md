@@ -1,6 +1,6 @@
 # Changelog — @varshyl/team-management
 
-## v0.1.0 — 2026-05-08
+## 0.1.0 — 2026-05-08
 
 First production-grade release. v0.0.1 was a stub with no business logic; v0.1.0 is the first version products can actually consume — a complete team management module with org model, RBAC, invitations, audit log, ownership transfer, email change, password reset, and super-admin back office.
 
