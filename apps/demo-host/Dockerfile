@@ -9,7 +9,7 @@ COPY pnpm-workspace.yaml package.json pnpm-lock.yaml* ./
 COPY packages/team-management/package.json ./packages/team-management/
 COPY apps/demo-host/package.json ./apps/demo-host/
 # Install all workspace deps
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --no-frozen-lockfile
 
 # ── Build team-management ─────────────────────────────────────────────────────
 FROM deps AS build-tm
@@ -35,7 +35,7 @@ COPY packages/team-management/package.json ./packages/team-management/
 COPY apps/demo-host/package.json ./apps/demo-host/
 
 # Install production deps only
-RUN pnpm install --frozen-lockfile --prod
+RUN pnpm install --no-frozen-lockfile --prod
 
 # Copy built artifacts
 COPY --from=build-app /app/packages/team-management/dist ./packages/team-management/dist
