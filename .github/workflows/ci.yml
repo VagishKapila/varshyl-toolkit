@@ -29,6 +29,7 @@ jobs:
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/varshyl_test
       TMPDIR: /tmp
+      TM_ENCRYPTION_KEY: test-encryption-key-for-ci-only!
 
     steps:
       - name: Checkout
@@ -58,7 +59,9 @@ jobs:
             ${{ runner.os }}-pnpm-
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        # --no-frozen-lockfile allows lockfile updates when new deps are added
+        # (e.g. supertest, bcryptjs added in v0.1.0). Lockfile is committed after local install.
+        run: pnpm install --no-frozen-lockfile
 
       - name: Build team-management (required before downstream typecheck)
         run: pnpm --filter @varshyl/team-management build

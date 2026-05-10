@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS tm_user_locks (
+  user_id INTEGER PRIMARY KEY,
+  locked_by INTEGER NOT NULL,
+  reason TEXT NOT NULL,
+  locked_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  unlocked_at TIMESTAMPTZ
+);

@@ -4,6 +4,16 @@ export type {
   ServerModuleAdapter,
   TeamManagementConfig,
   TeamManagementServerModule,
+  OrgRole,
+  AuditActorType,
+  TransferStatus,
+  TmOrganization,
+  TmMembership,
+  TmInvitation,
+  TmAuditEvent,
+  TmOwnershipTransfer,
+  TmPasswordResetRequest,
+  TeamManagementFeatureFlags,
 } from './server/types.js';
 
 // ─── Shared types (safe everywhere) ───────────────────────────────────────────

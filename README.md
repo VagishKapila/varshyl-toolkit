@@ -18,7 +18,7 @@ Each module is independently versioned, tagged, and pinned by products via git t
 
 | Module | Status | Latest tag | QA |
 |---|---|---|---|
-| team-management | ✅ **Shipped v0.0.1** | [team-management-v0.0.1](https://github.com/VagishKapila/varshyl-toolkit/releases/tag/team-management-v0.0.1) | [Evidence](qa-evidence/v0.0.1/README.md) |
+| team-management | 🟢 **Active v0.1.0** | [team-management-v0.1.0](https://github.com/VagishKapila/varshyl-toolkit/releases/tag/team-management-v0.1.0) | [v0.0.1](qa-evidence/v0.0.1/README.md) · [v0.1.0](qa-evidence/team-management-v0.1.0/) |
 
 ## Architecture
 
