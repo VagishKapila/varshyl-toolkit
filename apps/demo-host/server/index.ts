@@ -61,6 +61,14 @@ async function seedDemoData(): Promise<void> {
     }
     console.log('[seed] Memberships: Sarah(owner), Mike(admin), Jane(member), Tom(viewer) ✓');
 
+    // Upsert super-admin for Sarah Chen (user_id=1)
+    await client.query(
+      `INSERT INTO tm_super_admins (user_id, granted_at)
+       VALUES (1, NOW())
+       ON CONFLICT (user_id) DO NOTHING`
+    );
+    console.log('[seed] Super-admin: Sarah Chen (id=1) ✓');
+
     await client.query('COMMIT');
   } catch (err) {
     await client.query('ROLLBACK');
