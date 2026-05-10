@@ -1,0 +1,59 @@
+{
+  "module": "team-management",
+  "version": "v0.1.0",
+  "verified_at": "2026-05-10T15:26:00Z",
+  "demo_host": "https://demo-host-production.up.railway.app",
+  "builder": "DOCKERFILE",
+  "railway_json_confirmed": "apps/demo-host/railway.json sets builder=DOCKERFILE",
+  "scenarios": [
+    {
+      "id": "S1",
+      "name": "List org members",
+      "request": "GET /api/team/orgs/1/members (as Sarah/owner)",
+      "http_status": 200,
+      "result": "PASS",
+      "summary": "4 members returned: Sarah(owner), Mike(admin), Jane(member), Tom(viewer)"
+    },
+    {
+      "id": "S2",
+      "name": "Create invitation",
+      "request": "POST /api/team/orgs/1/invitations {email: alex@demo.varshyl.com, role: member}",
+      "http_status": 201,
+      "result": "PASS",
+      "summary": "Invitation id=2 created, status=pending, expires 2026-05-13"
+    },
+    {
+      "id": "S3",
+      "name": "Audit log",
+      "request": "GET /api/team/orgs/1/audit",
+      "http_status": 200,
+      "result": "PASS",
+      "summary": "3 events returned; latest action=member.invited actor=1"
+    },
+    {
+      "id": "S4",
+      "name": "Ownership transfer",
+      "request": "POST /api/team/orgs/1/transfer {toUserId: 2}",
+      "http_status": 201,
+      "result": "PASS",
+      "summary": "Transfer id=2 status=pending from=1(Sarah) to=2(Mike), expires 2026-05-12"
+    },
+    {
+      "id": "S5",
+      "name": "Super-admin: list all orgs",
+      "request": "GET /api/team/admin/orgs (as Sarah/super-admin)",
+      "http_status": 200,
+      "result": "PASS",
+      "summary": "1 org returned: 'Demo Construction Co.' id=1"
+    },
+    {
+      "id": "S6",
+      "name": "Super-admin: trigger password reset",
+      "request": "POST /api/team/admin/users/3/password-reset {reason: QA verification}",
+      "http_status": 200,
+      "result": "PASS",
+      "summary": "message='Password reset email sent' for Jane Williams (user_id=3)"
+    }
+  ],
+  "overall": "PASS — 6/6 scenarios verified on live Railway deployment"
+}
