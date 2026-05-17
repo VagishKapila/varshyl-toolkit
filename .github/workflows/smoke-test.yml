@@ -1,0 +1,75 @@
+name: Smoke Tests — team-management v0.1.0
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    name: Playwright smoke tests (Chromium)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9.1.0
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Install Playwright Chromium + deps
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Create evidence directory
+        run: mkdir -p qa-evidence/team-management-v0.1.0
+
+      - name: Run smoke tests
+        env:
+          DEMO_HOST_URL: ${{ secrets.DEMO_HOST_URL }}
+        run: pnpm exec playwright test --project=chromium
+
+      - name: Commit screenshots to repo
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add qa-evidence/team-management-v0.1.0/ || true
+          if git diff --cached --quiet; then
+            echo "No screenshot changes to commit"
+          else
+            git commit -m "ci: update smoke test screenshots [skip ci]"
+            git push
+          fi
+
+      - name: Upload Playwright artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-artifacts
+          path: |
+            test-results/
+            qa-evidence/team-management-v0.1.0/smoke-results.json
+          retention-days: 14

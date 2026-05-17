@@ -8,13 +8,15 @@
     "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck",
     "lint": "pnpm -r lint",
-    "verify": "pnpm typecheck && pnpm test && pnpm build && bash scripts/verify-no-cross-imports.sh"
+    "verify": "pnpm typecheck && pnpm test && pnpm build && bash scripts/verify-no-cross-imports.sh",
+    "smoke": "playwright test --project=chromium"
   },
   "engines": {
     "node": ">=20",
     "pnpm": ">=9"
   },
   "devDependencies": {
+    "@playwright/test": "^1.44.0",
     "typescript": "^5.4.5"
   },
   "packageManager": "pnpm@9.1.0"
