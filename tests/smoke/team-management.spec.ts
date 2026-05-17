@@ -13,6 +13,14 @@
  * S4 – Audit log page loads and shows at least one entry
  * S5 – Super-admin dashboard accessible; shows "Demo Construction Co."
  * S6 – Viewer (Tom Nakamura) cannot see the invite form or admin controls
+ *
+ * Visual regression (OPS-22)
+ * --------------------------
+ * Each scenario calls toHaveScreenshot() after the DOM assertions.
+ * Baselines live in tests/smoke/__screenshots__/<scenario>.png
+ * On first run (CI=true, no baseline): update-snapshots flag must be passed.
+ * Threshold: maxDiffPixelRatio 0.02 (2% pixel change tolerance).
+ * To update baselines: DEMO_HOST_URL=... pnpm exec playwright test --update-snapshots
  */
 
 import { test, expect, Page } from '@playwright/test';
@@ -29,7 +37,7 @@ async function loginAs(page: Page, userId: number) {
   expect(res.status()).toBe(200);
 }
 
-async function saveScreenshot(page: Page, filename: string) {
+async function saveEvidence(page: Page, filename: string) {
   fs.mkdirSync(EVIDENCE_DIR, { recursive: true });
   await page.screenshot({
     path: path.join(EVIDENCE_DIR, filename),
@@ -41,8 +49,10 @@ async function saveScreenshot(page: Page, filename: string) {
 
 test('S1 – home page renders varshyl-toolkit version banner', async ({ page }) => {
   await page.goto('/');
-  await saveScreenshot(page, 'S1-home-page.png');
   await expect(page.getByText(/varshyl-toolkit/i)).toBeVisible();
+  await saveEvidence(page, 'S1-home-page.png');
+  // Visual regression — baseline auto-created on first run with --update-snapshots
+  await expect(page).toHaveScreenshot('S1-home-page.png', { maxDiffPixelRatio: 0.02 });
 });
 
 // ─── S2: Owner login → members page ─────────────────────────────────────────
@@ -50,13 +60,14 @@ test('S1 – home page renders varshyl-toolkit version banner', async ({ page })
 test('S2 – owner login shows all 4 org members', async ({ page }) => {
   await loginAs(page, 1); // Sarah Chen — Owner
   await page.goto('/team/members');
-  await saveScreenshot(page, 'S2-members-page.png');
 
   // All 4 org members must be visible
   await expect(page.getByText('Sarah Chen')).toBeVisible();
   await expect(page.getByText('Mike Torres')).toBeVisible();
   await expect(page.getByText('Jane Williams')).toBeVisible();
   await expect(page.getByText('Tom Nakamura')).toBeVisible();
+  await saveEvidence(page, 'S2-members-page.png');
+  await expect(page).toHaveScreenshot('S2-members-page.png', { maxDiffPixelRatio: 0.02 });
 });
 
 // ─── S3: Invite form visible and submittable ─────────────────────────────────
@@ -73,8 +84,9 @@ test('S3 – owner can see invite form and send an invitation', async ({ page })
   await emailInput.fill('smoke-test@example.com');
   await page.getByRole('button', { name: /send invite/i }).click();
 
-  await saveScreenshot(page, 'S3-invite-sent.png');
   await expect(page.getByText(/invitation sent successfully/i)).toBeVisible();
+  await saveEvidence(page, 'S3-invite-sent.png');
+  await expect(page).toHaveScreenshot('S3-invite-sent.png', { maxDiffPixelRatio: 0.02 });
 });
 
 // ─── S4: Audit log page ───────────────────────────────────────────────────────
@@ -82,13 +94,14 @@ test('S3 – owner can see invite form and send an invitation', async ({ page })
 test('S4 – audit log page loads with entries', async ({ page }) => {
   await loginAs(page, 1); // Sarah Chen — Owner
   await page.goto('/team/audit');
-  await saveScreenshot(page, 'S4-audit-log.png');
 
   // Audit log must render (not error page)
   await expect(page).not.toHaveURL(/error/i);
   // At least one audit entry exists (seeded at boot)
   const rows = page.locator('table tbody tr, [data-testid="audit-row"], li[class*="audit"]');
   await expect(rows.first()).toBeVisible({ timeout: 10_000 });
+  await saveEvidence(page, 'S4-audit-log.png');
+  await expect(page).toHaveScreenshot('S4-audit-log.png', { maxDiffPixelRatio: 0.02 });
 });
 
 // ─── S5: Super-admin dashboard ───────────────────────────────────────────────
@@ -96,9 +109,10 @@ test('S4 – audit log page loads with entries', async ({ page }) => {
 test('S5 – super-admin can see org list with Demo Construction Co.', async ({ page }) => {
   await loginAs(page, 1); // Sarah Chen — Owner + super-admin
   await page.goto('/admin');
-  await saveScreenshot(page, 'S5-super-admin-dashboard.png');
 
   await expect(page.getByText(/Demo Construction Co/i)).toBeVisible();
+  await saveEvidence(page, 'S5-super-admin-dashboard.png');
+  await expect(page).toHaveScreenshot('S5-super-admin.png', { maxDiffPixelRatio: 0.02 });
 });
 
 // ─── S6: Viewer role restrictions ────────────────────────────────────────────
@@ -106,7 +120,6 @@ test('S5 – super-admin can see org list with Demo Construction Co.', async ({ 
 test('S6 – viewer (Tom Nakamura) cannot see invite form or admin controls', async ({ page }) => {
   await loginAs(page, 4); // Tom Nakamura — Viewer
   await page.goto('/team/members');
-  await saveScreenshot(page, 'S6-viewer-restrictions.png');
 
   // Tom can see the member list
   await expect(page.getByText('Sarah Chen')).toBeVisible();
@@ -114,10 +127,12 @@ test('S6 – viewer (Tom Nakamura) cannot see invite form or admin controls', as
   // Invite form must NOT be visible for a Viewer
   const emailInput = page.getByPlaceholder('colleague@company.com');
   await expect(emailInput).not.toBeVisible();
+  await saveEvidence(page, 'S6-viewer-members.png');
+  await expect(page).toHaveScreenshot('S6-viewer-members.png', { maxDiffPixelRatio: 0.02 });
 
-  // /admin should be inaccessible
+  // /admin should be inaccessible — should not show org list
   await page.goto('/admin');
-  await saveScreenshot(page, 'S6-viewer-admin-blocked.png');
-  // Should redirect away or show access denied — not show the org list
   await expect(page.getByText(/Demo Construction Co/i)).not.toBeVisible({ timeout: 5_000 });
+  await saveEvidence(page, 'S6-viewer-admin-blocked.png');
+  await expect(page).toHaveScreenshot('S6-viewer-admin-blocked.png', { maxDiffPixelRatio: 0.02 });
 });
