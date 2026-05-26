@@ -80,3 +80,25 @@ jobs:
 
       - name: Verify no cross-module imports
         run: bash scripts/verify-no-cross-imports.sh
+
+  # ── Secrets guard ─────────────────────────────────────────────────────────────
+  # Scans every PR diff for leaked secrets using Gitleaks.
+  # Fails the build if any secret pattern (API tokens, private keys, DB URLs,
+  # OAuth secrets, JWT secrets, etc.) is detected in committed code.
+  # This job is MANDATORY — it protects all future public npm packages.
+  secrets-guard:
+    name: Secrets guard (gitleaks)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history so gitleaks can diff against base
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # GITLEAKS_LICENSE not required for public repos
+
