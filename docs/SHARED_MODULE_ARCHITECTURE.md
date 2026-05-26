@@ -99,10 +99,10 @@ varshyl-platform/                           ← new repo, GitHub: varshyl-inc/va
 
 `packages/team-management/` may not import from `packages/trust-score/`. Enforced by:
 - TypeScript `paths` config that doesn't expose sibling packages.
-- CI step (`verify-no-cross-imports.sh`) that greps for `from '@varshyl/<other>'` inside each package and fails the build.
+- CI step (`verify-no-cross-imports.sh`) that greps for `from '@varshylinc/<other>'` inside each package and fails the build.
 - ESLint rule (when added) banning the same.
 
-If two modules genuinely need to share code, that shared code becomes its own package (e.g., `@varshyl/auth-primitives`). No exceptions, no "just this once" cross-imports.
+If two modules genuinely need to share code, that shared code becomes its own package (e.g., `@varshylinc/auth-primitives`). No exceptions, no "just this once" cross-imports.
 
 ---
 
@@ -156,7 +156,7 @@ The product writes ONE adapter per module, in product-side code, when it install
 
 ```typescript
 import express from 'express';
-import { createServerModule } from '@varshyl/team-management';
+import { createServerModule } from '@varshylinc/team-management';
 
 const teamMgmt = createServerModule({
   adapter,                    // ServerModuleAdapter
@@ -175,7 +175,7 @@ app.get('/api/team/health', teamMgmt.health);
 ### 2.4 Client module shape
 
 ```tsx
-import { ClientModuleProvider, Pages } from '@varshyl/team-management/client';
+import { ClientModuleProvider, Pages } from '@varshylinc/team-management/client';
 
 <ClientModuleProvider apiBaseUrl="/api/team" authToken={jwt}>
   <Routes>
@@ -290,7 +290,7 @@ Two delivery channels supported. Pick one per organization, not per module.
 // In ConstructIInv's package.json
 {
   "dependencies": {
-    "@varshyl/team-management": "github:varshyl-inc/varshyl-platform#team-management-v1.0.0"
+    "@varshylinc/team-management": "github:varshyl-inc/varshyl-platform#team-management-v1.0.0"
   }
 }
 ```
@@ -302,7 +302,7 @@ Two delivery channels supported. Pick one per organization, not per module.
 ```json
 {
   "dependencies": {
-    "@varshyl/team-management": "1.0.0"
+    "@varshylinc/team-management": "1.0.0"
   }
 }
 ```
@@ -335,14 +335,14 @@ These are the three scenarios that actually happen. Everything else is a variati
 3. Run `pnpm new-module team-management` (or manual: copy from a template package).
 4. Build server: routes, services, sql, migrations.
 5. Build client: pages, components, api, types.
-6. Run `pnpm --filter @varshyl/team-management test` — all green.
-7. Run `pnpm --filter @varshyl/team-management build` — TypeScript clean, build artifact produced.
+6. Run `pnpm --filter @varshylinc/team-management test` — all green.
+7. Run `pnpm --filter @varshylinc/team-management build` — TypeScript clean, build artifact produced.
 8. Open changeset: `pnpm changeset` — minor or major as appropriate.
 9. Commit, push, open PR.
 10. CI runs: typecheck, test, build, isolation check.
 11. Merge PR. Release workflow runs: bumps version, updates CHANGELOG, pushes tag `team-management-v0.1.0`.
 12. Switch to ConstructIInv repo (separate Cowork session, NEW chat — toolbox and product work do not share context).
-13. In ConstructIInv: write the adapter. Add `@varshyl/team-management` pinned to `team-management-v0.1.0`.
+13. In ConstructIInv: write the adapter. Add `@varshylinc/team-management` pinned to `team-management-v0.1.0`.
 14. Wire `runMigrations()` into server boot. Mount router. Add routes to client App.tsx.
 15. Run product's full QA suite (existing 7-layer for ConstructIInv). All green.
 16. Layer 9 verification: real headless browser screenshots of Team Management flows in ConstructIInv UI.

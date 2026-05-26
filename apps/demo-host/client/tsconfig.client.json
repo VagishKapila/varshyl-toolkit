@@ -8,7 +8,7 @@
     "jsx": "react-jsx",
     "noEmit": true,
     "paths": {
-      "@varshyl/team-management/client": [
+      "@varshylinc/team-management/client": [
         "../../../packages/team-management/src/client/index.ts"
       ]
     }

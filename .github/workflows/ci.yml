@@ -64,7 +64,7 @@ jobs:
         run: pnpm install --no-frozen-lockfile
 
       - name: Build team-management (required before downstream typecheck)
-        run: pnpm --filter @varshyl/team-management build
+        run: pnpm --filter @varshylinc/team-management build
 
       - name: Typecheck
         run: pnpm typecheck

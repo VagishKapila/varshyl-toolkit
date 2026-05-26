@@ -1,5 +1,5 @@
 {
-  "name": "@varshyl/demo-host",
+  "name": "@varshylinc/demo-host",
   "version": "0.0.1",
   "description": "Verification harness for varshyl-toolkit modules. NOT a product.",
   "private": true,
@@ -15,7 +15,7 @@
     "test": "echo 'demo-host has no unit tests — integration tested via QA endpoints'"
   },
   "dependencies": {
-    "@varshyl/team-management": "workspace:*",
+    "@varshylinc/team-management": "workspace:*",
     "bcryptjs": "^2.4.3",
     "express": "^4.18.3",
     "pg": "^8.11.5"

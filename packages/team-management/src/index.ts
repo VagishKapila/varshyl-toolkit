@@ -21,4 +21,4 @@ export type { TeamMember, TeamInvite } from './shared/types.js';
 
 // NOTE: Client exports live in packages/team-management/src/client/index.ts
 // Import them in your bundler (Vite/webpack) via the "client" export condition:
-//   import { PlaceholderPage } from '@varshyl/team-management/client'
+//   import { PlaceholderPage } from '@varshylinc/team-management/client'
