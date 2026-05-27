@@ -17,14 +17,14 @@ cp -r packages/team-management "packages/$MODULE"
 node -e "
 const fs = require('fs');
 const pkg = JSON.parse(fs.readFileSync('packages/$MODULE/package.json','utf8'));
-pkg.name = '@varshyl/$MODULE';
+pkg.name = '@varshylinc/$MODULE';
 pkg.version = '0.0.1';
 fs.writeFileSync('packages/$MODULE/package.json', JSON.stringify(pkg, null, 2) + '\n');
 "
 
 # Clear CHANGELOG
 cat > "packages/$MODULE/CHANGELOG.md" << EOF
-# @varshyl/$MODULE
+# @varshylinc/$MODULE
 
 ## 0.0.1
 
