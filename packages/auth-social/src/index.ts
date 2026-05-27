@@ -1,5 +1,3 @@
-import type { Pool } from 'pg';
-import type { AuthConfig } from './config.js';
 import { createAuthService } from './server/pg-auth-service.js';
 import { runMigrations, MIGRATIONS_DIR } from './server/migrations.js';
 import { verifyAppleIdToken, verifyGoogleIdToken } from './server/token-verify.js';

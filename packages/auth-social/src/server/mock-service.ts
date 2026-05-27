@@ -30,7 +30,7 @@ export function createMockAuthService(capture: MockAuthCapture = { lastResetToke
   const resetTokens = new Map<string, { userId: string; expiresAt: Date }>();
   let nextId = 1;
 
-  function createUser(email: string, name?: string, provider: 'email' | 'apple' | 'google' = 'email'): MockUser {
+  function createUser(email: string, name?: string, _provider: 'email' | 'apple' | 'google' = 'email'): MockUser {
     const id = String(nextId++);
     const user: MockUser = {
       id,

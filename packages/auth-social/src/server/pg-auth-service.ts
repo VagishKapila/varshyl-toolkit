@@ -68,7 +68,7 @@ export function createAuthService(
   }
 
   return {
-    async signUpEmail({ email, password, name }) {
+    async signUpEmail({ email, password, name }): Promise<Session> {
       const normalized = email.trim().toLowerCase();
       const existing = await pool.query(
         `SELECT id FROM as_credentials WHERE email = $1`,
@@ -85,7 +85,7 @@ export function createAuthService(
       return issueSession(pool, user.id, ttlDays);
     },
 
-    async signInEmail({ email, password }) {
+    async signInEmail({ email, password }): Promise<Session> {
       const normalized = email.trim().toLowerCase();
       const result = await pool.query<{ user_id: string; password_hash: string }>(
         `SELECT user_id, password_hash FROM as_credentials WHERE email = $1`,
@@ -100,7 +100,7 @@ export function createAuthService(
       return issueSession(pool, row.user_id, ttlDays);
     },
 
-    async signInWithProvider({ provider, idToken }) {
+    async signInWithProvider({ provider, idToken }): Promise<Session> {
       const { userId } = await resolveOAuthUser(provider, idToken);
       return issueSession(pool, userId, ttlDays);
     },
