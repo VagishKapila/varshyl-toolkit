@@ -1,5 +1,11 @@
 # @varshylinc/auth-social
 
+## 0.1.1
+
+### Patch Changes
+
+- Add `exports` map `require` conditions so `require('@varshylinc/auth-social')` resolves correctly. `0.1.0` shipped with `exports` containing only `import` and `types` conditions, causing `ERR_PACKAGE_PATH_NOT_EXPORTED` for every CommonJS consumer. This patch adds `require` alongside `import` and `types` for the three entry points: `.` (server), `./client` (React), `./client/capgo` (Capgo native provider). No source code or behavior change.
+
 ## 0.1.0 — 2026-05-27
 
 Initial release of `@varshylinc/auth-social`.
