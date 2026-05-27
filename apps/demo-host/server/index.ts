@@ -2,6 +2,10 @@ import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { createServerModule } from '@varshylinc/team-management';
+import {
+  runMigrations as runOceMigrations,
+  seedStandardConsents,
+} from '@varshylinc/onboarding-consent-engine';
 import { pool, testConnection } from './db.js';
 import {
   demoAdapter,
@@ -10,6 +14,7 @@ import {
   getDemoUserById,
   listDemoUsers,
 } from './adapter.js';
+import { createConsentRouter } from './consent.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = parseInt(process.env.PORT ?? '3000', 10);
@@ -23,7 +28,6 @@ async function seedDemoData(): Promise<void> {
   try {
     await client.query('BEGIN');
 
-    // Upsert org
     const orgInsert = await client.query<{ id: number }>(`
       INSERT INTO tm_organizations (name, slug, owner_user_id, settings)
       VALUES ('Demo Construction Co.', 'demo-construction-co', 1, '{}')
@@ -43,7 +47,6 @@ async function seedDemoData(): Promise<void> {
       console.log(`[seed] Org already exists id=${orgId}`);
     }
 
-    // Upsert memberships
     const members: Array<{ userId: number; role: string }> = [
       { userId: 1, role: 'owner' },
       { userId: 2, role: 'admin' },
@@ -61,7 +64,6 @@ async function seedDemoData(): Promise<void> {
     }
     console.log('[seed] Memberships: Sarah(owner), Mike(admin), Jane(member), Tom(viewer) ✓');
 
-    // Upsert super-admin for Sarah Chen (user_id=1)
     await client.query(
       `INSERT INTO tm_super_admins (user_id, granted_at)
        VALUES (1, NOW())
@@ -91,8 +93,8 @@ async function boot(): Promise<void> {
     process.exit(1);
   }
 
-  // 2. Migrations
-  console.log('[boot] Running migrations...');
+  // 2. team-management migrations
+  console.log('[boot] Running team-management migrations...');
   const tm = createServerModule({
     adapter: demoAdapter,
     db: pool,
@@ -113,25 +115,45 @@ async function boot(): Promise<void> {
 
   try {
     const { applied, skipped } = await tm.runMigrations();
-    if (applied.length) console.log('[boot] Applied:', applied);
-    if (skipped.length) console.log('[boot] Skipped:', skipped);
-    console.log('[boot] Migrations complete ✓');
+    if (applied.length) console.log('[boot] TM applied:', applied);
+    if (skipped.length) console.log('[boot] TM skipped:', skipped);
+    console.log('[boot] team-management migrations complete ✓');
   } catch (err) {
-    console.error('[boot] FATAL: Migration failed:', (err as Error).message);
+    console.error('[boot] FATAL: team-management migration failed:', (err as Error).message);
     process.exit(1);
   }
 
-  // 3. Seed demo data
+  // 3. onboarding-consent-engine migrations + seed
+  console.log('[boot] Running onboarding-consent-engine migrations...');
+  try {
+    const { applied, skipped } = await runOceMigrations(pool);
+    if (applied.length) console.log('[boot] OCE applied:', applied);
+    if (skipped.length) console.log('[boot] OCE skipped:', skipped);
+    console.log('[boot] OCE migrations complete ✓');
+    await seedStandardConsents(pool, 'ConstructInv');
+    console.log('[boot] OCE standard consents seeded ✓');
+  } catch (err) {
+    console.error('[boot] FATAL: OCE migration/seed failed:', (err as Error).message);
+    process.exit(1);
+  }
+
+  // 4. Seed demo data
   console.log('[boot] Seeding demo data...');
   await seedDemoData();
 
-  // 4. Express app
+  // 5. Express app
   const app = express();
   app.use(express.json());
 
+  // ── Readiness probe — responds only after all migrations + seed complete ───
+  // app.listen() is called below; this endpoint is only reachable once the
+  // server is fully booted, making it safe to use as a CI health-check gate.
+  app.get('/healthz', (_req, res) => {
+    res.status(200).json({ status: 'ready' });
+  });
+
   // ── Demo auth endpoints ────────────────────────────────────────────────────
 
-  // POST /api/demo/login { userId: number }
   app.post('/api/demo/login', (req, res) => {
     const { userId } = req.body as { userId?: number };
     const user = userId ? getDemoUserById(userId) : undefined;
@@ -149,7 +171,6 @@ async function boot(): Promise<void> {
     res.json({ ok: true, user: { id: user.id, name: user.name, email: user.email } });
   });
 
-  // POST /api/demo/logout
   app.post('/api/demo/logout', (req, res) => {
     const raw = req.headers.cookie ?? '';
     const m = /(?:^|;\s*)tm_session=([^;]+)/.exec(raw);
@@ -158,7 +179,6 @@ async function boot(): Promise<void> {
     res.json({ ok: true });
   });
 
-  // GET /api/demo/whoami
   app.get('/api/demo/whoami', async (req, res) => {
     const uid = await demoAdapter.getCurrentUserId(req);
     if (!uid) { res.status(401).json({ error: 'Not logged in' }); return; }
@@ -167,7 +187,6 @@ async function boot(): Promise<void> {
     res.json({ id: user.id, name: user.name, email: user.email });
   });
 
-  // GET /api/demo/users
   app.get('/api/demo/users', (_req, res) => {
     res.json(listDemoUsers());
   });
@@ -175,7 +194,10 @@ async function boot(): Promise<void> {
   // ── team-management router ─────────────────────────────────────────────────
   app.use('/api/team', tm.router);
 
-  // ── Own health endpoint ────────────────────────────────────────────────────
+  // ── onboarding-consent-engine router ──────────────────────────────────────
+  app.use('/api/consent', createConsentRouter(pool));
+
+  // ── Health + info ──────────────────────────────────────────────────────────
   app.get('/api/health', (_req, res) => {
     res.json({
       status: 'ok',
@@ -207,13 +229,19 @@ async function boot(): Promise<void> {
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`[boot] demo-host listening on :${PORT} (${NODE_ENV}) ✓`);
     console.log('[boot] Endpoints:');
-    console.log('[boot]   GET  /api/health          → demo-host health');
-    console.log('[boot]   GET  /api/team/health     → team-management health');
-    console.log('[boot]   POST /api/demo/login      → login as demo user { userId }');
-    console.log('[boot]   POST /api/demo/logout     → logout');
-    console.log('[boot]   GET  /api/demo/whoami     → current session user');
-    console.log('[boot]   GET  /api/demo/users      → list demo users');
-    console.log('[boot]   GET  /                    → React shell');
+    console.log('[boot]   GET  /healthz                     → readiness probe');
+    console.log('[boot]   GET  /api/health                  → health + info');
+    console.log('[boot]   GET  /api/team/health             → team-management health');
+    console.log('[boot]   POST /api/demo/login              → login as demo user { userId }');
+    console.log('[boot]   POST /api/demo/logout             → logout');
+    console.log('[boot]   GET  /api/demo/whoami             → current session user');
+    console.log('[boot]   GET  /api/demo/users              → list demo users');
+    console.log('[boot]   GET  /api/consent/definitions     → OCE: all consent definitions');
+    console.log('[boot]   POST /api/consent/signup          → OCE: record signup consents');
+    console.log('[boot]   GET  /api/consent/status/:userId  → OCE: current status');
+    console.log('[boot]   GET  /api/consent/pending/:userId → OCE: pending re-consents');
+    console.log('[boot]   GET  /api/consent/audit/:userId   → OCE: audit trail');
+    console.log('[boot]   GET  /                            → React shell');
   });
 
   const shutdown = async () => {
