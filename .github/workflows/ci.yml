@@ -30,6 +30,9 @@ jobs:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/varshyl_test
       TMPDIR: /tmp
       TM_ENCRYPTION_KEY: test-encryption-key-for-ci-only!
+      # Prevent pnpm from failing on ${NODE_AUTH_TOKEN} in .npmrc during CI
+      # (only the publish job needs a real value)
+      NODE_AUTH_TOKEN: ''
 
     steps:
       - name: Checkout
@@ -89,6 +92,9 @@ jobs:
   secrets-guard:
     name: Secrets guard (gitleaks)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read   # required for Gitleaks to fetch PR commits
 
     steps:
       - name: Checkout
@@ -101,4 +107,3 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # GITLEAKS_LICENSE not required for public repos
-
