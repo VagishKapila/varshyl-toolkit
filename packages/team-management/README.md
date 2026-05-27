@@ -1,4 +1,4 @@
-# @varshyl/team-management
+# @varshylinc/team-management
 
 > Shared team management module for Varshyl products. Install as a versioned package via git tag.
 
@@ -10,15 +10,15 @@
 
 ```json
 "dependencies": {
-  "@varshyl/team-management": "github:VagishKapila/varshyl-toolkit#team-management-v0.0.1"
+  "@varshylinc/team-management": "github:VagishKapila/varshyl-toolkit#team-management-v0.0.1"
 }
 ```
 
 ## 2. Server setup
 
 ```ts
-import { createServerModule } from '@varshyl/team-management';
-import type { ServerModuleAdapter } from '@varshyl/team-management';
+import { createServerModule } from '@varshylinc/team-management';
+import type { ServerModuleAdapter } from '@varshylinc/team-management';
 
 // Implement the adapter for your product
 const adapter: ServerModuleAdapter = {
@@ -46,7 +46,7 @@ app.use('/api/team', tm.router);
 ## 3. Client setup
 
 ```tsx
-import { PlaceholderPage } from '@varshyl/team-management/client';
+import { PlaceholderPage } from '@varshylinc/team-management/client';
 
 // In your React router:
 <Route path="/team" element={<PlaceholderPage />} />

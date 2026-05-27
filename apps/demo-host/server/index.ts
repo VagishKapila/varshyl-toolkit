@@ -1,7 +1,7 @@
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { createServerModule } from '@varshyl/team-management';
+import { createServerModule } from '@varshylinc/team-management';
 import { pool, testConnection } from './db.js';
 import {
   demoAdapter,

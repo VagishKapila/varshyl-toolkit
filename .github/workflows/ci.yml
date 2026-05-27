@@ -30,6 +30,9 @@ jobs:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/varshyl_test
       TMPDIR: /tmp
       TM_ENCRYPTION_KEY: test-encryption-key-for-ci-only!
+      # Prevent pnpm from failing on ${NODE_AUTH_TOKEN} in .npmrc during CI
+      # (only the publish job needs a real value)
+      NODE_AUTH_TOKEN: ''
 
     steps:
       - name: Checkout
@@ -60,11 +63,10 @@ jobs:
 
       - name: Install dependencies
         # --no-frozen-lockfile allows lockfile updates when new deps are added
-        # (e.g. supertest, bcryptjs added in v0.1.0). Lockfile is committed after local install.
         run: pnpm install --no-frozen-lockfile
 
       - name: Build team-management (required before downstream typecheck)
-        run: pnpm --filter @varshyl/team-management build
+        run: pnpm --filter @varshylinc/team-management build
 
       - name: Typecheck
         run: pnpm typecheck
@@ -80,3 +82,27 @@ jobs:
 
       - name: Verify no cross-module imports
         run: bash scripts/verify-no-cross-imports.sh
+
+  # ── Secrets guard ─────────────────────────────────────────────────────────────
+  # Scans every PR diff for leaked secrets using Gitleaks.
+  # Fails the build if any secret pattern (API tokens, private keys, DB URLs,
+  # OAuth secrets, JWT secrets, etc.) is detected in committed code.
+  # This job is MANDATORY — it protects all future public npm packages.
+  secrets-guard:
+    name: Secrets guard (gitleaks)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read   # required for Gitleaks to fetch PR commits
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history so gitleaks can diff against base
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # GITLEAKS_LICENSE not required for public repos

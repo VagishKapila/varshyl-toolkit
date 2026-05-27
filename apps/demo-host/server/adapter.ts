@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import type { Request } from 'express';
-import type { ServerModuleAdapter, OrgRole } from '@varshyl/team-management';
+import type { ServerModuleAdapter, OrgRole } from '@varshylinc/team-management';
 
 // ── In-memory user store ───────────────────────────────────────────────────────
 

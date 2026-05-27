@@ -30,14 +30,14 @@ In the product's `package.json`:
 
 ```json
 "dependencies": {
-  "@varshyl/team-management": "github:VagishKapila/varshyl-toolkit#team-management-v0.0.1"
+  "@varshylinc/team-management": "github:VagishKapila/varshyl-toolkit#team-management-v0.0.1"
 }
 ```
 
 Then in product server code:
 
 ```ts
-import { createServerModule } from '@varshyl/team-management';
+import { createServerModule } from '@varshylinc/team-management';
 
 const tm = createServerModule({ adapter, db, config });
 await tm.runMigrations();
@@ -47,7 +47,7 @@ app.use('/api/team', tm.router);
 Then in product React client:
 
 ```tsx
-import { PlaceholderPage } from '@varshyl/team-management/client';
+import { PlaceholderPage } from '@varshylinc/team-management/client';
 
 <Route path='/team' element={<PlaceholderPage />} />
 ```

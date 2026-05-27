@@ -1,4 +1,4 @@
-# Changelog — @varshyl/team-management
+# Changelog — @varshylinc/team-management
 
 ## 0.1.0 — 2026-05-08
 

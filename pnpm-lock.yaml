@@ -14,7 +14,7 @@ importers:
 
   apps/demo-host:
     dependencies:
-      '@varshyl/team-management':
+      '@varshylinc/team-management':
         specifier: workspace:*
         version: link:../../packages/team-management
       express:

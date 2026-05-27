@@ -17,7 +17,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@varshyl/team-management/client': path.resolve(__dirname, '../../../packages/team-management/src/client/index.ts'),
+      '@varshylinc/team-management/client': path.resolve(__dirname, '../../../packages/team-management/src/client/index.ts'),
     },
   },
 });

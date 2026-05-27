@@ -19,7 +19,7 @@ import {
   PasswordResetRequestPage,
   PasswordResetPage,
   SuperAdminDashboard,
-} from '@varshyl/team-management/client';
+} from '@varshylinc/team-management/client';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -212,7 +212,7 @@ function HomePage(): React.ReactElement {
         <h1 className="text-3xl font-bold text-slate-900 mb-2">varshyl-toolkit</h1>
         <p className="text-slate-500 text-sm">
           Demo host — verification harness for{' '}
-          <code className="text-orange-600 text-xs">@varshyl/team-management</code> v0.1.0
+          <code className="text-orange-600 text-xs">@varshylinc/team-management</code> v0.1.0
         </p>
       </div>
       <div className="flex gap-4 flex-wrap justify-center">
@@ -246,7 +246,7 @@ function HomePage(): React.ReactElement {
         </Link>
       </div>
       <p className="text-xs text-slate-400 mt-4">
-        varshyl-toolkit v0.1.0 · @varshyl/team-management first feature release
+        varshyl-toolkit v0.1.0 · @varshylinc/team-management first feature release
       </p>
     </div>
   );

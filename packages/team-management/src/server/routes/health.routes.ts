@@ -15,7 +15,7 @@ export function createHealthRouter(
       await pool.query('SELECT 1');
       res.json({
         status: 'ok',
-        module: '@varshyl/team-management',
+        module: '@varshylinc/team-management',
         version: MODULE_VERSION,
         db: 'connected',
         flags: {
@@ -32,7 +32,7 @@ export function createHealthRouter(
     } catch (err) {
       res.status(503).json({
         status: 'error',
-        module: '@varshyl/team-management',
+        module: '@varshylinc/team-management',
         version: MODULE_VERSION,
         db: 'disconnected',
         error: err instanceof Error ? err.message : 'Unknown error',
