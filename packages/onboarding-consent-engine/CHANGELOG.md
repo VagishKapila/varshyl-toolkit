@@ -1,4 +1,4 @@
-# @varshyl/onboarding-consent-engine
+# @varshylinc/onboarding-consent-engine
 
 ## 0.1.0
 

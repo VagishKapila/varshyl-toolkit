@@ -1,4 +1,4 @@
--- Migration ledger for @varshyl/onboarding-consent-engine
+-- Migration ledger for @varshylinc/onboarding-consent-engine
 CREATE TABLE IF NOT EXISTS oce_schema_migrations (
   id          SERIAL       PRIMARY KEY,
   migration   VARCHAR(255) NOT NULL UNIQUE,

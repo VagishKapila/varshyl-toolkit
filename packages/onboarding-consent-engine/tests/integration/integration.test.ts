@@ -11,7 +11,7 @@ const describeWithDb = process.env.DATABASE_URL ? describe : describe.skip;
 let pool: Pool;
 let consent: ReturnType<typeof createConsentModule>;
 
-describeWithDb('@varshyl/onboarding-consent-engine — integration', () => {
+describeWithDb('@varshylinc/onboarding-consent-engine — integration', () => {
   beforeAll(async () => {
     pool = new Pool({ connectionString: process.env.DATABASE_URL });
     // Migrations already applied by global-setup; seed again is idempotent
