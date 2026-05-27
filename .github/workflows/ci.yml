@@ -107,3 +107,99 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # GITLEAKS_LICENSE not required for public repos
+
+  # ── Ephemeral smoke — onboarding-consent-engine ──────────────────────────────
+  # Only runs when OCE package files are present (i.e. on the OCE branch or after
+  # it has merged into main). On branches without OCE, this job is skipped —
+  # GitHub treats a skipped required check as passing.
+  smoke-oce:
+    name: smoke — onboarding-consent-engine
+    runs-on: ubuntu-latest
+    needs: ci
+    if: ${{ hashFiles('packages/onboarding-consent-engine/package.json') != '' }}
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: varshyl_smoke
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/varshyl_smoke
+      PORT: 3001
+      NODE_ENV: test
+      TM_ENCRYPTION_KEY: test-encryption-key-for-ci-only!
+      DEMO_HOST: http://localhost:3001
+      NODE_AUTH_TOKEN: ''
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9.1.0
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Build team-management
+        run: pnpm --filter @varshylinc/team-management build
+
+      - name: Build onboarding-consent-engine
+        run: pnpm --filter @varshylinc/onboarding-consent-engine build
+
+      - name: Build demo-host server
+        run: pnpm --filter @varshylinc/demo-host build:server
+
+      - name: Start ephemeral demo-host
+        run: |
+          node apps/demo-host/dist/server/index.js &
+          echo "DEMO_HOST_PID=$!" >> "$GITHUB_ENV"
+
+      - name: Wait for /healthz (max 60s)
+        run: |
+          echo "Waiting for demo-host on port 3001..."
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:3001/healthz > /dev/null 2>&1; then
+              echo "demo-host ready after $((i * 2))s"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "ERROR: demo-host did not become ready within 60s"
+          exit 1
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run smoke — consent-demo flow (ephemeral)
+        run: pnpm exec playwright test tests/smoke/onboarding-consent-engine.spec.ts
+        env:
+          DEMO_HOST_URL: http://localhost:3001
+
+      - name: Upload smoke results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oce-smoke-results
+          path: |
+            playwright-report/
+            test-results/
+            qa-evidence/smoke-results.json
+          retention-days: 14
