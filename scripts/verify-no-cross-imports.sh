@@ -37,13 +37,14 @@ for pkg_dir in "$PACKAGES_DIR"/*/; do
     if [ "$other_pkg" = "$pkg_name" ]; then
       continue
     fi
-    # Check if this package imports from any other package
-    if grep -r "@varshylinc/$other_pkg" "$src_dir" --include="*.ts" --include="*.tsx" -l 2>/dev/null | grep -q .; then
-      echo "❌ CROSS-IMPORT VIOLATION: $pkg_name imports from @varshylinc/$other_pkg"
-      echo "   Violating files:"
-      grep -r "@varshylinc/$other_pkg" "$src_dir" --include="*.ts" --include="*.tsx" -l
-      ERRORS=$((ERRORS + 1))
-    fi
+    for scope in "@varshylinc" "@varshyl"; do
+      if grep -r "${scope}/${other_pkg}" "$src_dir" --include="*.ts" --include="*.tsx" -l 2>/dev/null | grep -q .; then
+        echo "❌ CROSS-IMPORT VIOLATION: $pkg_name imports from ${scope}/${other_pkg}"
+        echo "   Violating files:"
+        grep -r "${scope}/${other_pkg}" "$src_dir" --include="*.ts" --include="*.tsx" -l
+        ERRORS=$((ERRORS + 1))
+      fi
+    done
   done
 done
 

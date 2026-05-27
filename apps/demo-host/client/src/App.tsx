@@ -20,6 +20,13 @@ import {
   PasswordResetPage,
   SuperAdminDashboard,
 } from '@varshylinc/team-management/client';
+import {
+  AuthSignInPage,
+  AuthSignUpPage,
+  AuthForgotPasswordPage,
+  AuthResetPasswordPage,
+  AuthAuthedPage,
+} from './AuthDemo.js';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -239,6 +246,12 @@ function HomePage(): React.ReactElement {
           Demo Login →
         </Link>
         <Link
+          to="/auth/signin"
+          className="px-4 py-2 bg-orange-600 text-white rounded-lg text-sm hover:bg-orange-500 transition-colors"
+        >
+          Auth Social →
+        </Link>
+        <Link
           to="/team/members"
           className="px-4 py-2 bg-orange-600 text-white rounded-lg text-sm hover:bg-orange-500 transition-colors"
         >
@@ -323,6 +336,13 @@ export default function App(): React.ReactElement {
         path="/team/email-change/cancel"
         element={<WithNav whoami={whoami}><EmailChangeCancelRoute /></WithNav>}
       />
+
+      {/* Auth social demo */}
+      <Route path="/auth/signin" element={<AuthSignInPage />} />
+      <Route path="/auth/signup" element={<AuthSignUpPage />} />
+      <Route path="/auth/forgot-password" element={<AuthForgotPasswordPage />} />
+      <Route path="/auth/reset-password" element={<AuthResetPasswordPage />} />
+      <Route path="/auth/authed" element={<AuthAuthedPage />} />
 
       {/* Password reset (standalone, no nav) */}
       <Route path="/password-reset" element={<PasswordResetRequestPage />} />
