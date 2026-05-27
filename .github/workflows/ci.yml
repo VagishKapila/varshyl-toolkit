@@ -68,6 +68,9 @@ jobs:
       - name: Build team-management (required before downstream typecheck)
         run: pnpm --filter @varshylinc/team-management build
 
+      - name: Build onboarding-consent-engine (required before downstream typecheck)
+        run: pnpm --filter @varshylinc/onboarding-consent-engine build
+
       - name: Typecheck
         run: pnpm typecheck
 
