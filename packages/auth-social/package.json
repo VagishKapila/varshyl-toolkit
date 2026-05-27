@@ -1,0 +1,53 @@
+{
+  "name": "@varshylinc/auth-social",
+  "version": "0.1.0",
+  "description": "Shared sign-in system for Varshyl products — Apple, Google, and email/password.",
+  "private": false,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./client": {
+      "import": "./dist/client.js",
+      "types": "./dist/client.d.ts"
+    },
+    "./client/capgo": {
+      "import": "./dist/client/providers/capgo-social-provider.js",
+      "types": "./dist/client/providers/capgo-social-provider.d.ts"
+    }
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.client.build.json && mkdir -p dist/migrations && cp migrations/*.sql dist/migrations/",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.client.json --noEmit",
+    "test": "vitest run",
+    "lint": "eslint src --ext .ts,.tsx --max-warnings 0"
+  },
+  "dependencies": {
+    "@node-rs/argon2": "^2.0.0",
+    "jose": "^5.2.4"
+  },
+  "peerDependencies": {
+    "pg": "^8.11.5",
+    "react": "^18.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.7",
+    "@types/pg": "^8.11.5",
+    "@types/react": "^18.3.1",
+    "@typescript-eslint/eslint-plugin": "^7.8.0",
+    "@typescript-eslint/parser": "^7.8.0",
+    "eslint": "^8.57.0",
+    "pg": "^8.11.5",
+    "react": "^18.3.1",
+    "typescript": "^5.4.5",
+    "vitest": "^1.5.0"
+  }
+}
