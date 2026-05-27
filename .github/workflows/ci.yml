@@ -116,7 +116,7 @@ jobs:
     name: smoke — onboarding-consent-engine
     runs-on: ubuntu-latest
     needs: ci
-    if: ${{ hashFiles('packages/onboarding-consent-engine/package.json') != '' }}
+    if: hashFiles('packages/onboarding-consent-engine/package.json') != ''
 
     services:
       postgres:
