@@ -71,6 +71,9 @@ jobs:
       - name: Build onboarding-consent-engine (required before downstream typecheck)
         run: pnpm --filter @varshylinc/onboarding-consent-engine build
 
+      - name: Build auth-social (required before downstream typecheck)
+        run: pnpm --filter @varshylinc/auth-social build
+
       - name: Typecheck
         run: pnpm typecheck
 
@@ -130,10 +133,27 @@ jobs:
             echo "present=false" >> $GITHUB_OUTPUT
           fi
 
+  # ── Detect auth-social ────────────────────────────────────────────────────────
+  detect-auth-social:
+    name: detect-auth-social
+    runs-on: ubuntu-latest
+    outputs:
+      present: ${{ steps.check.outputs.present }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check for auth-social package
+        id: check
+        run: |
+          if [ -f "packages/auth-social/package.json" ]; then
+            echo "present=true" >> $GITHUB_OUTPUT
+          else
+            echo "present=false" >> $GITHUB_OUTPUT
+          fi
+
   # ── Ephemeral smoke — onboarding-consent-engine ──────────────────────────────
-  # Runs the full ephemeral Playwright smoke against a locally-booted demo-host
-  # when OCE is present on the branch. Skips otherwise (skipped = satisfied).
-  # This is the required merge gate for all PRs touching OCE.
   smoke-oce:
     name: smoke — onboarding-consent-engine
     runs-on: ubuntu-latest
@@ -218,6 +238,100 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: oce-smoke-results
+          path: |
+            playwright-report/
+            test-results/
+            qa-evidence/smoke-results.json
+          retention-days: 14
+
+  # ── Ephemeral smoke — auth-social ─────────────────────────────────────────────
+  smoke-auth-social:
+    name: smoke — auth-social
+    runs-on: ubuntu-latest
+    needs: [ci, detect-auth-social]
+    if: needs.detect-auth-social.outputs.present == 'true'
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: varshyl_smoke
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/varshyl_smoke
+      PORT: 3001
+      NODE_ENV: test
+      TM_ENCRYPTION_KEY: test-encryption-key-for-ci-only!
+      NODE_AUTH_TOKEN: ''
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9.1.0
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Build team-management
+        run: pnpm --filter @varshylinc/team-management build
+
+      - name: Build onboarding-consent-engine
+        run: pnpm --filter @varshylinc/onboarding-consent-engine build
+
+      - name: Build auth-social
+        run: pnpm --filter @varshylinc/auth-social build
+
+      - name: Build demo-host
+        run: pnpm --filter @varshylinc/demo-host build
+
+      - name: Start ephemeral demo-host
+        run: |
+          node apps/demo-host/dist/server/index.js &
+          echo "DEMO_HOST_PID=$!" >> "$GITHUB_ENV"
+
+      - name: Wait for /healthz (max 60s)
+        run: |
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:3001/healthz > /dev/null 2>&1; then
+              echo "demo-host ready after $((i * 2))s"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "ERROR: demo-host did not become ready within 60s"
+          exit 1
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run smoke — auth-social (ephemeral)
+        run: pnpm exec playwright test tests/smoke/auth-social.spec.ts
+        env:
+          DEMO_HOST_URL: http://localhost:3001
+
+      - name: Upload smoke results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: auth-social-smoke-results
           path: |
             playwright-report/
             test-results/

@@ -6,6 +6,7 @@ import {
   runMigrations as runOceMigrations,
   seedStandardConsents,
 } from '@varshylinc/onboarding-consent-engine';
+import { createMockAuthService } from '@varshylinc/auth-social';
 import { pool, testConnection } from './db.js';
 import {
   demoAdapter,
@@ -15,11 +16,15 @@ import {
   listDemoUsers,
 } from './adapter.js';
 import { createConsentRouter } from './consent.js';
+import { createAuthRouter } from './auth-social.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = parseInt(process.env.PORT ?? '3000', 10);
 const NODE_ENV = process.env.NODE_ENV ?? 'development';
 const DEMO_HOST = process.env.DEMO_HOST ?? `http://localhost:${PORT}`;
+
+const authCapture = { lastResetToken: null as string | null, lastResetEmail: null as string | null };
+const authService = createMockAuthService(authCapture);
 
 // ── Demo data seed ─────────────────────────────────────────────────────────────
 
@@ -146,8 +151,6 @@ async function boot(): Promise<void> {
   app.use(express.json());
 
   // ── Readiness probe — responds only after all migrations + seed complete ───
-  // app.listen() is called below; this endpoint is only reachable once the
-  // server is fully booted, making it safe to use as a CI health-check gate.
   app.get('/healthz', (_req, res) => {
     res.status(200).json({ status: 'ready' });
   });
@@ -197,6 +200,9 @@ async function boot(): Promise<void> {
   // ── onboarding-consent-engine router ──────────────────────────────────────
   app.use('/api/consent', createConsentRouter(pool));
 
+  // ── auth-social router (mock-backed for demo/smoke) ──────────────────────────
+  app.use('/api/auth', createAuthRouter(authService, authCapture));
+
   // ── Health + info ──────────────────────────────────────────────────────────
   app.get('/api/health', (_req, res) => {
     res.json({
@@ -210,7 +216,7 @@ async function boot(): Promise<void> {
 
   // ── Serve React client ─────────────────────────────────────────────────────
   const clientDist = path.join(__dirname, '../client');
-  if (NODE_ENV === 'production') {
+  if (NODE_ENV === 'production' || NODE_ENV === 'test') {
     app.use(express.static(clientDist));
     app.get('*', (req, res) => {
       if (req.path.startsWith('/api/')) {
@@ -241,6 +247,9 @@ async function boot(): Promise<void> {
     console.log('[boot]   GET  /api/consent/status/:userId  → OCE: current status');
     console.log('[boot]   GET  /api/consent/pending/:userId → OCE: pending re-consents');
     console.log('[boot]   GET  /api/consent/audit/:userId   → OCE: audit trail');
+    console.log('[boot]   POST /api/auth/signup              → auth-social: email signup');
+    console.log('[boot]   POST /api/auth/signin              → auth-social: email signin');
+    console.log('[boot]   POST /api/auth/signin/provider    → auth-social: social signin');
     console.log('[boot]   GET  /                            → React shell');
   });
 

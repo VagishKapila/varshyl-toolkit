@@ -1,9 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
-// Ephemeral CI: DEMO_HOST_URL=http://localhost:3001 (set by smoke-oce job)
+// Ephemeral CI: DEMO_HOST_URL=http://localhost:3001 (set by smoke jobs)
 // Post-deploy verification: set DEMO_HOST_URL to the live Railway URL
-const DEMO_HOST_URL =
-  process.env.DEMO_HOST_URL ?? 'http://localhost:3000';
+const DEMO_HOST_URL = process.env.DEMO_HOST_URL ?? 'http://localhost:3000';
 
 export default defineConfig({
   testDir: './tests/smoke',
