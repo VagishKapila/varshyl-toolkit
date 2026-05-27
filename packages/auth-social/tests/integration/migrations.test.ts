@@ -7,7 +7,7 @@ const describeWithDb = process.env.DATABASE_URL ? describe : describe.skip;
 describeWithDb('auth-social migrations', () => {
   let pool: Pool;
 
-  beforeAll(() => {
+  beforeAll(async () => {
     pool = new Pool({ connectionString: process.env.DATABASE_URL });
   });
 
@@ -15,13 +15,31 @@ describeWithDb('auth-social migrations', () => {
     await pool.end();
   });
 
-  it('applies all migrations idempotently', async () => {
-    const first = await runMigrations(pool);
-    expect(first.applied.length).toBe(MIGRATIONS.length);
+  it('runs all 4 migrations successfully', async () => {
+    await runMigrations(pool);
+
+    const result = await pool.query(
+      `SELECT COUNT(*) as cnt FROM as_schema_migrations`
+    );
+    expect(parseInt(result.rows[0].cnt, 10)).toBe(MIGRATIONS.length);
+  });
+
+  it('is idempotent — re-running skips all 4 migrations', async () => {
+    const before = await pool.query(
+      `SELECT applied_at FROM as_schema_migrations ORDER BY id`
+    );
 
     const second = await runMigrations(pool);
-    expect(second.applied).toHaveLength(0);
-    expect(second.skipped.length).toBe(MIGRATIONS.length);
+    expect(second.applied.length).toBe(0);
+
+    const after = await pool.query(
+      `SELECT applied_at FROM as_schema_migrations ORDER BY id`
+    );
+
+    expect(after.rows.length).toBe(MIGRATIONS.length);
+    before.rows.forEach((row, i) => {
+      expect(after.rows[i].applied_at.getTime()).toBe(row.applied_at.getTime());
+    });
   });
 
   it('creates as_* tables', async () => {
@@ -29,5 +47,10 @@ describeWithDb('auth-social migrations', () => {
       const result = await pool.query(`SELECT to_regclass('public.${table}') AS reg`);
       expect(result.rows[0].reg).not.toBeNull();
     }
+  });
+
+  it('as_schema_migrations has exactly 4 rows', async () => {
+    const result = await pool.query(`SELECT COUNT(*) as cnt FROM as_schema_migrations`);
+    expect(parseInt(result.rows[0].cnt, 10)).toBe(MIGRATIONS.length);
   });
 });
