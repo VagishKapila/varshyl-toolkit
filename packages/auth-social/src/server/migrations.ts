@@ -3,7 +3,7 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import type { Pool } from 'pg';
 
-export const MIGRATIONS_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'migrations');
+export const MIGRATIONS_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'migrations');
 
 const MIGRATIONS: Array<{ name: string; file: string }> = [
   { name: '0001_create_as_credentials', file: join(MIGRATIONS_DIR, '0001_create_as_credentials.sql') },

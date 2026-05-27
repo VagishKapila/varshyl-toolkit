@@ -4,6 +4,7 @@
   "description": "Shared sign-in system for Varshyl products — Apple, Google, and email/password.",
   "private": false,
   "type": "module",
+  "files": ["dist", "migrations"],
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
