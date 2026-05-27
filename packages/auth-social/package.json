@@ -1,6 +1,6 @@
 {
   "name": "@varshylinc/auth-social",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Shared sign-in system for Varshyl products — Apple, Google, and email/password.",
   "private": false,
   "type": "module",
@@ -9,16 +9,19 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js",
+      "import": "./dist/index.js"
     },
     "./client": {
-      "import": "./dist/client.js",
-      "types": "./dist/client.d.ts"
+      "types": "./dist/client.d.ts",
+      "require": "./dist/client.js",
+      "import": "./dist/client.js"
     },
     "./client/capgo": {
-      "import": "./dist/client/providers/capgo-social-provider.js",
-      "types": "./dist/client/providers/capgo-social-provider.d.ts"
+      "types": "./dist/client/providers/capgo-social-provider.d.ts",
+      "require": "./dist/client/providers/capgo-social-provider.js",
+      "import": "./dist/client/providers/capgo-social-provider.js"
     }
   },
   "publishConfig": {
