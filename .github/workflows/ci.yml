@@ -199,14 +199,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
-      - name: Build team-management
-        run: pnpm --filter @varshylinc/team-management build
-
-      - name: Build onboarding-consent-engine
-        run: pnpm --filter @varshylinc/onboarding-consent-engine build
-
-      - name: Build demo-host server
-        run: pnpm --filter @varshylinc/demo-host build:server
+      - name: Build demo-host and all workspace deps
+        run: pnpm --filter @varshylinc/demo-host... build
 
       - name: Start ephemeral demo-host
         run: |
@@ -290,17 +284,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
-      - name: Build team-management
-        run: pnpm --filter @varshylinc/team-management build
-
-      - name: Build onboarding-consent-engine
-        run: pnpm --filter @varshylinc/onboarding-consent-engine build
-
-      - name: Build auth-social
-        run: pnpm --filter @varshylinc/auth-social build
-
-      - name: Build demo-host
-        run: pnpm --filter @varshylinc/demo-host build
+      - name: Build demo-host and all workspace deps
+        run: pnpm --filter @varshylinc/demo-host... build
 
       - name: Start ephemeral demo-host
         run: |
