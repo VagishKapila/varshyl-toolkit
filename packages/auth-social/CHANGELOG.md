@@ -1,5 +1,11 @@
 # @varshylinc/auth-social
 
+## 0.2.0
+
+### Minor Changes
+
+- Password show/hide eye toggle on AuthField password inputs; signup consent slot (`consentSlot` prop) on SignInScreen for host-composed consent UI.
+
 ## 0.1.1
 
 ### Patch Changes

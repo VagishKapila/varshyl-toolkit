@@ -9,6 +9,8 @@ interface SignInScreenProps {
   onSuccess?: () => void;
   forgotPasswordUrl?: string;
   signUpMode?: boolean;
+  /** Signup-only slot for consent UI (e.g. OCE SignupConsentBlock). Ignored when signUpMode is false. */
+  consentSlot?: React.ReactNode;
 }
 
 export function SignInScreen({
@@ -16,6 +18,7 @@ export function SignInScreen({
   onSuccess,
   forgotPasswordUrl = '/auth/forgot-password',
   signUpMode = false,
+  consentSlot,
 }: SignInScreenProps): React.ReactElement {
   const theme = getAuthTheme();
   const [email, setEmail] = useState('');
@@ -91,6 +94,9 @@ export function SignInScreen({
           onChange={setPassword}
           autoComplete={signUpMode ? 'new-password' : 'current-password'}
         />
+        {signUpMode && consentSlot != null && (
+          <div data-testid="signup-consent-slot">{consentSlot}</div>
+        )}
         {error && (
           <p style={{ margin: 0, color: theme.error, fontSize: '13px' }} data-testid="auth-error">
             {error}
