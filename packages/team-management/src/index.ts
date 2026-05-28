@@ -1,5 +1,13 @@
 // ─── Server exports (Node.js + tsc, DO NOT import in browser bundles) ─────────
-export { createServerModule } from './server/index.js';
+export { createServerModule, runMigrations } from './server/index.js';
+export {
+  addOrgMember,
+  listOrgMembers,
+  getOrgHierarchy,
+  updateOrgMember,
+  removeOrgMember,
+} from './server/org-admin.js';
+export type { OrgMemberRecord, OrgHierarchyGroup } from './server/org-admin.js';
 export type {
   ServerModuleAdapter,
   TeamManagementConfig,

@@ -1,6 +1,6 @@
 {
   "name": "@varshylinc/demo-host",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Verification harness for varshyl-toolkit modules. NOT a product.",
   "private": true,
   "type": "module",

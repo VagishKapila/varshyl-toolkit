@@ -1,27 +1,34 @@
 {
   "name": "@varshylinc/team-management",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Team management shared module for Varshyl products.",
   "private": false,
+  "type": "module",
+  "files": [
+    "dist"
+  ],
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js",
+      "import": "./dist/index.js"
     },
     "./server": {
-      "import": "./dist/server/index.js",
-      "types": "./dist/server/index.d.ts"
+      "types": "./dist/server/index.d.ts",
+      "require": "./dist/server/index.js",
+      "import": "./dist/server/index.js"
     },
     "./client": {
-      "import": "./dist/client/index.js",
-      "types": "./dist/client/index.d.ts"
+      "types": "./dist/client/index.d.ts",
+      "require": "./dist/client/index.js",
+      "import": "./dist/client/index.js"
     }
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json && mkdir -p dist/server/migrations && cp src/server/migrations/*.sql dist/server/migrations/",
-    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.client.json",
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.client.build.json && mkdir -p dist/server/migrations && cp src/server/migrations/*.sql dist/server/migrations/",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.client.json --noEmit",
     "test": "vitest run",
     "lint": "eslint src --ext .ts,.tsx --max-warnings 0"
   },
@@ -46,9 +53,9 @@
   },
   "peerDependencies": {
     "express": "^4.18.3",
-    "pg": "^8.11.5"
+    "pg": "^8.11.5",
+    "react": "^18.0.0"
   },
-  "type": "module",
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"

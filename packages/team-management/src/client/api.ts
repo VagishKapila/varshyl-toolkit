@@ -8,6 +8,7 @@ import type {
   SuperAdminOrgSummary,
   OrgRole,
   ApiError,
+  OrgHierarchyGroup,
 } from './types.js';
 
 export let TM_API_BASE = '/api/team';
@@ -22,6 +23,7 @@ async function fetchTm<T>(
 ): Promise<T> {
   const res = await fetch(`${TM_API_BASE}${path}`, {
     ...options,
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       ...(options.headers ?? {}),
@@ -41,6 +43,48 @@ async function fetchTm<T>(
   }
 
   return data as T;
+}
+
+type RawMemberRow = {
+  id: number;
+  org_id: number;
+  user_id: number;
+  role: OrgRole;
+  joined_at: string;
+  removed_at?: string | null;
+  removed_by_user_id?: number | null;
+  removal_reason?: string | null;
+  user?: { id: number; email: string; name?: string };
+  email?: string;
+  name?: string;
+};
+
+function normalizeMember(row: RawMemberRow): PublicMember {
+  return {
+    id: row.id,
+    org_id: row.org_id,
+    user_id: row.user_id,
+    role: row.role,
+    email: row.user?.email ?? row.email ?? '',
+    name: row.user?.name ?? row.name,
+    joined_at: row.joined_at,
+    removed_at: row.removed_at ?? undefined,
+    removed_by_user_id: row.removed_by_user_id ?? undefined,
+    removal_reason: row.removal_reason ?? undefined,
+  };
+}
+
+function normalizeMemberRecord(record: {
+  membership: RawMemberRow;
+  email: string;
+  name?: string;
+}): PublicMember {
+  return normalizeMember({
+    ...record.membership,
+    email: record.email,
+    name: record.name,
+    user: { id: record.membership.user_id, email: record.email, name: record.name },
+  });
 }
 
 // ─── Orgs ────────────────────────────────────────────────────────────────────
@@ -71,7 +115,41 @@ export async function listMembers(
   opts?: { includeFormer?: boolean }
 ): Promise<PublicMember[]> {
   const qs = opts?.includeFormer ? '?includeFormer=true' : '';
-  return fetchTm<PublicMember[]>(`/orgs/${orgId}/members${qs}`);
+  const data = await fetchTm<{ members: RawMemberRow[] }>(`/orgs/${orgId}/members${qs}`);
+  return data.members.map(normalizeMember);
+}
+
+export async function addOrgMember(
+  orgId: number,
+  data: { email: string; role: OrgRole; name?: string }
+): Promise<PublicMember> {
+  const res = await fetchTm<{ member: { membership: RawMemberRow; email: string; name?: string } }>(
+    `/orgs/${orgId}/members`,
+    { method: 'POST', body: JSON.stringify(data) }
+  );
+  return normalizeMemberRecord(res.member);
+}
+
+export async function updateOrgMember(
+  orgId: number,
+  userId: number,
+  data: { role?: OrgRole; name?: string }
+): Promise<PublicMember> {
+  const res = await fetchTm<{ member: { membership: RawMemberRow; email: string; name?: string } }>(
+    `/orgs/${orgId}/members/${userId}`,
+    { method: 'PATCH', body: JSON.stringify(data) }
+  );
+  return normalizeMemberRecord(res.member);
+}
+
+export async function getOrgHierarchy(orgId: number): Promise<OrgHierarchyGroup[]> {
+  const data = await fetchTm<{
+    hierarchy: Array<{ role: OrgRole; members: Array<{ membership: RawMemberRow; email: string; name?: string }> }>;
+  }>(`/orgs/${orgId}/hierarchy`);
+  return data.hierarchy.map((group) => ({
+    role: group.role,
+    members: group.members.map(normalizeMemberRecord),
+  }));
 }
 
 export async function removeMember(
@@ -90,10 +168,7 @@ export async function changeMemberRole(
   userId: number,
   newRole: OrgRole
 ): Promise<PublicMember> {
-  return fetchTm<PublicMember>(`/orgs/${orgId}/members/${userId}/role`, {
-    method: 'PATCH',
-    body: JSON.stringify({ role: newRole }),
-  });
+  return updateOrgMember(orgId, userId, { role: newRole });
 }
 
 // ─── Invitations ─────────────────────────────────────────────────────────────
