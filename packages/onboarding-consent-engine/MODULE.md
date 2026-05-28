@@ -1,7 +1,7 @@
 # MODULE: @varshylinc/onboarding-consent-engine
 
-**Status:** ✅ RELEASED — v0.1.0  
-**Git tag:** `onboarding-consent-engine-v0.1.0`  
+**Status:** ✅ RELEASED — v0.2.0  
+**Git tag:** `onboarding-consent-engine-v0.2.0`  
 **First module to ship MODULE.md** — this document sets the precedent for all future `packages/*` in varshyl-toolkit.
 
 ---
@@ -45,6 +45,16 @@ Shared consent collection, audit trail, welcome screen, and empty state. Intende
 | `WelcomeScreen` | `{productName, requiredConsents, optionalConsents, value, onChange, onContinue, legalLinks?, loading?, logo?}` | Full-page first-run screen |
 | `EmptyState` | `{title?, description?, action?}` | Empty state placeholder |
 | `ConsentUpdateModal` | `{productName, updatedConsents, value, onChange, onAccept, loading?, legalLinks?}` | Modal for policy updates |
+| `SignupConsentBlock` | `{termsUrl, privacyUrl, aiTrainingChecked, onAiTrainingChange, aiTrainingLabel?, learnMoreUrl?, actionPhrase?, disabled?}` | Hybrid signup consent — implied ToS/Privacy + explicit AI checkbox |
+
+### Client actions (import from `@varshylinc/onboarding-consent-engine/client`)
+
+| Export | Description |
+|--------|-------------|
+| `buildSignupConsentsPayload` | Build `{ key, granted }[]` for `recordSignupConsents` from signup UI state |
+| `recordSignupConsentsAction` | POST hybrid signup consents to host `/api/consent/signup` |
+| `consentActions` | SOREN-callable action bundle |
+| `DEFAULT_AI_TRAINING_LABEL` | Owner-approved default AI checkbox copy |
 
 ### Shared types (import from `@varshylinc/onboarding-consent-engine`)
 
@@ -107,7 +117,7 @@ Releases follow SemVer with the prefix `onboarding-consent-engine-vX.Y.Z`.
 | Release | Tag | Notes |
 |---------|-----|-------|
 | v0.1.0 | `onboarding-consent-engine-v0.1.0` | Initial release |
-| v0.2.0 | `onboarding-consent-engine-v0.2.0` | Planned: IP/UA encryption via libsodium sealed box |
+| v0.2.0 | `onboarding-consent-engine-v0.2.0` | SignupConsentBlock + hybrid signup consent pattern |
 
 ---
 

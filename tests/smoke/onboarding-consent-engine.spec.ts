@@ -96,6 +96,31 @@ test('full consent-demo flow — render → required check → submit → DB ass
   expect(pending, 'User should have no pending required consents after signup').toHaveLength(0);
 });
 
+// S7: hybrid signup — ai_training unchecked by default, still recorded explicitly
+test('S7: hybrid signup records ai_training=false when checkbox unchecked', async ({ request }) => {
+  const userId = `smoke-hybrid-${Date.now()}`;
+  const submitRes = await request.post(`${BASE}/api/consent/signup`, {
+    data: {
+      userId,
+      consents: [
+        { key: 'terms_of_service', granted: true },
+        { key: 'privacy_policy', granted: true },
+        { key: 'ai_training', granted: false },
+      ],
+    },
+  });
+  expect(submitRes.status()).toBe(200);
+
+  const auditRes = await request.get(`${BASE}/api/consent/audit/${userId}`);
+  const trail = await auditRes.json();
+  const byKey = Object.fromEntries(
+    trail.map((e: { key: string; granted: boolean }) => [e.key, e.granted]),
+  );
+  expect(byKey['terms_of_service']).toBe(true);
+  expect(byKey['privacy_policy']).toBe(true);
+  expect(byKey['ai_training']).toBe(false);
+});
+
 // ── S6: Error path — unknown consent key returns 400 ─────────────────────────
 test('S6: POST /api/consent/signup with unknown key returns 400', async ({ request }) => {
   const res = await request.post(`${BASE}/api/consent/signup`, {

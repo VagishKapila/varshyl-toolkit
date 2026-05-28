@@ -38,6 +38,33 @@ const pending = await consent.needsConsentUpdate(String(user.id));
 
 ## Client usage
 
+### Signup consent (v0.2.0+)
+
+```tsx
+import {
+  SignupConsentBlock,
+  buildSignupConsentsPayload,
+} from '@varshylinc/onboarding-consent-engine/client';
+
+const [aiTraining, setAiTraining] = useState(false);
+
+<SignupConsentBlock
+  termsUrl="/legal/terms"
+  privacyUrl="/legal/privacy"
+  aiTrainingChecked={aiTraining}
+  onAiTrainingChange={setAiTraining}
+  learnMoreUrl="/legal/ai-data"
+/>
+
+// On signup submit — ToS/Privacy implied granted; AI reflects checkbox
+await consent.recordSignupConsents({
+  userId: String(user.id),
+  consents: buildSignupConsentsPayload({ aiTrainingGranted: aiTraining }),
+});
+```
+
+### Welcome screen (first-run onboarding)
+
 ```tsx
 import { WelcomeScreen } from '@varshylinc/onboarding-consent-engine/client';
 

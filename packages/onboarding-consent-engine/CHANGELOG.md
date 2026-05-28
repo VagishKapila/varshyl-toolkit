@@ -1,5 +1,13 @@
 # @varshylinc/onboarding-consent-engine
 
+## 0.2.0
+
+### Minor Changes
+
+- Add `SignupConsentBlock` — hybrid signup consent UX (implied ToS/Privacy line + separate unchecked-by-default AI-training checkbox).
+- Add `buildSignupConsentsPayload` and client `consentActions` for wiring signup to `recordSignupConsents`.
+- Export signup consent constants (`DEFAULT_AI_TRAINING_LABEL`, `IMPLIED_SIGNUP_CONSENT_KEYS`, `AI_TRAINING_CONSENT_KEY`).
+
 ## 0.1.1
 
 ### Patch Changes
