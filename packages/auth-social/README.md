@@ -7,6 +7,22 @@
 
 Part of the **Varshyl Toolkit** — a set of independent, composable packages for building Capacitor + web SaaS apps.
 
+## Screenshots
+
+Ready-made sign-in screen with Google and email/password — drop it into your app and theme it.
+
+![Sign-in screen with Google button, email and password fields, and a show/hide password toggle](https://raw.githubusercontent.com/VagishKapila/varshyl-toolkit/chore/public-polish/docs/readme-screenshots/auth-social-sign-in.png)
+
+Tap the eye icon to reveal or hide the password — helpful on mobile keyboards.
+
+![Password field with the visibility toggle showing plain text](https://raw.githubusercontent.com/VagishKapila/varshyl-toolkit/chore/public-polish/docs/readme-screenshots/auth-social-eye-toggle.png)
+
+Forgot-password and reset-password screens ship with the package — wire your adapter’s email sender and you’re done.
+
+![Forgot password screen — user enters email to receive a reset link](https://raw.githubusercontent.com/VagishKapila/varshyl-toolkit/chore/public-polish/docs/readme-screenshots/auth-social-forgot-password.png)
+
+![Reset password screen — user sets a new password from the email link](https://raw.githubusercontent.com/VagishKapila/varshyl-toolkit/chore/public-polish/docs/readme-screenshots/auth-social-reset-password.png)
+
 ## What it does
 
 Handles sign-in and sign-up for mobile and web apps without owning your user table. You implement a small adapter for your existing user store; the module manages credentials, OAuth identities, sessions, and password-reset tokens in its own Postgres tables. Ships ready-made React screens with platform-aware social buttons (Apple on iOS, Google on Android/web) and an email/password flow with a password visibility toggle.

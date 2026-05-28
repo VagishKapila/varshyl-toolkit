@@ -7,6 +7,14 @@
 
 Part of the **Varshyl Toolkit** — a set of independent, composable packages for building Capacitor + web SaaS apps.
 
+## Screenshots
+
+Hybrid signup consent: Terms and Privacy as linked text, plus a separate optional checkbox that starts unchecked.
+
+![Signup consent block with Terms/Privacy links and an unchecked optional AI-training checkbox](https://raw.githubusercontent.com/VagishKapila/varshyl-toolkit/chore/public-polish/docs/readme-screenshots/onboarding-consent-signup-block.png)
+
+The AI-training choice is explicit and off by default — the pattern auditors expect for secondary data use.
+
 ## What it does
 
 Collects and audits user consent at signup and onboarding. Stores an append-only consent history with version tracking when policy text changes. Ships React components for a first-run welcome screen, policy-update modals, and a hybrid signup block (implied Terms/Privacy + explicit AI-training checkbox). Your app owns authentication and user creation — this module only records consent.

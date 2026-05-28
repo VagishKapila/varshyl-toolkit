@@ -7,6 +7,12 @@
 
 Part of the **Varshyl Toolkit** — a set of independent, composable packages for building Capacitor + web SaaS apps.
 
+## Screenshots
+
+Admin Org/People page — roster, role hierarchy, and add-member in one screen for org owners.
+
+![Org People admin page listing team members, roles, and add-member controls](https://raw.githubusercontent.com/VagishKapila/varshyl-toolkit/chore/public-polish/docs/readme-screenshots/team-management-org-people.png)
+
 ## What it does
 
 Provides org CRUD, member roster, role hierarchy, invitations, audit log, ownership transfer, and an admin Org/People page. The host product implements a small adapter for identity and authorization; the module owns all `tm_*` tables. Members are keyed by host `userId` for future seat mapping with `@varshylinc/mobile-payments`.

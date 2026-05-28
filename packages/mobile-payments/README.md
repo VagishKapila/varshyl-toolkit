@@ -7,6 +7,12 @@
 
 Part of the **Varshyl Toolkit** — a set of independent, composable packages for building Capacitor + web SaaS apps.
 
+## Screenshots
+
+In-app paywall with pricing, free trial, subscribe, and restore — ready for RevenueCat on iOS and Android.
+
+![Subscription paywall showing monthly price, 90-day free trial, and Subscribe / Restore buttons](https://raw.githubusercontent.com/VagishKapila/varshyl-toolkit/chore/public-polish/docs/readme-screenshots/mobile-payments-paywall.png)
+
 ## What it does
 
 Manages org-keyed subscription state for Capacitor mobile apps. Syncs purchase events from RevenueCat webhooks, tracks seat assignments, and exposes server-side write guards plus client paywall/gate components. When a subscription lapses, users retain read access but lose write permission — enforced on the server, not just in the UI.
