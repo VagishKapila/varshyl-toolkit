@@ -37,9 +37,9 @@ jobs:
       - name: Build public-demo
         run: pnpm --filter @varshylinc/public-demo build
 
-      - name: Install Playwright package and Chromium
+      - name: Install Playwright (workspace root + browser binary)
         run: |
-          npm install playwright
+          pnpm add -w playwright
           npx playwright install chromium --with-deps
 
       - name: Start vite preview (background)
