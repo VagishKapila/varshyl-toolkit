@@ -35,7 +35,7 @@ test('S3: email sign-up then sign-in establishes session', async ({ page }) => {
 
   await page.goto('/auth/signup');
   await page.getByLabel('Email').fill(email);
-  await page.getByLabel('Password').fill(password);
+  await page.getByTestId('password-input').fill(password);
   await page.getByTestId('sign-in-submit').click();
   await expect(page.getByTestId('auth-authed')).toBeVisible({ timeout: 10000 });
 
@@ -43,7 +43,7 @@ test('S3: email sign-up then sign-in establishes session', async ({ page }) => {
   await expect(page.getByTestId('sign-in-screen')).toBeVisible({ timeout: 10000 });
 
   await page.getByLabel('Email').fill(email);
-  await page.getByLabel('Password').fill(password);
+  await page.getByTestId('password-input').fill(password);
   await page.getByTestId('sign-in-submit').click();
   await expect(page.getByTestId('auth-authed')).toBeVisible({ timeout: 10000 });
 });
@@ -73,7 +73,7 @@ test('S4: forgot-password → reset → sign-in with new password', async ({ pag
 
   await page.goto('/auth/signin');
   await page.getByLabel('Email').fill(email);
-  await page.getByLabel('Password').fill(newPassword);
+  await page.getByTestId('password-input').fill(newPassword);
   await page.getByTestId('sign-in-submit').click();
   await expect(page.getByTestId('auth-authed')).toBeVisible({ timeout: 10000 });
 });
@@ -86,7 +86,7 @@ test('S5: social sign-in via mock provider establishes session', async ({ page }
 
 test('S6: password field hidden by default; eye toggle reveals and hides', async ({ page }) => {
   await page.goto('/auth/signin');
-  const passwordInput = page.getByTestId('auth-password-input');
+  const passwordInput = page.getByTestId('password-input');
   await expect(passwordInput).toHaveAttribute('type', 'password');
 
   const toggle = page.getByTestId('password-visibility-toggle');
@@ -103,11 +103,11 @@ test('S7: eye toggle is keyboard-focusable with correct aria-label per state', a
 
   await toggle.focus();
   await expect(toggle).toBeFocused();
-  await expect(toggle).toHaveAttribute('aria-label', 'Show password');
+  await expect(toggle).toHaveAttribute('aria-label', 'Show characters');
   await expect(toggle).toHaveAttribute('aria-pressed', 'false');
 
   await toggle.press('Enter');
-  await expect(toggle).toHaveAttribute('aria-label', 'Hide password');
+  await expect(toggle).toHaveAttribute('aria-label', 'Hide characters');
   await expect(toggle).toHaveAttribute('aria-pressed', 'true');
 });
 

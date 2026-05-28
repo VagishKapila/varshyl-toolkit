@@ -4,7 +4,7 @@ export function togglePasswordVisibility(currentlyVisible: boolean): boolean {
 }
 
 export function passwordVisibilityAriaLabel(visible: boolean): string {
-  return visible ? 'Hide password' : 'Show password';
+  return visible ? 'Hide characters' : 'Show characters';
 }
 
 export function passwordInputType(visible: boolean): 'text' | 'password' {

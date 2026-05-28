@@ -89,7 +89,7 @@ export function AuthField({
       onChange={e => onChange(e.target.value)}
       autoComplete={autoComplete}
       placeholder={placeholder}
-      data-testid={isPasswordField ? 'auth-password-input' : undefined}
+      data-testid={isPasswordField ? 'password-input' : undefined}
       style={{
         width: '100%',
         boxSizing: 'border-box',
