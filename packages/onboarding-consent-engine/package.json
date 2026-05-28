@@ -1,22 +1,27 @@
 {
   "name": "@varshylinc/onboarding-consent-engine",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Consent collection, audit trail, welcome screen, and empty state for Varshyl products",
   "type": "module",
+  "files": [
+    "dist"
+  ],
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js",
+      "import": "./dist/index.js"
     },
     "./client": {
-      "import": "./dist/client/index.js",
-      "types": "./dist/client/index.d.ts"
+      "types": "./dist/client/index.d.ts",
+      "require": "./dist/client/index.js",
+      "import": "./dist/client/index.js"
     }
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "tsc -p tsconfig.json && mkdir -p dist/server/migrations && cp src/server/migrations/*.sql dist/server/migrations/",
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.client.build.json && mkdir -p dist/server/migrations && cp src/server/migrations/*.sql dist/server/migrations/",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.client.json --noEmit",
     "lint": "eslint src --ext .ts,.tsx --max-warnings 0",
     "test": "vitest run",

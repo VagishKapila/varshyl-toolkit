@@ -1,5 +1,11 @@
 # @varshylinc/onboarding-consent-engine
 
+## 0.1.1
+
+### Patch Changes
+
+- Add require conditions to exports map so require('@varshylinc/onboarding-consent-engine') resolves for CommonJS consumers. No code or behavior change.
+
 ## 0.1.0
 
 ### Minor Changes
