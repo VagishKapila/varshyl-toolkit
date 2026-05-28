@@ -1,10 +1,13 @@
 {
   "name": "@varshylinc/mobile-payments",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Seat-aware in-app subscriptions for Varshyl mobile products — RevenueCat IAP (Phase 1).",
   "private": false,
   "type": "module",
-  "files": ["dist", "migrations"],
+  "files": [
+    "dist",
+    "migrations"
+  ],
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
@@ -36,7 +39,7 @@
   },
   "dependencies": {},
   "peerDependencies": {
-    "@revenuecat/purchases-capacitor": "^9.0.0",
+    "@revenuecat/purchases-capacitor": "^10.0.0",
     "pg": "^8.11.5",
     "react": "^18.0.0"
   },
@@ -46,6 +49,7 @@
     }
   },
   "devDependencies": {
+    "@revenuecat/purchases-capacitor": "^10.0.0",
     "@types/node": "^20.12.7",
     "@types/pg": "^8.11.5",
     "@types/react": "^18.3.1",

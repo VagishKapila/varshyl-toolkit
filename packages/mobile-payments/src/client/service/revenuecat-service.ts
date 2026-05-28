@@ -2,13 +2,28 @@ import type { ClientPaymentsConfig, ProductPaymentsConfig } from '../../config.j
 import type { SubscriptionState } from '../../types.js';
 import { resolveClientAccessMode } from '../access.js';
 import type { SubscriptionService } from './subscription-service.js';
-import { Purchases } from '@revenuecat/purchases-capacitor';
+
+type PurchasesClient = typeof import('@revenuecat/purchases-capacitor').Purchases;
+type CustomerInfoResult = Awaited<ReturnType<PurchasesClient['getCustomerInfo']>>;
+
+async function getPurchases(): Promise<PurchasesClient> {
+  try {
+    const mod = await import('@revenuecat/purchases-capacitor');
+    return mod.Purchases;
+  } catch {
+    throw new Error(
+      '@varshylinc/mobile-payments/client/revenuecat requires ' +
+        '@revenuecat/purchases-capacitor to be installed in the host app. ' +
+        'Install it as a regular dependency in your Capacitor product.'
+    );
+  }
+}
 
 function mapCustomerInfo(
   orgId: string,
   entitlementId: string,
   seats: number,
-  info: Awaited<ReturnType<typeof Purchases.getCustomerInfo>>
+  info: CustomerInfoResult
 ): SubscriptionState {
   const active = info.customerInfo.entitlements.active[entitlementId];
   const status = active ? 'active' : 'none';
@@ -33,6 +48,7 @@ export function createRevenueCatSubscriptionService(
 
   async function ensureConfigured() {
     if (configured || !clientConfig.revenueCatApiKey) return;
+    const Purchases = await getPurchases();
     await Purchases.configure({
       apiKey: clientConfig.revenueCatApiKey,
       appUserID: orgId,
@@ -49,12 +65,14 @@ export function createRevenueCatSubscriptionService(
 
     async getState() {
       await ensureConfigured();
+      const Purchases = await getPurchases();
       const info = await Purchases.getCustomerInfo();
       return mapCustomerInfo(orgId, product.entitlementId, 1, info);
     },
 
     async getOfferings() {
       await ensureConfigured();
+      const Purchases = await getPurchases();
       const { current } = await Purchases.getOfferings();
       if (!current) return [];
       return [
@@ -73,6 +91,7 @@ export function createRevenueCatSubscriptionService(
 
     async purchase(packageId) {
       await ensureConfigured();
+      const Purchases = await getPurchases();
       const { current } = await Purchases.getOfferings();
       const pkg = current?.availablePackages.find((p) => p.identifier === packageId);
       if (!pkg) throw new Error(`Package not found: ${packageId}`);
@@ -81,18 +100,19 @@ export function createRevenueCatSubscriptionService(
         orgId,
         product.entitlementId,
         1,
-        result as Awaited<ReturnType<typeof Purchases.getCustomerInfo>>
+        result as CustomerInfoResult
       );
     },
 
     async restore() {
       await ensureConfigured();
+      const Purchases = await getPurchases();
       const result = await Purchases.restorePurchases();
       return mapCustomerInfo(
         orgId,
         product.entitlementId,
         1,
-        result as Awaited<ReturnType<typeof Purchases.getCustomerInfo>>
+        result as CustomerInfoResult
       );
     },
   };
