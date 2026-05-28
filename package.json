@@ -8,6 +8,7 @@
     "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck",
     "lint": "pnpm -r lint",
+    "prepush": "bash scripts/prepush-check.sh",
     "verify": "pnpm typecheck && pnpm test && pnpm build && bash scripts/verify-no-cross-imports.sh"
   },
   "engines": {

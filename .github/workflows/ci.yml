@@ -430,3 +430,64 @@ jobs:
             test-results/
             qa-evidence/smoke-results.json
           retention-days: 14
+
+  # ── Pre-publish packaging gate ────────────────────────────────────────────────
+  # Cowork: add "pre-publish-check" to main branch required checks on land.
+  pre-publish-check:
+    name: pre-publish-check
+    runs-on: ubuntu-latest
+    needs: [ci]
+
+    env:
+      NODE_AUTH_TOKEN: ''
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9.1.0
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Build all packages (dist/ must exist for exports validation)
+        run: pnpm build
+
+      - name: Run packaging checks on changed publishable packages
+        run: |
+          set -euo pipefail
+          mapfile -t CHANGED < <(git diff --name-only origin/main...HEAD \
+            | grep '^packages/' | cut -d/ -f2 | sort -u || true)
+
+          PACKAGES=()
+          for dir in "${CHANGED[@]}"; do
+            [[ -z "$dir" ]] && continue
+            if [[ -f "packages/$dir/package.json" ]]; then
+              PRIVATE=$(node -p "require('./packages/$dir/package.json').private !== false")
+              if [[ "$PRIVATE" == "false" ]]; then
+                PACKAGES+=("@varshylinc/$dir")
+              fi
+            fi
+          done
+
+          if [[ ${#PACKAGES[@]} -eq 0 ]]; then
+            echo "No publishable package dirs changed — smoke-test rail on known-good packages"
+            PACKAGES=("@varshylinc/auth-social" "@varshylinc/mobile-payments")
+          fi
+
+          echo "Packages to check: ${PACKAGES[*]}"
+          for pkg in "${PACKAGES[@]}"; do
+            echo "══════════════════════════════════════"
+            echo "pre-publish-check: $pkg"
+            bash scripts/prepush-check.sh "$pkg" --packaging-only
+          done

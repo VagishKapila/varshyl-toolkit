@@ -169,6 +169,46 @@ Railway is never a CI dependency.
 
 Future modules add their own `smoke — <module>` check to this list on introduction.
 
+Also recommended on `main`: `pre-publish-check` (packaging/tarball gate — add when prepush-rail PR lands).
+
+---
+
+## Pre-push rail (`pnpm prepush`)
+
+Before pushing any module branch, run:
+
+```bash
+pnpm prepush -- @varshylinc/<package-name>
+# With local Postgres integration tests required:
+pnpm prepush -- @varshylinc/<package-name> --require-db
+```
+
+Implemented in `scripts/prepush-check.sh`. Encodes the manual Section-16 checklist and the publish bugs that cost multiple round-trips on the first two modules.
+
+### Six recurring bug classes this prevents
+
+| Bug class | Where it first bit us | What the rail checks |
+|-----------|----------------------|----------------------|
+| ESLint failures | auth-social initial PR | Step 2: `pnpm lint` |
+| SQL migrations not in tarball | auth-social publish | Steps 7–8: `files` includes `migrations`; tarball lists `.sql` |
+| `exports` map missing `require` | auth-social@0.1.0 publish | Step 6: every entry has `types` + `require` + `import` |
+| Native SDK peer dep crashes non-Capacitor consumers | mobile-payments@0.1.0 `./client/revenuecat` | Step 8: tarball install **without** optional peers; all entry points load |
+| Missing CHANGELOG at tag time | auth-social + mobile-payments release gate | Step 5: `## <version>` in CHANGELOG or pending changeset |
+| Branch behind `main` at push time | mobile-payments land | Step 1: warn-only (never auto-rebase) |
+
+### Changeset / CHANGELOG discipline
+
+- Run `pnpm changeset` when cutting a release-worthy change.
+- Run `pnpm changeset version` **before** pushing the release tag — this generates `CHANGELOG.md ## <version>` and bumps `package.json`.
+- `release.yml` requires the `## <version>` section to **already exist** at publish time. The prepush rail hard-fails if neither a matching CHANGELOG section nor a pending changeset exists.
+
+### Rebase policy
+
+If the branch is behind `origin/main`, prepush prints a **warning only** — it never auto-rebases. Reconcile manually (`git rebase origin/main`), then re-run prepush.
+
+### CI: `pre-publish-check`
+
+Every PR also runs the **packaging-only** subset (steps 5–8) via the `pre-publish-check` CI job. Add `pre-publish-check` to `main` required checks when landing the prepush-rail PR (additive, same as smoke checks).
 
 ---
 
