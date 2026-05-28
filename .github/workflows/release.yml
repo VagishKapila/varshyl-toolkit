@@ -89,6 +89,7 @@ jobs:
 
     permissions:
       contents: read
+      id-token: write   # required for npm provenance attestation (OIDC → Sigstore)
 
     steps:
       - name: Checkout
@@ -115,6 +116,10 @@ jobs:
         # pnpm publish -r skips packages with private:true automatically.
         # --access public required for first publish of scoped packages.
         # NODE_AUTH_TOKEN is read by npm from the environment — never hardcoded.
+        # NPM_CONFIG_PROVENANCE=true instructs npm to attach a Sigstore attestation
+        # linking this artifact to its source commit + workflow (displays as
+        # "✓ Provenance" badge on the package's npmjs.com page).
         run: pnpm publish -r --access public --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: 'true'
