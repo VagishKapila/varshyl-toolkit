@@ -1,89 +1,42 @@
-# varshyl-toolkit
+# Varshyl Toolkit
 
-Shared module toolbox for Varshyl Inc. products.
+Independent, composable npm packages for building Capacitor + web SaaS apps. Each module ships its own server logic, React UI, SQL migrations, and adapter contract — install only what you need, pin versions independently, and keep your user data in your own database.
 
-## What this is
+## Packages
 
-Modules that Varshyl products install as versioned packages.
-Built once, consumed by ConstructInv, BrandOS, and future products.
-Each module is independently versioned, tagged, and pinned by products via git tags.
+| Package | Version | Description |
+|---|---|---|
+| [@varshylinc/auth-social](packages/auth-social) | ![npm](https://img.shields.io/npm/v/@varshylinc/auth-social) | Apple, Google, and email/password auth with sessions and password reset |
+| [@varshylinc/onboarding-consent-engine](packages/onboarding-consent-engine) | ![npm](https://img.shields.io/npm/v/@varshylinc/onboarding-consent-engine) | Terms/Privacy consent, GDPR/CCPA-style audit trail, signup consent block |
+| [@varshylinc/mobile-payments](packages/mobile-payments) | ![npm](https://img.shields.io/npm/v/@varshylinc/mobile-payments) | RevenueCat IAP subscriptions, paywall UI, seat-aware write enforcement |
+| [@varshylinc/team-management](packages/team-management) | ![npm](https://img.shields.io/npm/v/@varshylinc/team-management) | Org roster, roles, hierarchy, and admin People page |
 
-## What this is NOT
+Each package has its own README with install instructions, quick-start examples, and entry-point tables.
 
-- Not a service
-- Not a product
-- Not a place for product-specific code
+## Why
 
-## Modules
+- **Composable** — four independent packages; no forced bundle, no cross-imports between modules.
+- **You own your data** — modules own prefixed Postgres tables (`as_`, `oce_`, `mp_`, `tm_`); your app owns users and business logic via adapters.
+- **Capacitor + web** — native SDK peers (Capgo, RevenueCat) are optional; CI runs on mocks without device keys.
+- **No vendor lock-in for the core** — raw SQL migrations, standard Express routers, plain React components. Swap adapters, not architectures.
 
-| Module | Status | Latest tag | QA |
-|---|---|---|---|
-| team-management | 🟢 **Active v0.1.0** | [team-management-v0.1.0](https://github.com/VagishKapila/varshyl-toolkit/releases/tag/team-management-v0.1.0) | [v0.0.1](qa-evidence/v0.0.1/README.md) · [v0.1.0](qa-evidence/team-management-v0.1.0/) |
-
-## Architecture
-
-See [docs/SHARED_MODULE_ARCHITECTURE.md](docs/SHARED_MODULE_ARCHITECTURE.md).
-
-## How products consume a module
-
-In the product's `package.json`:
-
-```json
-"dependencies": {
-  "@varshylinc/team-management": "github:VagishKapila/varshyl-toolkit#team-management-v0.0.1"
-}
-```
-
-Then in product server code:
-
-```ts
-import { createServerModule } from '@varshylinc/team-management';
-
-const tm = createServerModule({ adapter, db, config });
-await tm.runMigrations();
-app.use('/api/team', tm.router);
-```
-
-Then in product React client:
-
-```tsx
-import { PlaceholderPage } from '@varshylinc/team-management/client';
-
-<Route path='/team' element={<PlaceholderPage />} />
-```
-
-## Demo host
-
-`apps/demo-host` is the verification harness. It is **NOT** a product.
-It exists only to prove modules work against real Postgres before products consume them.
-
-Live at: https://demo-host-production.up.railway.app
-
-## Versioning
-
-Per-package semver. Tags: `<package-name>-v<X.Y.Z>`.
-Root milestone tags: `toolkit-v<X.Y.Z>` (progress markers, not package releases).
-
-To cut a release:
-```bash
-bash scripts/tag-release.sh team-management 0.0.1
-git push origin team-management-v0.0.1
-```
-
-See [docs/SHARED_MODULE_ARCHITECTURE.md §4](docs/SHARED_MODULE_ARCHITECTURE.md) for full versioning policy.
-
-## Adding a new module
+## Install
 
 ```bash
-bash scripts/new-module.sh <module-name>
+npm install @varshylinc/auth-social
+# … or any sibling package — see per-package README for peer deps and optional native SDKs
 ```
 
-Scaffolds from the team-management template. Then:
-1. Define the adapter interface in `packages/<module-name>/src/server/types.ts`
-2. Write the migration SQL in `src/server/migrations/`
-3. Fill in `README.md` (all 10 sections)
-4. Run `pnpm verify`
+See each package README for server setup, client configuration, and adapter contracts.
 
-## Cowork sessions
+## Engineering
 
-See [CLAUDE.md](CLAUDE.md).
+This is a **pnpm monorepo** with strict TypeScript, raw `pg` + SQL migrations (no ORM), and per-package CI smoke gates. Before publish, `pnpm prepush -- @varshylinc/<package>` runs lint, tests, demo-host build, changeset/CHANGELOG check, exports-map validation, and a packed-tarball install test.
+
+`apps/demo-host` is an internal verification harness — not a product. It proves modules work against real Postgres before host apps consume them.
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) for design philosophy and [CONTRIBUTING.md](CONTRIBUTING.md) for PR requirements.
+
+## License
+
+Apache-2.0 © Vagish Kapila / Varshyl Inc. See [LICENSE](LICENSE).

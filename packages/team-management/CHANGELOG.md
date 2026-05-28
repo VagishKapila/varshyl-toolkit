@@ -1,5 +1,11 @@
 # Changelog — @varshylinc/team-management
 
+## 0.2.1
+
+### Patch Changes
+
+- Public release polish: README, npm metadata (keywords/description/repository), and Apache-2.0 license. No code changes.
+
 ## 0.2.0
 
 ### Minor Changes

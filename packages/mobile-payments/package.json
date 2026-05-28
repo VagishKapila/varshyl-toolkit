@@ -1,12 +1,37 @@
 {
   "name": "@varshylinc/mobile-payments",
-  "version": "0.1.1",
-  "description": "Seat-aware in-app subscriptions for Varshyl mobile products — RevenueCat IAP (Phase 1).",
+  "version": "0.1.2",
+  "description": "Seat-aware in-app subscriptions for Capacitor apps via RevenueCat: Apple IAP + Google Play Billing, free trials, paywall UI, and read-only enforcement on lapse.",
+  "author": "Vagish Kapila (Varshyl Inc.)",
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/VagishKapila/varshyl-toolkit/tree/main/packages/mobile-payments#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/VagishKapila/varshyl-toolkit.git",
+    "directory": "packages/mobile-payments"
+  },
+  "bugs": {
+    "url": "https://github.com/VagishKapila/varshyl-toolkit/issues"
+  },
+  "keywords": [
+    "revenuecat",
+    "in-app-purchase",
+    "iap",
+    "subscriptions",
+    "capacitor",
+    "ionic",
+    "apple-iap",
+    "google-play-billing",
+    "paywall",
+    "react",
+    "typescript"
+  ],
   "private": false,
   "type": "module",
   "files": [
     "dist",
-    "migrations"
+    "migrations",
+    "LICENSE"
   ],
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

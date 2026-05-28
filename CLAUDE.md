@@ -92,8 +92,6 @@ pnpm verify
 
 ## Key contacts & resources
 
-- Architecture doc: `docs/SHARED_MODULE_ARCHITECTURE.md`
-- Full architecture source: Construct14 — Bible & Research chat (Cowork)
-- Railway dashboard: https://railway.app/project/dfc9a5aa-b63b-4275-93d8-55173eb1eda5 (demo-host deployment)
-- Demo host URL: https://demo-host-production.up.railway.app
+- Architecture doc: `docs/SHARED_MODULE_ARCHITECTURE.md` (internal); public overview: `ARCHITECTURE.md`
+- Demo host: deployed on Railway (internal harness — not a product)
 - Repo: https://github.com/VagishKapila/varshyl-toolkit
