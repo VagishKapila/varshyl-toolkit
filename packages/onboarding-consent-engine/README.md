@@ -11,7 +11,7 @@ Part of the **Varshyl Toolkit** — a set of independent, composable packages fo
 
 Hybrid signup consent: Terms and Privacy as linked text, plus a separate optional checkbox that starts unchecked.
 
-![Signup consent block with Terms/Privacy links and an unchecked optional AI-training checkbox](https://raw.githubusercontent.com/VagishKapila/varshyl-toolkit/chore/public-polish/docs/readme-screenshots/onboarding-consent-signup-block.png)
+![Signup consent block with Terms/Privacy links and an unchecked optional AI-training checkbox](https://varshyl-toolkit-demo.netlify.app/screenshots/signup-consent.png)
 
 The AI-training choice is explicit and off by default — the pattern auditors expect for secondary data use.
 

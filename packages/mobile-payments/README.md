@@ -11,7 +11,7 @@ Part of the **Varshyl Toolkit** — a set of independent, composable packages fo
 
 In-app paywall with pricing, free trial, subscribe, and restore — ready for RevenueCat on iOS and Android.
 
-![Subscription paywall showing monthly price, 90-day free trial, and Subscribe / Restore buttons](https://raw.githubusercontent.com/VagishKapila/varshyl-toolkit/chore/public-polish/docs/readme-screenshots/mobile-payments-paywall.png)
+![Subscription paywall showing monthly price, 90-day free trial, and Subscribe / Restore buttons](https://varshyl-toolkit-demo.netlify.app/screenshots/paywall.png)
 
 ## What it does
 

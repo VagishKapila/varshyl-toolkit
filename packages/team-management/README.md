@@ -11,7 +11,7 @@ Part of the **Varshyl Toolkit** — a set of independent, composable packages fo
 
 Admin Org/People page — roster, role hierarchy, and add-member in one screen for org owners.
 
-![Org People admin page listing team members, roles, and add-member controls](https://raw.githubusercontent.com/VagishKapila/varshyl-toolkit/chore/public-polish/docs/readme-screenshots/team-management-org-people.png)
+![Org People admin page listing team members, roles, and add-member controls](https://varshyl-toolkit-demo.netlify.app/screenshots/org-people-page.png)
 
 ## What it does
 
