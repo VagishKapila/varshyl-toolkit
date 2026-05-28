@@ -27,6 +27,13 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Build workspace packages (compile TS → dist so Vite can resolve exports)
+        run: |
+          pnpm --filter @varshylinc/auth-social build
+          pnpm --filter @varshylinc/mobile-payments build
+          pnpm --filter @varshylinc/onboarding-consent-engine build
+          pnpm --filter @varshylinc/team-management build
+
       - name: Build public-demo
         run: pnpm --filter @varshylinc/public-demo build
 
