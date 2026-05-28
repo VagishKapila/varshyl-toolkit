@@ -100,6 +100,8 @@ export interface ServerModuleAdapter {
   getUsersByIds(userIds: number[]): Promise<Array<{ id: number; email: string; name?: string }>>;
   findUserByEmail(email: string): Promise<{ id: number; email: string } | null>;
   createUserFromInvite(data: { email: string; orgId: number; role: OrgRole }): Promise<{ id: number; email: string }>;
+  /** Optional — host updates display name when org admin edits a member. */
+  updateUserName?(userId: number, name: string): Promise<void>;
   setUserPassword(userId: number, passwordHash: string): Promise<void>;
   hashPassword(plaintext: string): Promise<string>;
   verifyPassword(plaintext: string, hash: string): Promise<boolean>;

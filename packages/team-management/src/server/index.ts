@@ -165,3 +165,11 @@ export function createServerModule(opts: {
 }
 
 export type { ServerModuleAdapter, TeamManagementConfig, TeamManagementServerModule };
+export {
+  addOrgMember,
+  listOrgMembers,
+  getOrgHierarchy,
+  updateOrgMember,
+  removeOrgMember,
+} from './org-admin.js';
+export type { OrgMemberRecord, OrgHierarchyGroup } from './org-admin.js';

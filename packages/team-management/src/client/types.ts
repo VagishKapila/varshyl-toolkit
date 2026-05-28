@@ -76,3 +76,8 @@ export interface SuperAdminOrgSummary {
 }
 
 export type ApiError = { error: string; details?: string[] };
+
+export interface OrgHierarchyGroup {
+  role: OrgRole;
+  members: PublicMember[];
+}

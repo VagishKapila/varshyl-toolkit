@@ -5,6 +5,11 @@ import { requireMembership, type AuthenticatedRequest } from '../middleware/requ
 import { requireRole } from '../middleware/require-role.js';
 import { getOrg, updateOrg, softDeleteOrg, listOrgMembers } from '../services/organizations.service.js';
 import { removeMember, changeRole, validateRoleChange } from '../services/memberships.service.js';
+import {
+  addOrgMember,
+  getOrgHierarchy,
+  updateOrgMember,
+} from '../org-admin.js';
 import { getPendingTransfer } from '../services/ownership.service.js';
 import { writeAuditEvent, getClientIp } from '../services/audit.service.js';
 
@@ -177,6 +182,67 @@ export function createOrgsRouter(
     }
   });
 
+  // POST /orgs/:orgId/members — add roster member by email (admin+)
+  router.post('/:orgId/members', authMiddleware, requireRole('admin'), async (req, res) => {
+    const { orgId, userId: actorId } = req as AuthenticatedRequest;
+    const { email, role, name } = req.body as { email?: string; role?: string; name?: string };
+
+    if (!email?.trim()) {
+      res.status(400).json({ error: 'email is required' });
+      return;
+    }
+    if (!role) {
+      res.status(400).json({ error: 'role is required' });
+      return;
+    }
+
+    try {
+      const record = await addOrgMember(pool, adapter, {
+        orgId,
+        email: email.trim(),
+        role: role as OrgRole,
+        name: name?.trim(),
+        addedByUserId: actorId,
+      });
+
+      if (flags.enableAuditLog) {
+        await writeAuditEvent({
+          pool,
+          orgId,
+          actorUserId: actorId,
+          action: 'member.added',
+          targetType: 'user',
+          targetId: record.membership.user_id,
+          after: { role, email: email.trim() },
+          ip: getClientIp(req),
+          userAgent: req.headers['user-agent'] ?? null,
+        });
+      }
+
+      res.status(201).json({ member: record });
+    } catch (e) {
+      const msg = (e as Error).message;
+      adapter.logger.error('[orgs] POST /:orgId/members', { error: msg });
+      if (msg.includes('Cannot') || msg.includes('Requires')) {
+        res.status(403).json({ error: msg });
+      } else {
+        res.status(500).json({ error: 'Failed to add member' });
+      }
+    }
+  });
+
+  // GET /orgs/:orgId/hierarchy — members grouped by role (member+)
+  router.get('/:orgId/hierarchy', authMiddleware, async (req, res) => {
+    const { orgId } = req as AuthenticatedRequest;
+    try {
+      const hierarchy = await getOrgHierarchy(pool, adapter, orgId);
+      res.json({ hierarchy });
+    } catch (e) {
+      adapter.logger.error('[orgs] GET /:orgId/hierarchy', { error: (e as Error).message });
+      res.status(500).json({ error: 'Failed to fetch org hierarchy' });
+    }
+  });
+
   // GET /orgs/:orgId/members — list members (member+)
   router.get('/:orgId/members', authMiddleware, async (req, res) => {
     const { orgId } = req as AuthenticatedRequest;
@@ -330,30 +396,32 @@ export function createOrgsRouter(
     }
   });
 
-  // PATCH /orgs/:orgId/members/:userId — alias without /role suffix (for compatibility)
+  // PATCH /orgs/:orgId/members/:userId — update role and/or display name (admin+)
   router.patch('/:orgId/members/:userId', authMiddleware, requireRole('admin'), async (req, res) => {
     const { orgId, userId: actorId, userRole } = req as AuthenticatedRequest;
     const targetUserId = parseInt(req.params.userId, 10);
-    const { role: newRole } = req.body as { role?: string };
+    const { role: newRole, name } = req.body as { role?: string; name?: string };
 
     if (isNaN(targetUserId)) {
       res.status(400).json({ error: 'Invalid user ID' });
       return;
     }
-    if (!newRole) {
-      res.status(400).json({ error: 'role is required' });
+    if (!newRole && !name?.trim()) {
+      res.status(400).json({ error: 'role or name is required' });
       return;
     }
 
     try {
-      await validateRoleChange(pool, { orgId, actorRole: userRole, targetUserId, newRole: newRole as OrgRole });
-
-      // Transfer lock: cannot change role of a user involved in a pending transfer
       const pendingTransferForPatch = await getPendingTransfer(pool, orgId);
-      if (pendingTransferForPatch &&
-          (pendingTransferForPatch.from_user_id === targetUserId ||
-           pendingTransferForPatch.to_user_id === targetUserId)) {
-        res.status(409).json({ error: 'Cannot change role of a member involved in a pending ownership transfer. Cancel the transfer first.' });
+      if (
+        pendingTransferForPatch &&
+        (pendingTransferForPatch.from_user_id === targetUserId ||
+          pendingTransferForPatch.to_user_id === targetUserId)
+      ) {
+        res.status(409).json({
+          error:
+            'Cannot change a member involved in a pending ownership transfer. Cancel the transfer first.',
+        });
         return;
       }
 
@@ -361,31 +429,40 @@ export function createOrgsRouter(
         `SELECT role FROM tm_memberships WHERE org_id = $1 AND user_id = $2 AND removed_at IS NULL`,
         [orgId, targetUserId]
       );
-      const updated = await changeRole(pool, { orgId, userId: targetUserId, newRole: newRole as OrgRole, changedByUserId: actorId });
+      const record = await updateOrgMember(pool, adapter, {
+        orgId,
+        userId: targetUserId,
+        actorUserId: actorId,
+        actorRole: userRole,
+        role: newRole as OrgRole | undefined,
+        name: name?.trim(),
+      });
 
       if (flags.enableAuditLog) {
         await writeAuditEvent({
           pool,
           orgId,
           actorUserId: actorId,
-          action: 'member.role_changed',
+          action: newRole ? 'member.role_changed' : 'member.updated',
           targetType: 'user',
           targetId: targetUserId,
           before: { role: before.rows[0]?.role },
-          after: { role: newRole },
+          after: { role: newRole ?? before.rows[0]?.role, name: name?.trim() },
           ip: getClientIp(req),
           userAgent: req.headers['user-agent'] ?? null,
         });
       }
 
-      res.json({ membership: updated });
+      res.json({ member: record });
     } catch (e) {
       const msg = (e as Error).message;
       adapter.logger.error('[orgs] PATCH /:orgId/members/:userId', { error: msg });
       if (msg.includes('Cannot') || msg.includes('Requires') || msg.includes('cannot')) {
         res.status(403).json({ error: msg });
+      } else if (msg.includes('not found')) {
+        res.status(404).json({ error: msg });
       } else {
-        res.status(500).json({ error: 'Failed to change role' });
+        res.status(500).json({ error: 'Failed to update member' });
       }
     }
   });

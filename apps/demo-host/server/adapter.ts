@@ -117,6 +117,11 @@ export const demoAdapter: ServerModuleAdapter = {
     return { id: newUser.id, email: newUser.email };
   },
 
+  updateUserName: async (userId, name) => {
+    const u = DEMO_USERS.find(u => u.id === userId);
+    if (u) u.name = name;
+  },
+
   // ── Password ───────────────────────────────────────────────────────────────
 
   setUserPassword: async (userId, passwordHash) => {

@@ -10,6 +10,7 @@ import {
 } from 'react-router-dom';
 import {
   MembersPage,
+  OrgPeoplePage,
   OrgSettingsPage,
   InvitationAcceptPage,
   InvitationCodePage,
@@ -131,6 +132,9 @@ function DemoNav({ whoami }: { whoami: DemoUser | null }): React.ReactElement {
         <Link to="/team/members" className="text-sm text-slate-300 hover:text-white transition-colors">
           Team
         </Link>
+        <Link to="/team/people" className="text-sm text-slate-300 hover:text-white transition-colors">
+          People
+        </Link>
         <Link to="/team/audit" className="text-sm text-slate-300 hover:text-white transition-colors">
           Audit
         </Link>
@@ -220,7 +224,7 @@ function HomePage(): React.ReactElement {
         <h1 className="text-3xl font-bold text-slate-900 mb-2">varshyl-toolkit</h1>
         <p className="text-slate-500 text-sm">
           Demo host — verification harness for{' '}
-          <code className="text-orange-600 text-xs">@varshylinc/team-management</code> v0.1.0
+          <code className="text-orange-600 text-xs">@varshylinc/team-management</code> v0.2.0
         </p>
       </div>
       <div className="flex gap-4 flex-wrap justify-center">
@@ -266,7 +270,7 @@ function HomePage(): React.ReactElement {
         </Link>
       </div>
       <p className="text-xs text-slate-400 mt-4">
-        varshyl-toolkit v0.1.0 · @varshylinc/team-management first feature release
+        varshyl-toolkit v0.2.0 · @varshylinc/team-management org/people admin
       </p>
     </div>
   );
@@ -305,6 +309,10 @@ export default function App(): React.ReactElement {
       <Route path="/team" element={<Navigate to="/team/members" replace />} />
 
       {/* Team pages — all need orgId */}
+      <Route
+        path="/team/people"
+        element={<WithNav whoami={whoami}><OrgPeoplePage orgId={DEMO_ORG_ID} /></WithNav>}
+      />
       <Route
         path="/team/members"
         element={<WithNav whoami={whoami}><MembersPage orgId={DEMO_ORG_ID} /></WithNav>}

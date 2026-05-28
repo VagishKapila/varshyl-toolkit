@@ -1,3 +1,4 @@
+export { OrgPeoplePage } from './pages/OrgPeoplePage.js';
 export { MembersPage } from './pages/MembersPage.js';
 export { OrgSettingsPage } from './pages/OrgSettingsPage.js';
 export { InvitationAcceptPage } from './pages/InvitationAcceptPage.js';
@@ -21,10 +22,15 @@ export { CascadePreview } from './components/CascadePreview.js';
 export { PendingTransferBanner } from './components/PendingTransferBanner.js';
 
 // Hooks
+export { useOrgMembers } from './hooks/useOrgMembers.js';
 export { useCurrentMembership } from './hooks/useCurrentMembership.js';
 export { useMembers } from './hooks/useMembers.js';
 export { usePendingInvitations } from './hooks/usePendingInvitations.js';
 export { usePendingTransfer } from './hooks/usePendingTransfer.js';
+
+export { orgAdminActions } from './actions.js';
+export { getTeamTheme, setTeamTheme, DEFAULT_TEAM_THEME } from './theme.js';
+export type { TeamManagementTheme } from './theme.js';
 
 // API
 export {
@@ -33,6 +39,9 @@ export {
   updateOrg,
   deleteOrg,
   listMembers,
+  addOrgMember,
+  updateOrgMember,
+  getOrgHierarchy,
   removeMember,
   changeMemberRole,
   listInvitations,
@@ -77,4 +86,5 @@ export type {
   CurrentMembership,
   SuperAdminOrgSummary,
   ApiError,
+  OrgHierarchyGroup,
 } from './types.js';
