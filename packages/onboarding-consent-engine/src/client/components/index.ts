@@ -8,3 +8,5 @@ export { EmptyState } from './EmptyState.js';
 export type { EmptyStateProps } from './EmptyState.js';
 export { ConsentUpdateModal } from './ConsentUpdateModal.js';
 export type { ConsentUpdateModalProps } from './ConsentUpdateModal.js';
+export { SignupConsentBlock } from './SignupConsentBlock.js';
+export type { SignupConsentBlockProps } from './SignupConsentBlock.js';
