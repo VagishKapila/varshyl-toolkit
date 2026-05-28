@@ -1,0 +1,60 @@
+{
+  "name": "@varshylinc/mobile-payments",
+  "version": "0.1.0",
+  "description": "Seat-aware in-app subscriptions for Varshyl mobile products — RevenueCat IAP (Phase 1).",
+  "private": false,
+  "type": "module",
+  "files": ["dist", "migrations"],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js",
+      "import": "./dist/index.js"
+    },
+    "./client": {
+      "types": "./dist/client.d.ts",
+      "require": "./dist/client.js",
+      "import": "./dist/client.js"
+    },
+    "./client/revenuecat": {
+      "types": "./dist/client/service/revenuecat-service.d.ts",
+      "require": "./dist/client/service/revenuecat-service.js",
+      "import": "./dist/client/service/revenuecat-service.js"
+    }
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.client.build.json && mkdir -p dist/migrations && cp migrations/*.sql dist/migrations/",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.client.json --noEmit",
+    "test": "vitest run",
+    "lint": "eslint src --ext .ts,.tsx --max-warnings 0"
+  },
+  "dependencies": {},
+  "peerDependencies": {
+    "@revenuecat/purchases-capacitor": "^9.0.0",
+    "pg": "^8.11.5",
+    "react": "^18.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@revenuecat/purchases-capacitor": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.7",
+    "@types/pg": "^8.11.5",
+    "@types/react": "^18.3.1",
+    "@typescript-eslint/eslint-plugin": "^7.8.0",
+    "@typescript-eslint/parser": "^7.8.0",
+    "eslint": "^8.57.0",
+    "pg": "^8.11.5",
+    "react": "^18.3.1",
+    "typescript": "^5.4.5",
+    "vitest": "^1.5.0"
+  }
+}

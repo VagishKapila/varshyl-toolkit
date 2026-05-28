@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@varshylinc/auth-social": "workspace:*",
+    "@varshylinc/mobile-payments": "workspace:*",
     "@varshylinc/onboarding-consent-engine": "workspace:*",
     "@varshylinc/team-management": "workspace:*",
     "bcryptjs": "^2.4.3",

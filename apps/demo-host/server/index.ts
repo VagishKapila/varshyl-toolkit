@@ -17,6 +17,8 @@ import {
 } from './adapter.js';
 import { createConsentRouter } from './consent.js';
 import { createAuthRouter } from './auth-social.js';
+import { createMobilePaymentsRouter } from './mobile-payments.js';
+import type { NormalizedEvent } from '@varshylinc/mobile-payments';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = parseInt(process.env.PORT ?? '3000', 10);
@@ -25,6 +27,7 @@ const DEMO_HOST = process.env.DEMO_HOST ?? `http://localhost:${PORT}`;
 
 const authCapture = { lastResetToken: null as string | null, lastResetEmail: null as string | null };
 const authService = createMockAuthService(authCapture);
+const paymentsEventCapture = { events: [] as NormalizedEvent[] };
 
 // ── Demo data seed ─────────────────────────────────────────────────────────────
 
@@ -142,11 +145,24 @@ async function boot(): Promise<void> {
     process.exit(1);
   }
 
-  // 4. Seed demo data
+  // 4. mobile-payments migrations
+  console.log('[boot] Running mobile-payments migrations...');
+  try {
+    const { runMigrations: runMpMigrations } = await import('@varshylinc/mobile-payments');
+    const mpResult = await runMpMigrations(pool);
+    if (mpResult.applied.length) console.log('[boot] MP applied:', mpResult.applied);
+    if (mpResult.skipped.length) console.log('[boot] MP skipped:', mpResult.skipped);
+    console.log('[boot] mobile-payments migrations complete ✓');
+  } catch (err) {
+    console.error('[boot] FATAL: mobile-payments migration failed:', (err as Error).message);
+    process.exit(1);
+  }
+
+  // 5. Seed demo data
   console.log('[boot] Seeding demo data...');
   await seedDemoData();
 
-  // 5. Express app
+  // 6. Express app
   const app = express();
   app.use(express.json());
 
@@ -202,6 +218,18 @@ async function boot(): Promise<void> {
 
   // ── auth-social router (mock-backed for demo/smoke) ──────────────────────────
   app.use('/api/auth', createAuthRouter(authService, authCapture));
+
+  // ── mobile-payments router (mock-backed for demo/smoke) ────────────────────
+  app.use(
+    '/api/payments',
+    createMobilePaymentsRouter(pool, {
+      product: {
+        productSlug: 'jobsiteintel',
+        entitlementId: 'premium',
+        monthlyProductId: 'jobsiteintel_premium_monthly',
+      },
+    }, paymentsEventCapture)
+  );
 
   // ── Health + info ──────────────────────────────────────────────────────────
   app.get('/api/health', (_req, res) => {

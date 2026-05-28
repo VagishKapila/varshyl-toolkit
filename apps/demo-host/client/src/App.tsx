@@ -27,6 +27,7 @@ import {
   AuthResetPasswordPage,
   AuthAuthedPage,
 } from './AuthDemo.js';
+import { PaymentsDemoPage } from './PaymentsDemo.js';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -252,6 +253,12 @@ function HomePage(): React.ReactElement {
           Auth Social →
         </Link>
         <Link
+          to="/payments/demo"
+          className="px-4 py-2 bg-orange-600 text-white rounded-lg text-sm hover:bg-orange-500 transition-colors"
+        >
+          Mobile Payments →
+        </Link>
+        <Link
           to="/team/members"
           className="px-4 py-2 bg-orange-600 text-white rounded-lg text-sm hover:bg-orange-500 transition-colors"
         >
@@ -343,6 +350,9 @@ export default function App(): React.ReactElement {
       <Route path="/auth/forgot-password" element={<AuthForgotPasswordPage />} />
       <Route path="/auth/reset-password" element={<AuthResetPasswordPage />} />
       <Route path="/auth/authed" element={<AuthAuthedPage />} />
+
+      {/* Mobile payments demo */}
+      <Route path="/payments/demo" element={<PaymentsDemoPage />} />
 
       {/* Password reset (standalone, no nav) */}
       <Route path="/password-reset" element={<PasswordResetRequestPage />} />
