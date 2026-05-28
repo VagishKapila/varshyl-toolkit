@@ -1,4 +1,9 @@
 # @varshylinc/auth-social
+## 0.2.2
+
+### Patch
+
+- Widen React peer dependency to support React 19 (`^18.0.0 || ^19.0.0`). No source changes; components work on both React 18 and 19. Fixes ERESOLVE on Next.js 15 + React 19 consumers.
 
 ## 0.2.1
 

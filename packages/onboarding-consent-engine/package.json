@@ -1,6 +1,6 @@
 {
   "name": "@varshylinc/onboarding-consent-engine",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Onboarding and legal consent for web + mobile apps: Terms/Privacy acceptance, GDPR/CCPA-style data-use consent, an audit trail, and a ready-made signup consent block.",
   "author": "Vagish Kapila (Varshyl Inc.)",
   "license": "Apache-2.0",
@@ -68,7 +68,7 @@
     "vitest": "^1.6.0"
   },
   "peerDependencies": {
-    "react": "^18.0.0"
+    "react": "^18.0.0 || ^19.0.0"
   },
   "publishConfig": {
     "access": "public",
