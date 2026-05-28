@@ -27,7 +27,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build workspace packages (compile TS → dist so Vite can resolve exports)
+      - name: Build workspace packages
         run: |
           pnpm --filter @varshylinc/auth-social build
           pnpm --filter @varshylinc/mobile-payments build
@@ -37,13 +37,30 @@ jobs:
       - name: Build public-demo
         run: pnpm --filter @varshylinc/public-demo build
 
-      - name: Deploy to Netlify
+      - name: Install Playwright Chromium
+        run: npx playwright install chromium --with-deps
+
+      - name: Start vite preview (background)
+        run: pnpm --filter @varshylinc/public-demo preview &
+
+      - name: Wait for preview server
+        run: |
+          for i in $(seq 1 20); do
+            curl -sf http://localhost:4173/ && echo "Server ready" && exit 0
+            sleep 2
+          done
+          echo "Server failed to start" && exit 1
+
+      - name: Capture screenshots
+        run: node scripts/take-screenshots.mjs
+
+      - name: Deploy to Netlify (build + screenshots)
         uses: nwtgck/actions-netlify@v3
         with:
           publish-dir: apps/public-demo/dist
           production-deploy: true
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          deploy-message: "Deploy public-demo from ${{ github.sha }}"
+          deploy-message: "Deploy public-demo + screenshots from ${{ github.sha }}"
           enable-pull-request-comment: false
           enable-commit-comment: false
         env:
