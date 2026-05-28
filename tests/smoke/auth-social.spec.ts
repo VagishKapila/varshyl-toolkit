@@ -83,3 +83,41 @@ test('S5: social sign-in via mock provider establishes session', async ({ page }
   await page.getByTestId('sign-in-google').click();
   await expect(page.getByTestId('auth-authed')).toBeVisible({ timeout: 10000 });
 });
+
+test('S6: password field hidden by default; eye toggle reveals and hides', async ({ page }) => {
+  await page.goto('/auth/signin');
+  const passwordInput = page.getByTestId('auth-password-input');
+  await expect(passwordInput).toHaveAttribute('type', 'password');
+
+  const toggle = page.getByTestId('password-visibility-toggle');
+  await toggle.click();
+  await expect(passwordInput).toHaveAttribute('type', 'text');
+
+  await toggle.click();
+  await expect(passwordInput).toHaveAttribute('type', 'password');
+});
+
+test('S7: eye toggle is keyboard-focusable with correct aria-label per state', async ({ page }) => {
+  await page.goto('/auth/signin');
+  const toggle = page.getByTestId('password-visibility-toggle');
+
+  await toggle.focus();
+  await expect(toggle).toBeFocused();
+  await expect(toggle).toHaveAttribute('aria-label', 'Show password');
+  await expect(toggle).toHaveAttribute('aria-pressed', 'false');
+
+  await toggle.press('Enter');
+  await expect(toggle).toHaveAttribute('aria-label', 'Hide password');
+  await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+});
+
+test('S8: signup screen renders consent slot content', async ({ page }) => {
+  await page.goto('/auth/signup');
+  await expect(page.getByTestId('signup-consent-slot')).toBeVisible();
+  await expect(page.getByRole('checkbox')).toBeVisible();
+});
+
+test('S9: sign-in mode does not render consent slot', async ({ page }) => {
+  await page.goto('/auth/signin');
+  await expect(page.getByTestId('signup-consent-slot')).toHaveCount(0);
+});

@@ -21,6 +21,8 @@
 - `configureAuth({ apiBaseUrl, theme?, socialProvider? })`
 - `useAuth(): { state, actions, loading }`
 - `SignInScreen`, `ForgotPasswordScreen`, `ResetPasswordScreen`
+- `AuthField` — themed form field with optional password show/hide eye toggle
+- `togglePasswordVisibility`, `passwordVisibilityAriaLabel`, `passwordInputType` — SOREN-callable UI helpers
 - `authActions` — SOREN-callable named functions
 - `detectPlatform()`, `setPlatformOverride()` (test hook)
 - `createMockSocialProvider()`, `createCapgoSocialProvider()` via `@varshylinc/auth-social/client/capgo`
@@ -113,6 +115,31 @@ This module is designed to become **Universal Varshyl Identity** without a rewri
 - OAuth identities stored separately (`as_oauth_identities`) enable linking one Apple/Google identity to one Varshyl account
 
 Phase 3 work: shared identity service + cross-product session linking — **not** a rebuild of auth UI.
+
+## Signup consent slot
+
+`SignInScreen` handles both sign-in and signup via `signUpMode`. Pass arbitrary consent UI through `consentSlot` — auth-social does **not** depend on `@varshylinc/onboarding-consent-engine`; the host product composes them:
+
+```tsx
+import { SignInScreen } from '@varshylinc/auth-social/client';
+import { SignupConsentBlock } from '@varshylinc/onboarding-consent-engine/client';
+
+<SignInScreen
+  actions={actions}
+  signUpMode
+  consentSlot={
+    <SignupConsentBlock
+      termsUrl="https://example.com/terms"
+      privacyUrl="https://example.com/privacy"
+      aiTrainingChecked={aiConsent}
+      onAiTrainingChange={setAiConsent}
+      actionPhrase="creating your account"
+    />
+  }
+/>
+```
+
+The slot renders below the password field and above the submit button, **only when `signUpMode` is true**.
 
 ## Password hashing
 

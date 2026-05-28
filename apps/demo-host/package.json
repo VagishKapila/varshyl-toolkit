@@ -1,6 +1,6 @@
 {
   "name": "@varshylinc/demo-host",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Verification harness for varshyl-toolkit modules. NOT a product.",
   "private": true,
   "type": "module",
@@ -12,7 +12,7 @@
     "start": "node dist/server/index.js",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p client/tsconfig.client.json",
     "lint": "eslint server client/src --ext .ts,.tsx --max-warnings 0",
-    "test": "echo 'demo-host has no unit tests \u2014 integration tested via QA endpoints'"
+    "test": "echo 'demo-host has no unit tests — integration tested via QA endpoints'"
   },
   "dependencies": {
     "@varshylinc/auth-social": "workspace:*",

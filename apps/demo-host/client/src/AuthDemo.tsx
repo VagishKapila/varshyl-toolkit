@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   SignInScreen,
@@ -8,6 +8,7 @@ import {
   createMockSocialProvider,
   useAuth,
 } from '@varshylinc/auth-social/client';
+import { SignupConsentBlock } from '@varshylinc/onboarding-consent-engine/client';
 
 configureAuth({
   apiBaseUrl: '/api/auth',
@@ -29,11 +30,21 @@ export function AuthSignInPage(): React.ReactElement {
 export function AuthSignUpPage(): React.ReactElement {
   const navigate = useNavigate();
   const { actions } = useAuth();
+  const [aiTrainingChecked, setAiTrainingChecked] = useState(false);
   return (
     <SignInScreen
       actions={actions}
       signUpMode
       onSuccess={() => navigate('/auth/authed')}
+      consentSlot={
+        <SignupConsentBlock
+          termsUrl="https://example.com/terms"
+          privacyUrl="https://example.com/privacy"
+          aiTrainingChecked={aiTrainingChecked}
+          onAiTrainingChange={setAiTrainingChecked}
+          actionPhrase="creating your account"
+        />
+      }
     />
   );
 }

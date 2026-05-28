@@ -8,5 +8,10 @@ export { ForgotPasswordScreen } from './client/components/ForgotPasswordScreen.j
 export { ResetPasswordScreen } from './client/components/ResetPasswordScreen.js';
 export { SocialButtons } from './client/components/SocialButtons.js';
 export { AuthField } from './client/components/AuthField.js';
+export {
+  togglePasswordVisibility,
+  passwordVisibilityAriaLabel,
+  passwordInputType,
+} from './client/passwordVisibility.js';
 export type { SocialAuthProvider } from './client/providers/social-provider.js';
 export { createMockSocialProvider, MockSocialProvider } from './client/providers/mock-social-provider.js';
