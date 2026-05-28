@@ -1,5 +1,11 @@
 # @varshylinc/mobile-payments
 
+## 0.1.1
+
+### Patch Changes
+
+- Move @revenuecat/purchases-capacitor to optional peer dependency and load it lazily so the package can be imported in non-Capacitor environments without the SDK installed. Fixes ERR_MODULE_NOT_FOUND on /client/revenuecat entry point.
+
 ## 0.1.0
 
 ### Minor Changes
@@ -10,4 +16,3 @@
   - Server SubscriptionStore with `mp_*` migrations, `assertCanWrite`, RevenueCat webhook
   - Client PaywallScreen, FeatureGate, ReadOnlyBanner, MockSubscriptionService
   - Mock-backed Playwright smoke gate for demo-host
-
