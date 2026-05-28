@@ -15,3 +15,5 @@ export {
 } from './client/passwordVisibility.js';
 export type { SocialAuthProvider } from './client/providers/social-provider.js';
 export { createMockSocialProvider, MockSocialProvider } from './client/providers/mock-social-provider.js';
+export type { AuthConfig } from './config.js';
+export type { Session, AuthProvider, OAuthProvider } from './types.js';

@@ -1,11 +1,15 @@
 import type { UserConsent } from '../shared/types.js';
 import {
   buildSignupConsentsPayload,
-  type BuildSignupConsentsPayloadOptions,
 } from '../shared/signupConsent.js';
 
-export { buildSignupConsentsPayload, DEFAULT_AI_TRAINING_LABEL } from '../shared/signupConsent.js';
-export type { BuildSignupConsentsPayloadOptions };
+export {
+  buildSignupConsentsPayload,
+  DEFAULT_AI_TRAINING_LABEL,
+  AI_TRAINING_CONSENT_KEY,
+  IMPLIED_SIGNUP_CONSENT_KEYS,
+} from '../shared/signupConsent.js';
+export type { BuildSignupConsentsPayloadOptions, SignupConsentEntry } from '../shared/signupConsent.js';
 
 export interface RecordSignupConsentsActionInput {
   userId: string;

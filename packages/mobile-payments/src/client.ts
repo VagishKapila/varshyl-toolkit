@@ -11,5 +11,19 @@ export {
   createMockSubscriptionService,
   MockSubscriptionService,
 } from './client/service/mock-service.js';
-export type { SubscriptionTheme, ClientPaymentsConfig } from './config.js';
-export type { SubscriptionState, AccessMode, Offering } from './types.js';
+export type {
+  SubscriptionTheme,
+  ClientPaymentsConfig,
+  PaymentsConfig,
+  ProductPaymentsConfig,
+} from './config.js';
+export type {
+  SubscriptionState,
+  AccessMode,
+  Offering,
+  SubscriptionStatus,
+  SubscriptionRecord,
+  NormalizedEvent,
+  SeatAssignment,
+  OfferingPackage,
+} from './types.js';

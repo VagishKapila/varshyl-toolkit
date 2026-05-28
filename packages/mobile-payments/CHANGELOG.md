@@ -1,4 +1,11 @@
 # @varshylinc/mobile-payments
+
+## 0.1.4
+
+### Patch Changes
+
+- Also export client-safe constants and types from `./client` subpaths so they can be imported directly into "use client" components without pulling server modules. No breaking changes — root exports are unchanged.
+
 ## 0.1.3
 
 ### Patch

@@ -1,6 +1,6 @@
 {
   "name": "@varshylinc/team-management",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Organization and team management for SaaS: member roster, roles and hierarchy, an admin People page, and a seat-ready data model.",
   "author": "Vagish Kapila (Varshyl Inc.)",
   "license": "Apache-2.0",
