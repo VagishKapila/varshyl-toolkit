@@ -3,6 +3,8 @@
   "private": true,
   "version": "0.0.0",
   "description": "Varshyl shared module toolbox. Versioned packages installed by Varshyl products.",
+  "license": "Apache-2.0",
+  "author": "Vagish Kapila (Varshyl Inc.)",
   "scripts": {
     "build": "pnpm -r build",
     "test": "pnpm -r test",

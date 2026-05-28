@@ -1,97 +1,84 @@
 # @varshylinc/team-management
 
-> Shared team management module for Varshyl products. Install as a versioned package via git tag.
+> Organization and team management for SaaS: member roster, roles and hierarchy, an admin People page, and a seat-ready data model.
 
-## Status
+![npm](https://img.shields.io/npm/v/@varshylinc/team-management)
+![license](https://img.shields.io/npm/l/@varshylinc/team-management)
 
-**Stub** — architecture in place, features to be implemented in the Team Management design session.
+Part of the **Varshyl Toolkit** — a set of independent, composable packages for building Capacitor + web SaaS apps.
 
-## 1. Installation
+## What it does
 
-```json
-"dependencies": {
-  "@varshylinc/team-management": "github:VagishKapila/varshyl-toolkit#team-management-v0.0.1"
-}
+Provides org CRUD, member roster, role hierarchy, invitations, audit log, ownership transfer, and an admin Org/People page. The host product implements a small adapter for identity and authorization; the module owns all `tm_*` tables. Members are keyed by host `userId` for future seat mapping with `@varshylinc/mobile-payments`.
+
+## Install
+
+```bash
+npm install @varshylinc/team-management
 ```
 
-## 2. Server setup
+Peer dependencies: `express`, `pg`, `react`.
+
+## Quick start
+
+**Server** — implement the adapter, migrate, mount the router:
 
 ```ts
+import { Pool } from 'pg';
+import express from 'express';
 import { createServerModule } from '@varshylinc/team-management';
 import type { ServerModuleAdapter } from '@varshylinc/team-management';
 
-// Implement the adapter for your product
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+
 const adapter: ServerModuleAdapter = {
   getCurrentUserId: async (req) => req.user?.id ?? null,
   getOrganizationIdForUser: async (userId) => yourDb.getOrgId(userId),
-  isUserOrgAdmin: async (userId, orgId) => yourDb.checkAdmin(userId, orgId),
+  isUserOrgAdmin: async (userId, orgId) => yourDb.isAdmin(userId, orgId),
   logger: console,
 };
 
-const tm = createServerModule({
-  adapter,
-  db: yourPgPool,
-  config: {
-    featureFlags: { enableInvites: false, enableAuditLog: false },
-  },
-});
-
-// Run on boot — idempotent, safe to call every startup
+const tm = createServerModule({ adapter, db: pool, config: { baseUrl: 'https://yourapp.com' } });
 await tm.runMigrations();
 
-// Mount the router
+const app = express();
 app.use('/api/team', tm.router);
 ```
 
-## 3. Client setup
+**Client** — theme + Org/People page:
 
 ```tsx
-import { PlaceholderPage } from '@varshylinc/team-management/client';
+import { OrgPeoplePage, setTeamTheme } from '@varshylinc/team-management/client';
 
-// In your React router:
-<Route path="/team" element={<PlaceholderPage />} />
+setTeamTheme({ paper: '#FAF7F0', brick: '#8B3A2F' });
+
+function TeamAdmin({ orgId }: { orgId: number }) {
+  return <OrgPeoplePage orgId={orgId} />;
+}
 ```
 
-## 4. DB ownership
+## Entry points
 
-All DB tables are prefixed `tm_*`. The module owns them exclusively.
-Host products must not query these tables directly — use the module's API.
-
-| Table | Purpose |
+| Import path | Exports |
 |---|---|
-| `tm_schema_migrations` | Migration ledger — tracks applied migrations |
+| `@varshylinc/team-management` | `createServerModule`, `runMigrations`, `addOrgMember`, `listOrgMembers`, `getOrgHierarchy`, `updateOrgMember`, `removeOrgMember`, types |
+| `@varshylinc/team-management/server` | Same server exports — use when you want an explicit server-only import path |
+| `@varshylinc/team-management/client` | `OrgPeoplePage`, `MembersPage`, `useOrgMembers`, `orgAdminActions`, `setTeamTheme`, API helpers, … |
 
-## 5. Feature flags
+## Database
 
-| Flag | Default | Description |
-|---|---|---|
-| `enableInvites` | `false` | Enable invite flows (stub) |
-| `enableAuditLog` | `false` | Enable audit log (stub) |
+Bring your own Postgres. Call `runMigrations()` (via the module instance or standalone export) on boot. Tables use the `tm_` prefix (`tm_organizations`, `tm_memberships`, `tm_invitations`, `tm_audit_events`, …). Migrations ship inside `dist/server/migrations/`.
 
-Routes for disabled flags return `501 Not Implemented`.
+## Theming
 
-## 6. API routes
+Themeable via `setTeamTheme()`. Ships a Blueprint & Brick default (`DEFAULT_TEAM_THEME`).
 
-| Method | Path | Description |
-|---|---|---|
-| GET | `/health` | Module health + DB connectivity check |
-| GET | `/invites` | List invites (flag: `enableInvites`) |
-| POST | `/invites` | Create invite (flag: `enableInvites`) |
-| GET | `/audit` | Audit log (flag: `enableAuditLog`) |
+## See also
 
-## 7. Adapter interface
+- [@varshylinc/auth-social](../auth-social) — shared `userId` for member records
+- [@varshylinc/mobile-payments](../mobile-payments) — seat billing integration (Phase 2)
+- [@varshylinc/onboarding-consent-engine](../onboarding-consent-engine) — consent at signup
 
-See `src/server/types.ts` for the full `ServerModuleAdapter` interface.
+## License
 
-## 8. Versioning
-
-Tags: `team-management-v<X.Y.Z>`. See `CHANGELOG.md` for history.
-
-## 9. Migrations
-
-Migrations are plain SQL files in `src/server/migrations/`, named `NNNN_description.sql`.
-`runMigrations()` applies them in order, skipping already-applied ones (ledger in `tm_schema_migrations`).
-
-## 10. Architecture
-
-See `../../docs/SHARED_MODULE_ARCHITECTURE.md` for the full architecture doc.
+Apache-2.0 © Vagish Kapila / Varshyl Inc.

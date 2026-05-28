@@ -1,11 +1,36 @@
 {
   "name": "@varshylinc/team-management",
-  "version": "0.2.0",
-  "description": "Team management shared module for Varshyl products.",
+  "version": "0.2.1",
+  "description": "Organization and team management for SaaS: member roster, roles and hierarchy, an admin People page, and a seat-ready data model.",
+  "author": "Vagish Kapila (Varshyl Inc.)",
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/VagishKapila/varshyl-toolkit/tree/main/packages/team-management#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/VagishKapila/varshyl-toolkit.git",
+    "directory": "packages/team-management"
+  },
+  "bugs": {
+    "url": "https://github.com/VagishKapila/varshyl-toolkit/issues"
+  },
+  "keywords": [
+    "team-management",
+    "organization",
+    "rbac",
+    "roles",
+    "hierarchy",
+    "multi-tenant",
+    "saas",
+    "members",
+    "react",
+    "typescript",
+    "postgres"
+  ],
   "private": false,
   "type": "module",
   "files": [
-    "dist"
+    "dist",
+    "LICENSE"
   ],
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

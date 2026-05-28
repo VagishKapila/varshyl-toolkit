@@ -1,6 +1,15 @@
 # @varshylinc/mobile-payments
 
-Seat-aware in-app subscriptions for Varshyl mobile products. Phase 1: Apple IAP + Google Play via RevenueCat.
+> Seat-aware in-app subscriptions for Capacitor apps via RevenueCat: Apple IAP + Google Play Billing, free trials, paywall UI, and read-only enforcement on lapse.
+
+![npm](https://img.shields.io/npm/v/@varshylinc/mobile-payments)
+![license](https://img.shields.io/npm/l/@varshylinc/mobile-payments)
+
+Part of the **Varshyl Toolkit** — a set of independent, composable packages for building Capacitor + web SaaS apps.
+
+## What it does
+
+Manages org-keyed subscription state for Capacitor mobile apps. Syncs purchase events from RevenueCat webhooks, tracks seat assignments, and exposes server-side write guards plus client paywall/gate components. When a subscription lapses, users retain read access but lose write permission — enforced on the server, not just in the UI.
 
 ## Install
 
@@ -8,10 +17,17 @@ Seat-aware in-app subscriptions for Varshyl mobile products. Phase 1: Apple IAP 
 npm install @varshylinc/mobile-payments
 ```
 
-## Server
+Peer dependencies: `pg` (server), `react` (client).
+
+For real StoreKit / Play Billing on device, also install `@revenuecat/purchases-capacitor` and use `@varshylinc/mobile-payments/client/revenuecat`. CI and local dev can use `createMockSubscriptionService()` — no RevenueCat SDK required.
+
+## Quick start
+
+**Server** — migrate, create store, enforce writes, mount webhook:
 
 ```ts
 import { Pool } from 'pg';
+import express from 'express';
 import {
   createSubscriptionStore,
   runMigrations,
@@ -19,18 +35,29 @@ import {
   createRevenueCatWebhookHandler,
 } from '@varshylinc/mobile-payments';
 
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 await runMigrations(pool);
-const store = createSubscriptionStore(pool, { product: { productSlug: 'myapp', entitlementId: 'premium', monthlyProductId: 'myapp_premium_monthly' } });
 
-// Before any write in your product API:
-if (!(await assertCanWrite(store, orgId, userId))) {
-  return res.status(403).json({ error: 'Subscription required' });
-}
+const store = createSubscriptionStore(pool, {
+  product: {
+    productSlug: 'myapp',
+    entitlementId: 'premium',
+    monthlyProductId: 'myapp_premium_monthly',
+  },
+  revenueCatWebhookSecret: process.env.REVENUECAT_WEBHOOK_SECRET,
+});
 
-app.post('/webhooks/revenuecat', createRevenueCatWebhookHandler(store, config));
+app.post('/api/payments/webhooks/revenuecat', createRevenueCatWebhookHandler(store, config));
+
+app.post('/api/items', async (req, res) => {
+  if (!(await assertCanWrite(store, orgId, userId))) {
+    return res.status(403).json({ error: 'Subscription required' });
+  }
+  // … create item
+});
 ```
 
-## Client
+**Client** — configure with mock or RevenueCat service:
 
 ```tsx
 import {
@@ -43,7 +70,8 @@ import {
 
 configureSubscriptions({
   config: { orgId: 'org-123', userId: 'user-456' },
-  service: createMockSubscriptionService(), // or RevenueCat via ./client/revenuecat
+  service: createMockSubscriptionService(),
+  theme: { accent: '#059669' },
 });
 
 function App() {
@@ -56,4 +84,28 @@ function App() {
 }
 ```
 
-See `MODULE.md` for the full contract, seat model, and Phase 2 design notes.
+## Entry points
+
+| Import path | Exports |
+|---|---|
+| `@varshylinc/mobile-payments` | `createSubscriptionStore`, `runMigrations`, `assertCanWrite`, `getAccessModeForUser`, `createRevenueCatWebhookHandler`, `createMockSubscriptionStore`, `assignBuyerSeat`, types |
+| `@varshylinc/mobile-payments/client` | `configureSubscriptions`, `useSubscription`, `PaywallScreen`, `FeatureGate`, `ReadOnlyBanner`, `RestoreButton`, `subscriptionActions`, `createMockSubscriptionService`, … |
+| `@varshylinc/mobile-payments/client/revenuecat` | `createRevenueCatSubscriptionService` — requires optional peer `@revenuecat/purchases-capacitor` |
+
+## Database
+
+Bring your own Postgres. Call `runMigrations(pool)` on boot. Tables use the `mp_` prefix (`mp_subscriptions`, `mp_subscription_events`, `mp_seat_assignments`).
+
+## Theming
+
+Themeable via `configureSubscriptions({ theme })`. Ships a neutral default (`DEFAULT_PAYMENTS_THEME`).
+
+## See also
+
+- [@varshylinc/team-management](../team-management) — seat assignment for multi-user orgs (Phase 2)
+- [@varshylinc/auth-social](../auth-social) — user identity for seat mapping
+- [@varshylinc/onboarding-consent-engine](../onboarding-consent-engine) — consent before paywall
+
+## License
+
+Apache-2.0 © Vagish Kapila / Varshyl Inc.

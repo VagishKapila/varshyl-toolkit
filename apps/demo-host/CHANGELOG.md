@@ -1,5 +1,15 @@
 # @varshylinc/demo-host
 
+## 0.0.4
+
+### Patch Changes
+
+- Updated dependencies
+  - @varshylinc/auth-social@0.2.1
+  - @varshylinc/onboarding-consent-engine@0.2.1
+  - @varshylinc/mobile-payments@0.1.2
+  - @varshylinc/team-management@0.2.1
+
 ## 0.0.3
 
 ### Patch Changes

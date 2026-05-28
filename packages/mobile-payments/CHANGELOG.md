@@ -1,5 +1,11 @@
 # @varshylinc/mobile-payments
 
+## 0.1.2
+
+### Patch Changes
+
+- Public release polish: README, npm metadata (keywords/description/repository), and Apache-2.0 license. No code changes.
+
 ## 0.1.1
 
 ### Patch Changes
