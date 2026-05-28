@@ -1,6 +1,6 @@
 {
   "name": "@varshylinc/public-demo",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Public mock-backed live demo of the Varshyl Toolkit — static Netlify deploy.",
   "type": "module",

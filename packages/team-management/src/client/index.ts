@@ -74,6 +74,9 @@ export {
   adminResetPassword,
 } from './api.js';
 
+// Shared types (also exported from root for server-side consumers)
+export type { TeamMember, TeamInvite } from '../shared/types.js';
+
 // Types
 export type {
   OrgRole,
