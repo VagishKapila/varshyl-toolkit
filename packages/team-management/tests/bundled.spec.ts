@@ -18,15 +18,17 @@ function isDockerAvailable(): boolean {
   }
 }
 
+const bundleFile = 'bundled-entry.js';
+
 describe('bundled dist (tsup) — no fs migration IO', () => {
   it('inlines SQL into the bundle (readFileSync absent)', () => {
     execSync('pnpm exec tsx scripts/inline-migrations.ts', { cwd: pkgRoot, stdio: 'pipe' });
     const outDir = join(pkgRoot, 'dist-bundled-verify');
     execSync(
-      `pnpm exec tsup src/index.ts --format esm --platform node --target node20 --out-dir ${outDir} --clean --no-splitting`,
+      `pnpm exec tsup src/server/bundled-entry.ts --format esm --platform node --target node20 --out-dir ${outDir} --clean --no-splitting`,
       { cwd: pkgRoot, stdio: 'pipe' },
     );
-    const bundleSource = readFileSync(join(outDir, 'index.js'), 'utf8');
+    const bundleSource = readFileSync(join(outDir, bundleFile), 'utf8');
     expect(bundleSource).not.toMatch(/readFileSync|from ['"]fs['"]/);
     expect(bundleSource).toMatch(/CREATE TABLE IF NOT EXISTS tm_schema_migrations/);
   });
@@ -42,11 +44,11 @@ describeWithPostgres('bundled dist (tsup) — migrations + self-test', () => {
   beforeAll(async () => {
     execSync('pnpm exec tsx scripts/inline-migrations.ts', { cwd: pkgRoot, stdio: 'inherit' });
     execSync(
-      `pnpm exec tsup src/index.ts --format esm --platform node --target node20 --out-dir ${bundleDir} --clean --no-splitting`,
+      `pnpm exec tsup src/server/bundled-entry.ts --format esm --platform node --target node20 --out-dir ${bundleDir} --clean --no-splitting`,
       { cwd: pkgRoot, stdio: 'inherit' },
     );
 
-    const bundleSource = readFileSync(join(bundleDir, 'index.js'), 'utf8');
+    const bundleSource = readFileSync(join(bundleDir, bundleFile), 'utf8');
     expect(bundleSource).not.toMatch(/readFileSync/);
     expect(bundleSource).toMatch(/tm_schema_migrations/);
 
@@ -61,7 +63,7 @@ describeWithPostgres('bundled dist (tsup) — migrations + self-test', () => {
   });
 
   it('runs bundled migrations and verifies schema', async () => {
-    const bundleUrl = pathToFileURL(join(bundleDir, 'index.js')).href;
+    const bundleUrl = pathToFileURL(join(bundleDir, bundleFile)).href;
     const mod = await import(bundleUrl);
 
     expect(mod.runMigrations).toBeTypeOf('function');
