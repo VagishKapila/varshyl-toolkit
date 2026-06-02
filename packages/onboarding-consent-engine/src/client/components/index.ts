@@ -10,3 +10,5 @@ export { ConsentUpdateModal } from './ConsentUpdateModal.js';
 export type { ConsentUpdateModalProps } from './ConsentUpdateModal.js';
 export { SignupConsentBlock } from './SignupConsentBlock.js';
 export type { SignupConsentBlockProps } from './SignupConsentBlock.js';
+export { SignupConsentTwoButton } from './SignupConsentTwoButton.js';
+export type { SignupConsentTwoButtonProps } from './SignupConsentTwoButton.js';

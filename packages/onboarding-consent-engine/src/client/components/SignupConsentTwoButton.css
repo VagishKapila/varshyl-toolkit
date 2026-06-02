@@ -1,0 +1,85 @@
+.oce-two-button-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.oce-implied-consent {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #4a4234;
+}
+
+.oce-implied-consent a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.oce-ai-prompt h3 {
+  margin: 0 0 6px;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: #211d18;
+}
+
+.oce-ai-prompt p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #4a4234;
+}
+
+.oce-two-button-group {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+}
+
+@media (max-width: 480px) {
+  .oce-two-button-group {
+    flex-direction: column;
+  }
+}
+
+.oce-no-button,
+.oce-yes-button {
+  flex: 1;
+  min-height: 44px;
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+}
+
+.oce-no-button:disabled,
+.oce-yes-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.oce-no-button {
+  background: transparent;
+  border: 1.5px solid #8b3a2f;
+  color: #8b3a2f;
+}
+
+.oce-no-button:hover:not(:disabled) {
+  background: #f4eee0;
+}
+
+.oce-yes-button {
+  background: #8b3a2f;
+  border: 1.5px solid #8b3a2f;
+  color: #faf7f0;
+}
+
+.oce-yes-button:hover:not(:disabled) {
+  background: #732e25;
+  border-color: #732e25;
+}

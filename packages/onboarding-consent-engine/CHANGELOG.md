@@ -1,5 +1,14 @@
 # @varshylinc/onboarding-consent-engine
 
+## 0.4.0
+
+### Minor Changes
+
+- Add `SignupConsentTwoButton` — two equal-weight signup buttons for AI training opt-in (ToS/Privacy implied consent line above; no checkbox). Ships minimal default CSS; products override via `*ClassName` props.
+- Add `useSignupConsents()` headless hook with `record()`, `isRecording`, and `error` for custom consent UI.
+- Add client `recordSignupConsents()` helper that throws on failure (wraps `recordSignupConsentsAction`). Export from `./client`.
+- README: new "Choosing your consent UX" section (checkbox vs two-button vs custom hook).
+
 ## 0.3.0
 
 ### Minor Changes

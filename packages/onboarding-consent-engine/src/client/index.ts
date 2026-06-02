@@ -5,6 +5,7 @@ export {
   EmptyState,
   ConsentUpdateModal,
   SignupConsentBlock,
+  SignupConsentTwoButton,
 } from './components/index.js';
 export type {
   ConsentCheckboxProps,
@@ -13,12 +14,19 @@ export type {
   EmptyStateProps,
   ConsentUpdateModalProps,
   SignupConsentBlockProps,
+  SignupConsentTwoButtonProps,
 } from './components/index.js';
+export { useSignupConsents } from './hooks/useSignupConsents.js';
+export type {
+  UseSignupConsentsOptions,
+  RecordSignupConsentsParams,
+} from './hooks/useSignupConsents.js';
 export {
   consentActions,
   buildSignupConsentsPayload,
   setAiTrainingConsent,
   toggleAiTrainingConsent,
+  recordSignupConsents,
   recordSignupConsentsAction,
   DEFAULT_AI_TRAINING_LABEL,
   AI_TRAINING_CONSENT_KEY,
@@ -28,6 +36,7 @@ export type {
   BuildSignupConsentsPayloadOptions,
   RecordSignupConsentsActionInput,
   RecordSignupConsentsActionResult,
+  RecordSignupConsentsClientParams,
   SignupConsentEntry,
 } from './actions.js';
 export type {

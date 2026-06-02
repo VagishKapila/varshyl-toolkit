@@ -85,12 +85,100 @@ function SignupForm() {
 }
 ```
 
+## Choosing your consent UX
+
+### Option 1 — Checkbox (default)
+
+```tsx
+import { SignupConsentBlock } from '@varshylinc/onboarding-consent-engine/client';
+
+<SignupConsentBlock
+  termsUrl="https://yoursite.com/terms"
+  privacyUrl="https://yoursite.com/privacy"
+  aiTrainingChecked={aiTraining}
+  onAiTrainingChange={setAiTraining}
+  actionPhrase="signing up"
+/>
+```
+
+### Option 2 — Two-button choice (higher opt-in)
+
+```tsx
+import {
+  SignupConsentTwoButton,
+  useSignupConsents,
+} from '@varshylinc/onboarding-consent-engine/client';
+
+function SignupForm() {
+  const { record, isRecording } = useSignupConsents();
+
+  const handleSubmit = async (aiTrainingGranted: boolean) => {
+    const user = await createUser(/* … */);
+    await record({
+      userId: user.id,
+      tosGranted: true,
+      privacyGranted: true,
+      aiTrainingGranted,
+    });
+  };
+
+  return (
+    <SignupConsentTwoButton
+      tosUrl="https://yoursite.com/terms"
+      privacyUrl="https://yoursite.com/privacy"
+      questionText="Help train Soren on real construction work?"
+      descriptionText="Your anonymized photos and voice notes make Soren smarter for every contractor."
+      noButtonText="No, just sign me up"
+      yesButtonText="Yes, sign up & count me in"
+      onSubmit={handleSubmit}
+      isSubmitting={isRecording}
+    />
+  );
+}
+```
+
+Override styling with `noButtonClassName`, `yesButtonClassName`, and `containerClassName` (Tailwind or your design system). Default minimal CSS ships with the component.
+
+### Option 3 — Fully custom UI (use the hook)
+
+```tsx
+import { useSignupConsents } from '@varshylinc/onboarding-consent-engine/client';
+
+function MyCustomConsent() {
+  const { record, isRecording, error } = useSignupConsents({
+    onSuccess: (userId) => router.push('/dashboard'),
+    onError: (err) => toast.error(err.message),
+  });
+
+  return (
+    <div>
+      {/* Your custom UI — modals, cards, native buttons, etc. */}
+      <button
+        type="button"
+        disabled={isRecording}
+        onClick={() =>
+          record({
+            userId,
+            tosGranted: true,
+            privacyGranted: true,
+            aiTrainingGranted: true,
+          })
+        }
+      >
+        Continue
+      </button>
+      {error && <p>{error.message}</p>}
+    </div>
+  );
+}
+```
+
 ## Entry points
 
 | Import path | Exports |
 |---|---|
 | `@varshylinc/onboarding-consent-engine` | `runMigrations`, `createConsentModule`, `seedStandardConsents`, `STANDARD_CONSENTS`, `applyProductName`, `buildSignupConsentsPayload`, types |
-| `@varshylinc/onboarding-consent-engine/client` | `ConsentCheckbox`, `ConsentBlock`, `WelcomeScreen`, `EmptyState`, `ConsentUpdateModal`, `SignupConsentBlock`, `consentActions`, `recordSignupConsentsAction`, … |
+| `@varshylinc/onboarding-consent-engine/client` | `SignupConsentBlock`, `SignupConsentTwoButton`, `useSignupConsents`, `recordSignupConsents`, `ConsentCheckbox`, `WelcomeScreen`, … |
 
 ## Database
 

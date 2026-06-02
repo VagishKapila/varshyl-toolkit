@@ -25,6 +25,40 @@ export type RecordSignupConsentsActionResult =
   | { ok: true; records: UserConsent[] }
   | { ok: false; error: string };
 
+/** Client hook / custom UI — maps explicit ToS/Privacy flags then POSTs signup consents. */
+export interface RecordSignupConsentsClientParams {
+  userId: string;
+  tosGranted: boolean;
+  privacyGranted: boolean;
+  aiTrainingGranted: boolean;
+  apiBaseUrl?: string;
+  ipAddress?: string;
+  userAgent?: string;
+}
+
+/**
+ * Records signup consents via the consent API. Throws on failure (for hooks and custom UI).
+ * Implied ToS/Privacy at signup must be true; AI training reflects the user's explicit choice.
+ */
+export async function recordSignupConsents(
+  params: RecordSignupConsentsClientParams,
+): Promise<UserConsent[]> {
+  if (!params.tosGranted || !params.privacyGranted) {
+    throw new Error('Terms of Service and Privacy Policy must be granted at signup');
+  }
+  const result = await recordSignupConsentsAction({
+    userId: params.userId,
+    aiTrainingGranted: params.aiTrainingGranted,
+    apiBaseUrl: params.apiBaseUrl,
+    ipAddress: params.ipAddress,
+    userAgent: params.userAgent,
+  });
+  if (!result.ok) {
+    throw new Error(result.error);
+  }
+  return result.records;
+}
+
 /** SOREN-callable: set explicit AI-training consent checkbox state. */
 export async function setAiTrainingConsent(checked: boolean): Promise<boolean> {
   return checked;
@@ -72,5 +106,6 @@ export const consentActions = {
   buildSignupConsentsPayload,
   setAiTrainingConsent,
   toggleAiTrainingConsent,
-  recordSignupConsents: recordSignupConsentsAction,
+  recordSignupConsents,
+  recordSignupConsentsAction,
 };
