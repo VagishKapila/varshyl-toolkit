@@ -59,11 +59,11 @@
     "registry": "https://registry.npmjs.org/"
   },
   "scripts": {
-    "prebuild": "tsx scripts/inline-migrations.ts",
+    "prebuild": "tsx scripts/inline-migrations.ts && tsx scripts/inline-client-css.ts",
     "build": "tsc -p tsconfig.json && tsc -p tsconfig.client.build.json && mkdir -p dist/client/components && cp src/client/components/*.css dist/client/components/",
-    "pretypecheck": "tsx scripts/inline-migrations.ts",
+    "pretypecheck": "tsx scripts/inline-migrations.ts && tsx scripts/inline-client-css.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.client.json --noEmit",
-    "pretest": "tsx scripts/inline-migrations.ts",
+    "pretest": "tsx scripts/inline-migrations.ts && tsx scripts/inline-client-css.ts",
     "test": "vitest run",
     "lint": "eslint src --ext .ts,.tsx --max-warnings 0"
   },

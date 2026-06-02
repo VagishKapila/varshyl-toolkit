@@ -4,7 +4,7 @@
 
 ### Patch Changes
 
-- **Publish fix:** Copy `SocialButtons.css` and `AuthDivider.css` into `dist/client/components/` during build so npm consumers resolve side-effect CSS imports (0.4.0 tarball omitted these files).
+- **Publish fix:** Ship official social button + divider styles without Node-breaking `.css` imports — CSS is inlined at build time and injected in the browser; `.css` files are also copied to `dist/client/components/` for optional manual `@import` in app bundlers (0.4.0 omitted dist CSS entirely).
 
 ## 0.4.0
 
