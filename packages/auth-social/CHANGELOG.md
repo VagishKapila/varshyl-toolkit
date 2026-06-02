@@ -1,5 +1,13 @@
 # @varshylinc/auth-social
 
+## 0.3.0
+
+### Minor Changes
+
+- Made migrations bundler-safe by inlining SQL at build/test/typecheck time and removing runtime filesystem reads.
+- Added hardened server utilities for pool creation, timeout handling, typed errors, and a boot-time `asSelfTest` check for migration/table readiness.
+- Added bundled-distribution verification tests (including optional Docker-backed runtime validation) and widened test include patterns for `*.spec.ts`.
+
 ## 0.2.4
 
 ### Patch

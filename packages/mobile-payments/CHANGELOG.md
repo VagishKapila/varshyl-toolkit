@@ -1,5 +1,13 @@
 # @varshylinc/mobile-payments
 
+## 0.2.0
+
+### Minor Changes
+
+- Switch migration execution to bundler-safe inline SQL generation (`scripts/inline-migrations.ts` -> `src/server/migrations.generated.ts`) so runtime never reads migration files from disk.
+- Add server resiliency and boot checks (`MpError`, timeout wrappers, `createMpPool`, `mpSelfTest`) and expose them from package exports.
+- Add bundled distribution verification (`tests/bundled.spec.ts`) and test config updates to validate inlined migrations in tsup output.
+
 ## 0.1.4
 
 ### Patch Changes

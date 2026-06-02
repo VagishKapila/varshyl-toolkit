@@ -1,5 +1,13 @@
 # Changelog — @varshylinc/team-management
 
+## 0.3.0
+
+### Minor Changes
+
+- Added bundler-safe inline migrations with generated `TM_MIGRATIONS`, extracted migration runtime, and removed filesystem SQL reads from server entrypoints.
+- Added `createTmPool`, `tmSelfTest`, and `TmError` exports for safer host boot wiring and explicit timeout/error behavior.
+- Updated package tooling with prebuild/pretypecheck/pretest migration generation, bundled-spec coverage, and build output cleanup for inline SQL delivery.
+
 ## 0.2.3
 
 ### Patch Changes

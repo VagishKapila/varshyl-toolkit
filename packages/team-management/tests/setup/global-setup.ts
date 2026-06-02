@@ -10,10 +10,10 @@ export async function setup(): Promise<void> {
   if (!databaseUrl) return; // unit-only runs skip this
 
   // Dynamically import to avoid issues with import.meta.url in globalSetup context
-  const { runMigrations } = await import('../../src/server/index.js');
+  const { tmSelfTest } = await import('../../src/server/index.js');
   const pool = new Pool({ connectionString: databaseUrl });
   try {
-    await runMigrations(pool);
+    await tmSelfTest({ pool });
   } finally {
     await pool.end();
   }

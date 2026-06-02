@@ -1,25 +1,45 @@
 import { createSubscriptionStore } from './server/create-store.js';
-import { runMigrations, MIGRATIONS_DIR } from './server/migrations.js';
 import { assertCanWrite, getAccessModeForUser } from './server/access.js';
 import { createRevenueCatWebhookHandler } from './server/revenuecat-webhook.js';
 import { createMockSubscriptionStore } from './server/mock-store.js';
 import { emitSubscriptionEvent } from './server/events.js';
 import { assignBuyerSeat } from './server/seats.js';
+import {
+  runMigrations,
+  BOOTSTRAP_SQL,
+  createMpPool,
+  mpSelfTest,
+  MpError,
+  DEFAULT_MP_CONNECTION_TIMEOUT_MS,
+  DEFAULT_MP_OPERATION_TIMEOUT_MS,
+} from './server/index.js';
 
 export {
   createSubscriptionStore,
   runMigrations,
-  MIGRATIONS_DIR,
+  BOOTSTRAP_SQL,
   assertCanWrite,
   getAccessModeForUser,
   createRevenueCatWebhookHandler,
   createMockSubscriptionStore,
   emitSubscriptionEvent,
   assignBuyerSeat,
+  createMpPool,
+  mpSelfTest,
+  MpError,
+  DEFAULT_MP_CONNECTION_TIMEOUT_MS,
+  DEFAULT_MP_OPERATION_TIMEOUT_MS,
 };
 
 export type { SubscriptionStore } from './server/store.js';
 export type { PaymentsConfig, ProductPaymentsConfig, ClientPaymentsConfig } from './config.js';
+export type {
+  RunMigrationsOptions,
+  CreateMpPoolOptions,
+  MpSelfTestResult,
+  MpSelfTestOptions,
+  MpErrorCode,
+} from './server/index.js';
 export type {
   SubscriptionStatus,
   SubscriptionState,

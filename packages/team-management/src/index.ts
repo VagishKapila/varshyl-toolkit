@@ -1,5 +1,13 @@
 // ─── Server exports (Node.js + tsc, DO NOT import in browser bundles) ─────────
-export { createServerModule, runMigrations } from './server/index.js';
+export {
+  createServerModule,
+  runMigrations,
+  createTmPool,
+  tmSelfTest,
+  TmError,
+  DEFAULT_TM_CONNECTION_TIMEOUT_MS,
+  DEFAULT_TM_OPERATION_TIMEOUT_MS,
+} from './server/index.js';
 export {
   addOrgMember,
   listOrgMembers,
@@ -8,6 +16,13 @@ export {
   removeOrgMember,
 } from './server/org-admin.js';
 export type { OrgMemberRecord, OrgHierarchyGroup } from './server/org-admin.js';
+export type {
+  RunMigrationsOptions,
+  CreateTmPoolOptions,
+  TmSelfTestOptions,
+  TmSelfTestResult,
+  TmErrorCode,
+} from './server/index.js';
 export type {
   ServerModuleAdapter,
   TeamManagementConfig,
