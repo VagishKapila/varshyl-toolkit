@@ -72,6 +72,10 @@ export interface ConsentModuleAdapter {
 export interface ConsentModuleConfig {
   pool: import('pg').Pool;
   adapter?: ConsentModuleAdapter;
+  /** Per-operation timeout for recordSignupConsents (default 5000ms). */
+  timeoutMs?: number;
+  /** Per-query timeout for migration/self-test operations (default 10000ms). */
+  connectionTimeoutMs?: number;
 }
 
 export interface ConsentModule {

@@ -1,6 +1,6 @@
 {
   "name": "@varshylinc/onboarding-consent-engine",
-  "version": "0.2.3",
+  "version": "0.3.0",
   "description": "Onboarding and legal consent for web + mobile apps: Terms/Privacy acceptance, GDPR/CCPA-style data-use consent, an audit trail, and a ready-made signup consent block.",
   "author": "Vagish Kapila (Varshyl Inc.)",
   "license": "Apache-2.0",
@@ -46,8 +46,11 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "tsc -p tsconfig.json && tsc -p tsconfig.client.build.json && mkdir -p dist/server/migrations && cp src/server/migrations/*.sql dist/server/migrations/",
+    "prebuild": "tsx scripts/inline-migrations.ts",
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.client.build.json",
+    "pretypecheck": "tsx scripts/inline-migrations.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.client.json --noEmit",
+    "pretest": "tsx scripts/inline-migrations.ts",
     "lint": "eslint src --ext .ts,.tsx --max-warnings 0",
     "test": "vitest run",
     "test:watch": "vitest"
@@ -63,7 +66,10 @@
     "@vitejs/plugin-react": "^4.2.1",
     "eslint": "^8.57.0",
     "react": "^18.3.1",
+    "@testcontainers/postgresql": "^10.28.0",
     "supertest": "^6.3.4",
+    "tsup": "^8.5.0",
+    "tsx": "^4.20.3",
     "typescript": "^5.4.5",
     "vitest": "^1.6.0"
   },

@@ -14,4 +14,6 @@ coverage/
 .nyc_output/
 playwright-report/
 test-results/
-qa-evidence/smoke-results.json
+packages/onboarding-consent-engine/src/server/migrations.generated.ts
+packages/onboarding-consent-engine/dist-bundled-test/
+packages/onboarding-consent-engine/dist-bundled-verify/

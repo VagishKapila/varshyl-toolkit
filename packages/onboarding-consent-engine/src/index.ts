@@ -2,8 +2,21 @@ export {
   runMigrations,
   seedStandardConsents,
   createConsentModule,
+  createOcePool,
+  oceSelfTest,
   STANDARD_CONSENTS,
   applyProductName,
+  OceError,
+  DEFAULT_OCE_CONNECTION_TIMEOUT_MS,
+  DEFAULT_OCE_OPERATION_TIMEOUT_MS,
+} from './server/index.js';
+
+export type {
+  RunMigrationsOptions,
+  OceSelfTestResult,
+  OceSelfTestOptions,
+  OceErrorCode,
+  CreateOcePoolOptions,
 } from './server/index.js';
 
 export type {

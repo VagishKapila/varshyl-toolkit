@@ -1,5 +1,16 @@
 # @varshylinc/onboarding-consent-engine
 
+## 0.3.0
+
+### Minor Changes
+
+- Inline migration SQL at build time (`migrations.generated.ts`) so bundled consumers (tsup, esbuild, webpack) no longer read `.sql` files via `import.meta.url` paths — fixes migration failures/hangs in production bundles.
+- Add `oceSelfTest()` boot-time wiring check returning `{ migrationsOk, seedOk, consentKeysFound }`.
+- Add `createOcePool()` with 10s default connection timeout; `recordSignupConsents` enforces 5s operation timeout (both configurable via `ConsentModuleConfig`).
+- Throw structured `OceError` codes: `OCE_MIGRATIONS_FAILED`, `OCE_UNKNOWN_KEY`, `OCE_TIMEOUT` — operations fail fast instead of hanging.
+- Add `tests/bundled.spec.ts` regression test (tsup bundle + Testcontainers Postgres).
+- **Audit note:** `auth-social`, `mobile-payments`, and `team-management` still load migrations via `fs` + `import.meta.url`; same bundler risk — follow-up recommended.
+
 ## 0.2.3
 
 ### Patch Changes
