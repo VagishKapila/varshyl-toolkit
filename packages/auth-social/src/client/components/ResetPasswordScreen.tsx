@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { AuthField } from './AuthField.js';
-import { getAuthTheme } from '../theme.js';
+import { useAuthTheme } from '../theme.js';
 import type { AuthActions } from '../../types.js';
 
 interface ResetPasswordScreenProps {
@@ -16,7 +16,7 @@ export function ResetPasswordScreen({
   signInUrl = '/auth/signin',
   onSuccess,
 }: ResetPasswordScreenProps): React.ReactElement {
-  const theme = getAuthTheme();
+  const theme = useAuthTheme();
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [done, setDone] = useState(false);

@@ -7,25 +7,15 @@
 
 Part of the **Varshyl Toolkit** — a set of independent, composable packages for building Capacitor + web SaaS apps.
 
-## Screenshots
-
-Ready-made sign-in screen with Google and email/password — drop it into your app and theme it.
-
-![Sign-in screen with Google button, email and password fields, and a show/hide password toggle](https://varshyl-toolkit-demo.netlify.app/screenshots/sign-in.png)
-
-Tap the eye icon to reveal or hide the password — helpful on mobile keyboards.
-
-![Password field with the visibility toggle showing plain text](https://varshyl-toolkit-demo.netlify.app/screenshots/eye-toggle.png)
-
-Forgot-password and reset-password screens ship with the package — wire your adapter’s email sender and you’re done.
-
-![Forgot password screen — user enters email to receive a reset link](https://varshyl-toolkit-demo.netlify.app/screenshots/forgot-password.png)
-
-![Reset password screen — user sets a new password from the email link](https://varshyl-toolkit-demo.netlify.app/screenshots/reset-password.png)
-
 ## What it does
 
-Handles sign-in and sign-up for mobile and web apps without owning your user table. You implement a small adapter for your existing user store; the module manages credentials, OAuth identities, sessions, and password-reset tokens in its own Postgres tables. Ships ready-made React screens with platform-aware social buttons (Apple on iOS, Google on Android/web) and an email/password flow with a password visibility toggle.
+Handles sign-in and sign-up for mobile and web apps without owning your user table. You implement a small adapter for your existing user store; the module manages credentials, OAuth identities, sessions, and password-reset tokens in its own Postgres tables.
+
+Ships ready-made React screens with **Sign in with Apple** and **Sign in with Google** (official logos + brand styling), an **AuthDivider**, email/password fields with a password visibility toggle, and product theming via **AuthThemeProvider**.
+
+> ⚠️ **Apple brand order:** Apple's guidelines require Sign in with Apple to appear **above** other third-party sign-in options on iOS apps. `SocialButtons` automatically enforces Apple-first ordering when both providers are shown.
+
+> ⚠️ **App Store 4.8:** If you offer Google (or any third-party sign-in), you must also offer Sign in with Apple on iOS. `SocialButtons` shows both on web and native by default; disabling Apple while keeping Google logs a dev-mode warning.
 
 ## Install
 
@@ -61,44 +51,84 @@ const auth = createAuthService(pool, adapter, {
 });
 ```
 
-**Client** — configure once, render the sign-in screen:
+**Client** — wrap your app root in `AuthThemeProvider`, configure once, render the sign-in screen:
 
 ```tsx
-import { configureAuth, SignInScreen, useAuth, setAuthTheme } from '@varshylinc/auth-social/client';
+import {
+  AuthThemeProvider,
+  configureAuth,
+  SignInScreen,
+  useAuth,
+} from '@varshylinc/auth-social/client';
+
+const JOBSITE_THEME = {
+  primary: '#3A6B5F',
+  primaryHover: '#2D544A',
+  surface: '#FAF7F0',
+};
 
 configureAuth({ apiBaseUrl: '/api/auth' });
-setAuthTheme({ primary: '#2563eb' });
+
+function App() {
+  return (
+    <AuthThemeProvider theme={JOBSITE_THEME}>
+      <LoginPage />
+    </AuthThemeProvider>
+  );
+}
 
 function LoginPage() {
   const { actions } = useAuth();
   return (
     <SignInScreen
       actions={actions}
+      submitButtonClassName="my-product-submit"
       onSuccess={() => (window.location.href = '/app')}
     />
   );
 }
 ```
 
+Standard auth layout:
+
+```tsx
+<SocialButtons variant="official" mode="signIn" />
+<AuthDivider text="or continue with email" />
+{/* email + password fields */}
+```
+
+## Theming
+
+- **Default theme** is neutral slate (`#1F2937`) — not orange. Brand colors are your choice.
+- Prefer **`AuthThemeProvider`** at the app root so screens pick up theme on first paint (no `useEffect` + `setAuthTheme` race).
+- **`setAuthTheme()`** still works for imperative overrides outside React.
+- **`SignInScreen`** accepts `submitButtonClassName`, `socialButtonClassName`, `containerClassName`, `inputClassName`, and `dividerText`.
+
+## SocialButtons props
+
+| Prop | Default | Description |
+|------|---------|-------------|
+| `providers` | `['apple','google']` | Which providers to consider |
+| `showApple` | `true` when Google is on | Set `false` only if you intentionally omit Apple (dev warning) |
+| `showGoogle` | `true` | Toggle Google button |
+| `variant` | `'official'` | `'official'` = Apple/Google brand buttons + logos; `'default'` = themed neutral |
+| `mode` | `'signIn'` | `'signUp'` changes button copy |
+
 ## Entry points
 
 | Import path | Exports |
 |---|---|
 | `@varshylinc/auth-social` | `createAuthService`, `runMigrations`, `MIGRATIONS_DIR`, `verifyAppleIdToken`, `verifyGoogleIdToken`, `createMockAuthService`, types |
-| `@varshylinc/auth-social/client` | `configureAuth`, `useAuth`, `SignInScreen`, `ForgotPasswordScreen`, `ResetPasswordScreen`, `AuthField`, `authActions`, `setAuthTheme`, `createMockSocialProvider`, … |
+| `@varshylinc/auth-social/client` | `AuthThemeProvider`, `useAuthTheme`, `SignInScreen`, `SocialButtons`, `AuthDivider`, `ForgotPasswordScreen`, `ResetPasswordScreen`, `AuthField`, `AppleLogo`, `GoogleLogo`, `authActions`, `setAuthTheme`, `createMockSocialProvider`, … |
 | `@varshylinc/auth-social/client/capgo` | `createCapgoSocialProvider` — native Apple/Google via Capgo (optional peer) |
 
 ## Database
 
 Bring your own Postgres. Call `runMigrations(pool)` on server boot — idempotent, safe every startup. Tables use the `as_` prefix (`as_credentials`, `as_oauth_identities`, `as_sessions`, `as_password_resets`). Requires `citext` and `pgcrypto` extensions.
 
-## Theming
-
-Themeable via `setAuthTheme()` or `configureAuth({ theme })`. Ships a neutral default (`DEFAULT_AUTH_THEME`).
-
 ## See also
 
-- [@varshylinc/onboarding-consent-engine](../onboarding-consent-engine) — compose `SignupConsentBlock` into `SignInScreen` via the `consentSlot` prop
+- [@varshylinc/onboarding-consent-engine](../onboarding-consent-engine) — compose consent UI into `SignInScreen` via the `consentSlot` prop
 - [@varshylinc/team-management](../team-management) — org roster keyed to the same `userId`
 - [@varshylinc/mobile-payments](../mobile-payments) — seat-aware subscriptions
 
