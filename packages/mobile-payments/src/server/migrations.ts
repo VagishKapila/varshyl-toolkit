@@ -1,17 +1,10 @@
-import { readFileSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
 import type { Pool } from 'pg';
+import { MP_MIGRATIONS } from './migrations.generated.js';
+import { MpError } from './errors.js';
+import { withMpTimeout } from './timeout.js';
+import { DEFAULT_MP_CONNECTION_TIMEOUT_MS } from './pool.js';
 
-export const MIGRATIONS_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'migrations');
-
-const MIGRATIONS: Array<{ name: string; file: string }> = [
-  { name: '0001_create_mp_subscriptions', file: join(MIGRATIONS_DIR, '0001_create_mp_subscriptions.sql') },
-  { name: '0002_create_mp_subscription_events', file: join(MIGRATIONS_DIR, '0002_create_mp_subscription_events.sql') },
-  { name: '0003_create_mp_seat_assignments', file: join(MIGRATIONS_DIR, '0003_create_mp_seat_assignments.sql') },
-];
-
-const BOOTSTRAP_SQL = `
+export const BOOTSTRAP_SQL = `
 CREATE TABLE IF NOT EXISTS mp_schema_migrations (
   id          SERIAL       PRIMARY KEY,
   migration   VARCHAR(255) NOT NULL UNIQUE,
@@ -19,39 +12,53 @@ CREATE TABLE IF NOT EXISTS mp_schema_migrations (
 );
 `;
 
+export interface RunMigrationsOptions {
+  /** Per-query timeout in ms (default 10000). */
+  connectionTimeoutMs?: number;
+}
+
 export async function runMigrations(
   pool: Pool,
-  logger: { info(msg: string): void } = { info: () => {} }
+  logger: { info(msg: string): void } = { info: () => {} },
+  opts: RunMigrationsOptions = {},
 ): Promise<{ applied: string[]; skipped: string[] }> {
+  const timeoutMs = opts.connectionTimeoutMs ?? DEFAULT_MP_CONNECTION_TIMEOUT_MS;
   const applied: string[] = [];
   const skipped: string[] = [];
+  const query = (sql: string, params?: unknown[]) =>
+    withMpTimeout(pool.query(sql, params), timeoutMs, 'MP_MIGRATIONS_FAILED');
 
-  await pool.query(BOOTSTRAP_SQL);
+  try {
+    await query(BOOTSTRAP_SQL);
 
-  for (const migration of MIGRATIONS) {
-    const result = await pool.query(
-      'SELECT id FROM mp_schema_migrations WHERE migration = $1',
-      [migration.name]
-    );
+    for (const migration of MP_MIGRATIONS) {
+      const result = await query(
+        'SELECT id FROM mp_schema_migrations WHERE migration = $1',
+        [migration.name],
+      );
 
-    if (result.rows.length > 0) {
-      skipped.push(migration.name);
-      logger.info(`[mobile-payments] skipped: ${migration.name}`);
-      continue;
+      if (result.rows.length > 0) {
+        skipped.push(migration.name);
+        logger.info(`[mobile-payments] skipped: ${migration.name}`);
+        continue;
+      }
+
+      await query(migration.sql);
+      await query('INSERT INTO mp_schema_migrations (migration) VALUES ($1)', [migration.name]);
+
+      applied.push(migration.name);
+      logger.info(`[mobile-payments] applied: ${migration.name}`);
     }
-
-    const sql = readFileSync(migration.file, 'utf-8');
-    await pool.query(sql);
-    await pool.query(
-      'INSERT INTO mp_schema_migrations (migration) VALUES ($1)',
-      [migration.name]
+  } catch (error) {
+    if (error instanceof MpError) {
+      throw error;
+    }
+    throw new MpError(
+      error instanceof Error ? error.message : 'Migration failed',
+      'MP_MIGRATIONS_FAILED',
+      { cause: error },
     );
-
-    applied.push(migration.name);
-    logger.info(`[mobile-payments] applied: ${migration.name}`);
   }
 
   return { applied, skipped };
 }
-
-export { MIGRATIONS };

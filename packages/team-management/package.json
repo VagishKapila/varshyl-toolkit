@@ -1,6 +1,6 @@
 {
   "name": "@varshylinc/team-management",
-  "version": "0.2.3",
+  "version": "0.3.0",
   "description": "Organization and team management for SaaS: member roster, roles and hierarchy, an admin People page, and a seat-ready data model.",
   "author": "Vagish Kapila (Varshyl Inc.)",
   "license": "Apache-2.0",
@@ -52,8 +52,11 @@
     }
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json && tsc -p tsconfig.client.build.json && mkdir -p dist/server/migrations && cp src/server/migrations/*.sql dist/server/migrations/",
+    "prebuild": "tsx scripts/inline-migrations.ts",
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.client.build.json",
+    "pretypecheck": "tsx scripts/inline-migrations.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.client.json --noEmit",
+    "pretest": "tsx scripts/inline-migrations.ts",
     "test": "vitest run",
     "lint": "eslint src --ext .ts,.tsx --max-warnings 0"
   },
@@ -69,10 +72,13 @@
     "@types/supertest": "^6.0.2",
     "@typescript-eslint/eslint-plugin": "^7.8.0",
     "@typescript-eslint/parser": "^7.8.0",
+    "@testcontainers/postgresql": "^10.28.0",
     "eslint": "^8.57.0",
     "pg": "^8.11.5",
     "react": "^18.3.1",
     "supertest": "^7.0.0",
+    "tsup": "^8.5.0",
+    "tsx": "^4.20.3",
     "typescript": "^5.4.5",
     "vitest": "^1.5.0"
   },

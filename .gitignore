@@ -15,5 +15,8 @@ coverage/
 playwright-report/
 test-results/
 packages/onboarding-consent-engine/src/server/migrations.generated.ts
-packages/onboarding-consent-engine/dist-bundled-test/
-packages/onboarding-consent-engine/dist-bundled-verify/
+packages/team-management/src/server/migrations.generated.ts
+packages/auth-social/src/server/migrations.generated.ts
+packages/mobile-payments/src/server/migrations.generated.ts
+packages/*/dist-bundled-test/
+packages/*/dist-bundled-verify/

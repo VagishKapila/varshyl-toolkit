@@ -1,12 +1,26 @@
-import { createAuthService } from './server/pg-auth-service.js';
-import { runMigrations, MIGRATIONS_DIR } from './server/migrations.js';
-import { verifyAppleIdToken, verifyGoogleIdToken } from './server/token-verify.js';
-
-export { createAuthService, runMigrations, MIGRATIONS_DIR };
-export { verifyAppleIdToken, verifyGoogleIdToken };
-export { createMockAuthService } from './server/mock-service.js';
-export type { MockAuthCapture } from './server/mock-service.js';
-export type { AuthService } from './server/service.js';
-export type { AuthUserAdapter } from './server/adapter.js';
+export {
+  createAuthService,
+  runMigrations,
+  MIGRATIONS,
+  MIGRATIONS_DIR,
+  createAsPool,
+  asSelfTest,
+  AsError,
+  DEFAULT_AS_CONNECTION_TIMEOUT_MS,
+  DEFAULT_AS_OPERATION_TIMEOUT_MS,
+  verifyAppleIdToken,
+  verifyGoogleIdToken,
+  createMockAuthService,
+} from './server/index.js';
+export type {
+  RunMigrationsOptions,
+  CreateAsPoolOptions,
+  AsSelfTestResult,
+  AsSelfTestOptions,
+  AsErrorCode,
+  MockAuthCapture,
+  AuthService,
+  AuthUserAdapter,
+} from './server/index.js';
 export type { AuthConfig } from './config.js';
 export type { Session, AuthProvider, OAuthProvider } from './types.js';

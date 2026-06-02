@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { Pool } from 'pg';
-import { runMigrations, MIGRATIONS } from '../../src/server/migrations.js';
+import { runMigrations } from '../../src/server/migrations.js';
+import { MP_MIGRATIONS } from '../../src/server/migrations.generated.js';
 
 const describeWithDb = process.env.DATABASE_URL ? describe : describe.skip;
 
@@ -18,13 +19,13 @@ describeWithDb('mobile-payments migrations', () => {
   it('runs all 3 migrations successfully', async () => {
     await runMigrations(pool);
     const result = await pool.query(`SELECT COUNT(*) as cnt FROM mp_schema_migrations`);
-    expect(parseInt(result.rows[0].cnt, 10)).toBe(MIGRATIONS.length);
+    expect(parseInt(result.rows[0].cnt, 10)).toBe(MP_MIGRATIONS.length);
   });
 
   it('is idempotent', async () => {
     const second = await runMigrations(pool);
     expect(second.applied.length).toBe(0);
-    expect(second.skipped.length).toBe(MIGRATIONS.length);
+    expect(second.skipped.length).toBe(MP_MIGRATIONS.length);
   });
 
   it('creates mp_* tables', async () => {

@@ -164,6 +164,9 @@ importers:
         specifier: ^5.2.4
         version: 5.10.0
     devDependencies:
+      '@testcontainers/postgresql':
+        specifier: ^10.28.0
+        version: 10.28.0
       '@types/node':
         specifier: ^20.12.7
         version: 20.19.40
@@ -188,6 +191,12 @@ importers:
       react:
         specifier: ^18.3.1
         version: 18.3.1
+      tsup:
+        specifier: ^8.5.0
+        version: 8.5.1(jiti@1.21.7)(postcss@8.5.14)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.9.0)
+      tsx:
+        specifier: ^4.20.3
+        version: 4.21.0
       typescript:
         specifier: ^5.4.5
         version: 5.9.3
@@ -200,6 +209,9 @@ importers:
       '@revenuecat/purchases-capacitor':
         specifier: ^10.0.0
         version: 10.4.0(@capacitor/core@6.2.1)
+      '@testcontainers/postgresql':
+        specifier: ^10.28.0
+        version: 10.28.0
       '@types/node':
         specifier: ^20.12.7
         version: 20.19.40
@@ -224,6 +236,15 @@ importers:
       react:
         specifier: ^18.3.1
         version: 18.3.1
+      supertest:
+        specifier: ^6.3.4
+        version: 6.3.4
+      tsup:
+        specifier: ^8.5.0
+        version: 8.5.1(jiti@1.21.7)(postcss@8.5.14)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.9.0)
+      tsx:
+        specifier: ^4.20.3
+        version: 4.21.0
       typescript:
         specifier: ^5.4.5
         version: 5.9.3
@@ -283,6 +304,9 @@ importers:
         specifier: ^4.18.3
         version: 4.22.1
     devDependencies:
+      '@testcontainers/postgresql':
+        specifier: ^10.28.0
+        version: 10.28.0
       '@types/express':
         specifier: ^4.17.21
         version: 4.17.25
@@ -319,6 +343,12 @@ importers:
       supertest:
         specifier: ^7.0.0
         version: 7.2.2
+      tsup:
+        specifier: ^8.5.0
+        version: 8.5.1(jiti@1.21.7)(postcss@8.5.14)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.9.0)
+      tsx:
+        specifier: ^4.20.3
+        version: 4.21.0
       typescript:
         specifier: ^5.4.5
         version: 5.9.3
