@@ -1,5 +1,11 @@
 # @varshylinc/auth-social
 
+## 0.4.1
+
+### Patch Changes
+
+- **Publish fix:** Copy `SocialButtons.css` and `AuthDivider.css` into `dist/client/components/` during build so npm consumers resolve side-effect CSS imports (0.4.0 tarball omitted these files).
+
 ## 0.4.0
 
 ### Minor Changes
