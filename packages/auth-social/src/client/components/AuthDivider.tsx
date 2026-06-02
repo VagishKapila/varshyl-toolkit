@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useLayoutEffect } from 'react';
+import { ensureAuthSocialClientStyles } from '../injectClientStyles.js';
 import { useAuthTheme } from '../theme.js';
-import './AuthDivider.css';
 
 export interface AuthDividerProps {
   /** Default: "or continue with email" */
@@ -12,6 +12,10 @@ export function AuthDivider({
   text = 'or continue with email',
   className = '',
 }: AuthDividerProps): React.ReactElement {
+  useLayoutEffect(() => {
+    ensureAuthSocialClientStyles();
+  }, []);
+
   const theme = useAuthTheme();
   const style = {
     '--as-divider-line': theme.border,

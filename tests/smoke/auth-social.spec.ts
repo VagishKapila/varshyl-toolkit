@@ -12,21 +12,21 @@ test('S0: /healthz returns ready', async ({ request }) => {
   expect(body.status).toBe('ready');
 });
 
-test('S1: web sign-in shows Google + email, not Apple', async ({ page }) => {
+test('S1: web sign-in shows Apple + Google + email (App Store 4.8)', async ({ page }) => {
   await page.goto('/auth/signin');
   await expect(page.getByTestId('sign-in-screen')).toBeVisible();
+  await expect(page.getByTestId('sign-in-apple')).toBeVisible();
   await expect(page.getByTestId('sign-in-google')).toBeVisible();
-  await expect(page.getByTestId('sign-in-apple')).toHaveCount(0);
   await expect(page.getByTestId('sign-in-submit')).toBeVisible();
 });
 
-test('S2: mocked iOS shows Apple + email, not Google', async ({ page }) => {
+test('S2: mocked iOS shows Apple + Google + email (App Store 4.8)', async ({ page }) => {
   await page.addInitScript(() => {
     (globalThis as { __AS_PLATFORM__?: string }).__AS_PLATFORM__ = 'ios';
   });
   await page.goto('/auth/signin');
   await expect(page.getByTestId('sign-in-apple')).toBeVisible();
-  await expect(page.getByTestId('sign-in-google')).toHaveCount(0);
+  await expect(page.getByTestId('sign-in-google')).toBeVisible();
 });
 
 test('S3: email sign-up then sign-in establishes session', async ({ page }) => {

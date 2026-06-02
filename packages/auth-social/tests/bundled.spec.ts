@@ -1,4 +1,6 @@
+// @vitest-environment node
 import { execSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -61,7 +63,9 @@ describeWithPostgres('bundled dist (tsup) - migrations + self-test', () => {
   });
 
   it('runs inlined migrations and self-test against bundled output', async () => {
-    const bundleUrl = pathToFileURL(join(bundleDir, 'index.js')).href;
+    const bundlePath = join(bundleDir, 'index.js');
+    expect(existsSync(bundlePath)).toBe(true);
+    const bundleUrl = pathToFileURL(bundlePath).href;
     const mod = await import(bundleUrl);
 
     expect(mod.runMigrations).toBeTypeOf('function');

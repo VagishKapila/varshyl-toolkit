@@ -1,5 +1,11 @@
 # @varshylinc/auth-social
 
+## 0.4.1
+
+### Patch Changes
+
+- **Publish fix:** Ship official social button + divider styles without Node-breaking `.css` imports — CSS is inlined at build time and injected in the browser; `.css` files are also copied to `dist/client/components/` for optional manual `@import` in app bundlers (0.4.0 omitted dist CSS entirely).
+
 ## 0.4.0
 
 ### Minor Changes

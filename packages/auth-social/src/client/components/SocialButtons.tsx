@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo } from 'react';
+import { ensureAuthSocialClientStyles } from '../injectClientStyles.js';
 import { AppleLogo } from '../assets/AppleLogo.js';
 import { GoogleLogo } from '../assets/GoogleLogo.js';
 import { useAuthTheme } from '../theme.js';
@@ -7,8 +8,6 @@ import {
   shouldWarnAppStore48,
   type SocialProvider,
 } from '../socialButtonsLogic.js';
-import './SocialButtons.css';
-
 export type SocialButtonsVariant = 'default' | 'official';
 export type SocialButtonsMode = 'signIn' | 'signUp';
 
@@ -51,6 +50,10 @@ export function SocialButtons({
   className = '',
   socialButtonClassName = '',
 }: SocialButtonsProps): React.ReactElement {
+  useLayoutEffect(() => {
+    ensureAuthSocialClientStyles();
+  }, []);
+
   const theme = useAuthTheme();
   const resolved = useMemo(
     () => resolveSocialProviders({ providers, showApple, showGoogle }),
