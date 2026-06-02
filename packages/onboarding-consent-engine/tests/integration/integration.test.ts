@@ -138,7 +138,7 @@ describeWithDb('@varshylinc/onboarding-consent-engine — integration', () => {
         userId: 'err-user',
         consents: [{ key: 'nonexistent_key', granted: true }],
       }),
-    ).rejects.toThrow('Unknown consent key: nonexistent_key');
+    ).rejects.toMatchObject({ code: 'OCE_UNKNOWN_KEY', message: 'Unknown consent key: nonexistent_key' });
   });
 
   it('onConsentRecorded adapter hook is called', async () => {
