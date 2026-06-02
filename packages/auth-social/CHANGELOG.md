@@ -1,5 +1,18 @@
 # @varshylinc/auth-social
 
+## 0.4.0
+
+### Minor Changes
+
+- **Breaking (visual):** `DEFAULT_AUTH_THEME.primary` changed from orange (`#ea580c`) to neutral slate (`#1F2937`). Products that relied on the orange default should pass an explicit theme.
+- Added **`AuthThemeProvider`** and **`useAuthTheme()`** so auth screens re-render when theme changes (fixes first-paint orange flash when only using `setAuthTheme` in `useEffect`).
+- **`SocialButtons`:** Apple and Google both shown on web by default (App Store 4.8); Apple always rendered above Google; new `providers`, `showApple`, `showGoogle`, `variant`, `mode`, and `className` props.
+- **`variant="official"`** (default): Apple/Google brand-compliant buttons with bundled **AppleLogo** and **GoogleLogo** SVGs.
+- Added **`AuthDivider`** component (`or continue with email` by default).
+- **`SignInScreen`:** `submitButtonClassName`, `socialButtonClassName`, `containerClassName`, `inputClassName`, `dividerText`, `socialVariant` styling hooks.
+- **`AuthField`:** `inputClassName` prop.
+- Dev-mode console warning when Google is enabled without Apple.
+
 ## 0.3.0
 
 ### Minor Changes
@@ -31,4 +44,3 @@
 ### Patch Changes
 
 - Public release polish: README, npm metadata (keywords/description/repository), and Apache-2.0 license. No code changes.
-

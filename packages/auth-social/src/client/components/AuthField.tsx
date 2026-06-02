@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { getAuthTheme } from '../theme.js';
+import { useAuthTheme } from '../theme.js';
 import {
   passwordInputType,
   passwordVisibilityAriaLabel,
@@ -15,6 +15,7 @@ interface AuthFieldProps {
   placeholder?: string;
   /** Show eye toggle for password fields. Default true. */
   showPasswordToggle?: boolean;
+  inputClassName?: string | undefined;
 }
 
 function EyeIcon({ color }: { color: string }): React.ReactElement {
@@ -75,8 +76,9 @@ export function AuthField({
   autoComplete,
   placeholder,
   showPasswordToggle = true,
+  inputClassName = '',
 }: AuthFieldProps): React.ReactElement {
-  const theme = getAuthTheme();
+  const theme = useAuthTheme();
   const isPasswordField = type === 'password';
   const canToggle = isPasswordField && showPasswordToggle;
   const [passwordVisible, setPasswordVisible] = useState(false);
@@ -90,6 +92,7 @@ export function AuthField({
       autoComplete={autoComplete}
       placeholder={placeholder}
       data-testid={isPasswordField ? 'password-input' : undefined}
+      className={inputClassName || undefined}
       style={{
         width: '100%',
         boxSizing: 'border-box',

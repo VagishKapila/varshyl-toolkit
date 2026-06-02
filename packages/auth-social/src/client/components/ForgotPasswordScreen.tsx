@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { AuthField } from './AuthField.js';
-import { getAuthTheme } from '../theme.js';
+import { useAuthTheme } from '../theme.js';
 import type { AuthActions } from '../../types.js';
 
 interface ForgotPasswordScreenProps {
@@ -14,7 +14,7 @@ export function ForgotPasswordScreen({
   signInUrl = '/auth/signin',
   onSuccess,
 }: ForgotPasswordScreenProps): React.ReactElement {
-  const theme = getAuthTheme();
+  const theme = useAuthTheme();
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
