@@ -95,7 +95,7 @@ function App() {
 | Import path | Exports |
 |---|---|
 | `@varshylinc/mobile-payments` | `createSubscriptionStore`, `runMigrations`, `assertCanWrite`, `getAccessModeForUser`, `createRevenueCatWebhookHandler`, `createMockSubscriptionStore`, `assignBuyerSeat`, types |
-| `@varshylinc/mobile-payments/client` | `configureSubscriptions`, `useSubscription`, `PaywallScreen`, `FeatureGate`, `ReadOnlyBanner`, `RestoreButton`, `subscriptionActions`, `createMockSubscriptionService`, … |
+| `@varshylinc/mobile-payments/client` | `configureSubscriptions`, `PaymentsThemeProvider`, `usePaymentsTheme`, `useSubscription`, `PaywallScreen`, `FeatureGate`, `ReadOnlyBanner`, `RestoreButton`, `subscriptionActions`, `createMockSubscriptionService`, … |
 | `@varshylinc/mobile-payments/client/revenuecat` | `createRevenueCatSubscriptionService` — requires optional peer `@revenuecat/purchases-capacitor` |
 
 ## Database
@@ -104,7 +104,79 @@ Bring your own Postgres. Call `runMigrations(pool)` on boot. Tables use the `mp_
 
 ## Theming
 
-Themeable via `configureSubscriptions({ theme })`. Ships a neutral default (`DEFAULT_PAYMENTS_THEME`).
+Paywall UI reads **AuthTheme-compatible** tokens via `PaymentsThemeProvider` (conceptual parity with `@varshylinc/auth-social` — toolkit modules cannot import each other, so use the **same** `theme` object on both providers).
+
+### Recommended: dual provider at app root
+
+```tsx
+import { AuthThemeProvider } from '@varshylinc/auth-social/client';
+import {
+  PaymentsThemeProvider,
+  PaywallScreen,
+  configureSubscriptions,
+} from '@varshylinc/mobile-payments/client';
+
+const theme = {
+  primary: '#3A6B5F',
+  primaryHover: '#2D544A',
+  surface: '#FAF7F0',
+  border: '#e8e0d0',
+  text: '#211D18',
+  textMuted: '#8a7f6f',
+  error: '#8B3A2F',
+  success: '#2D6A4F',
+  radius: '12px',
+};
+
+export function AppProviders({ children }: { children: React.ReactNode }) {
+  return (
+    <AuthThemeProvider theme={theme}>
+      <PaymentsThemeProvider theme={theme}>{children}</PaymentsThemeProvider>
+    </AuthThemeProvider>
+  );
+}
+```
+
+Without any provider, components still render using `DEFAULT_PAYMENTS_APP_THEME` (matches pre-0.3.0 JobSite defaults). Dev mode logs a one-time `console.warn` pointing here.
+
+### Legacy: `configureSubscriptions({ theme })`
+
+Still supported — maps `paper` / `brick` / `brass` / `ink` to the new token model:
+
+```ts
+configureSubscriptions({
+  config: { orgId, userId },
+  theme: { paper: '#FAF7F0', brick: '#8B3A2F', brass: '#B8893E', ink: '#211D18' },
+});
+```
+
+### `*ClassName` overrides
+
+| Component | Props |
+|-----------|--------|
+| `PaywallScreen` | `paywallClassName`, `planCardClassName`, `ctaButtonClassName`, `restoreButtonClassName`, `errorClassName` |
+| `RestoreButton` | `restoreButtonClassName` |
+| `ReadOnlyBanner` | `bannerClassName` |
+| `FeatureGate` | `gateClassName`, `blockedMessageClassName` |
+
+### CSS variables (no provider)
+
+Set on a parent of paywall UI:
+
+| Variable | Role |
+|----------|------|
+| `--mp-primary` | CTA, titles |
+| `--mp-primary-hover` | CTA hover |
+| `--mp-surface` | Card background |
+| `--mp-ink` | Body text |
+| `--mp-muted` | Secondary text, banner |
+| `--mp-danger` | Errors, blocked messages |
+| `--mp-success` | Success states (reserved) |
+| `--mp-border` | Outlines |
+| `--mp-radius` / `--mp-button-radius` | Corners |
+| `--mp-font-heading` / `--mp-font-body` | Typography |
+
+Optional: `@import '@varshylinc/mobile-payments/dist/client/components/PaywallStyles.css'` in your bundler.
 
 ## See also
 

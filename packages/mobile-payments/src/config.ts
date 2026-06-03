@@ -28,6 +28,25 @@ export interface ClientPaymentsConfig {
   revenueCatApiKey?: string;
 }
 
+/**
+ * Same field names as auth-social AuthTheme — pass one object to both
+ * AuthThemeProvider and PaymentsThemeProvider (modules cannot import each other).
+ */
+export interface PaymentsAppTheme {
+  primary: string;
+  primaryHover: string;
+  surface: string;
+  border: string;
+  text: string;
+  textMuted: string;
+  error: string;
+  success: string;
+  radius: string;
+  fontHeading?: string;
+  fontBody?: string;
+}
+
+/** @deprecated Use PaymentsAppTheme via PaymentsThemeProvider; still supported in configureSubscriptions({ theme }). */
 export interface SubscriptionTheme {
   paper: string;
   brick: string;
@@ -37,13 +56,27 @@ export interface SubscriptionTheme {
   fontBody: string;
 }
 
-export const DEFAULT_PAYMENTS_THEME: SubscriptionTheme = {
-  paper: '#FAF7F0',
-  brick: '#8B3A2F',
-  brass: '#B8893E',
-  ink: '#211D18',
+export const DEFAULT_PAYMENTS_APP_THEME: PaymentsAppTheme = {
+  primary: '#8B3A2F',
+  primaryHover: '#6E2E25',
+  surface: '#FAF7F0',
+  border: '#B8893E',
+  text: '#211D18',
+  textMuted: '#8a7f6f',
+  error: '#8B3A2F',
+  success: '#2D6A4F',
+  radius: '8px',
   fontHeading: '"Fraunces", Georgia, serif',
   fontBody: '"Inter", system-ui, sans-serif',
+};
+
+export const DEFAULT_PAYMENTS_THEME: SubscriptionTheme = {
+  paper: DEFAULT_PAYMENTS_APP_THEME.surface,
+  brick: DEFAULT_PAYMENTS_APP_THEME.primary,
+  brass: DEFAULT_PAYMENTS_APP_THEME.border,
+  ink: DEFAULT_PAYMENTS_APP_THEME.text,
+  fontHeading: DEFAULT_PAYMENTS_APP_THEME.fontHeading ?? '"Fraunces", Georgia, serif',
+  fontBody: DEFAULT_PAYMENTS_APP_THEME.fontBody ?? '"Inter", system-ui, sans-serif',
 };
 
 export const DEFAULT_PRODUCT_CONFIG: ProductPaymentsConfig = {

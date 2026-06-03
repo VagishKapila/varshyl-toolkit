@@ -1,14 +1,20 @@
 import React from 'react';
-import { getSubscriptionTheme } from '../configure.js';
 import { getSubscriptionService } from '../configure.js';
+import { usePaymentsTheme } from '../payments-theme.js';
+import './PaywallStyles.css';
 
-interface RestoreButtonProps {
+export interface RestoreButtonProps {
   onRestored?: () => void;
   disabled?: boolean;
+  restoreButtonClassName?: string;
 }
 
-export function RestoreButton({ onRestored, disabled }: RestoreButtonProps): React.ReactElement {
-  const theme = getSubscriptionTheme();
+export function RestoreButton({
+  onRestored,
+  disabled,
+  restoreButtonClassName = '',
+}: RestoreButtonProps): React.ReactElement {
+  const { cssVars } = usePaymentsTheme();
 
   const restore = async () => {
     await getSubscriptionService().restore();
@@ -21,14 +27,8 @@ export function RestoreButton({ onRestored, disabled }: RestoreButtonProps): Rea
       data-testid="paywall-restore"
       disabled={disabled}
       onClick={() => void restore()}
-      style={{
-        background: 'transparent',
-        color: theme.ink,
-        border: `1px solid ${theme.brass}`,
-        padding: '12px 16px',
-        borderRadius: '8px',
-        cursor: disabled ? 'wait' : 'pointer',
-      }}
+      className={`mp-restore-button ${restoreButtonClassName}`.trim()}
+      style={cssVars}
     >
       Restore Purchases
     </button>

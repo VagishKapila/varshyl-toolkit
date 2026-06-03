@@ -1,0 +1,100 @@
+.mp-paywall {
+  background: var(--mp-surface, #faf7f0);
+  color: var(--mp-ink, #211d18);
+  font-family: var(--mp-font-body, 'Inter', system-ui, sans-serif);
+  padding: 32px;
+  max-width: 420px;
+  margin: 0 auto;
+  border-radius: var(--mp-radius, 8px);
+}
+
+.mp-paywall__title {
+  font-family: var(--mp-font-heading, 'Fraunces', Georgia, serif);
+  color: var(--mp-primary, #8b3a2f);
+  margin: 0 0 8px;
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+.mp-paywall__plan-card {
+  margin: 0;
+}
+
+.mp-paywall__price {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.mp-paywall__trial {
+  color: var(--mp-muted, #8a7f6f);
+  margin: 8px 0 0;
+}
+
+.mp-paywall__error {
+  color: var(--mp-danger, #8b3a2f);
+  margin: 12px 0 0;
+}
+
+.mp-paywall__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.mp-paywall__cta {
+  background: var(--mp-primary, #8b3a2f);
+  color: var(--mp-surface, #faf7f0);
+  border: none;
+  padding: 12px 16px;
+  border-radius: var(--mp-button-radius, 8px);
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.mp-paywall__cta:hover:not(:disabled) {
+  background: var(--mp-primary-hover, #6e2e25);
+}
+
+.mp-paywall__cta:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.mp-restore-button {
+  background: transparent;
+  color: var(--mp-ink, #211d18);
+  border: 1px solid var(--mp-border, #b8893e);
+  padding: 12px 16px;
+  border-radius: var(--mp-button-radius, 8px);
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.mp-restore-button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.mp-read-only-banner {
+  background: var(--mp-muted, #b8893e);
+  color: var(--mp-surface, #faf7f0);
+  padding: 12px 16px;
+  border-radius: var(--mp-radius, 8px);
+  font-family: var(--mp-font-body, 'Inter', system-ui, sans-serif);
+  margin-bottom: 16px;
+}
+
+.mp-feature-gate__blocked {
+  opacity: 0.5;
+  pointer-events: none;
+  font-family: var(--mp-font-body, 'Inter', system-ui, sans-serif);
+}
+
+.mp-feature-gate__message {
+  color: var(--mp-danger, #8b3a2f);
+  margin-top: 8px;
+  font-family: var(--mp-font-body, 'Inter', system-ui, sans-serif);
+}
