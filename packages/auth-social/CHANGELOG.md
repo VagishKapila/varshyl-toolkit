@@ -1,5 +1,11 @@
 # @varshylinc/auth-social
 
+## 0.4.2
+
+### Patch Changes
+
+- Re-export **`getStoredSessionToken`**, **`storeSessionToken`**, **`clearSessionToken`**, and **`fetchSession`** from `@varshylinc/auth-social/client`. These existed in `client/actions` since 0.3.x but were missing from the main client barrel, which caused Webpack/Next.js import warnings when host apps bridged social sign-in (e.g. JobSite Intel [dailylog-ai#138](https://github.com/VagishKapila/dailylog-ai/pull/138) inlined `as_session_token` helpers as a workaround). Products can remove local duplicates and import from the package again.
+
 ## 0.4.1
 
 ### Patch Changes

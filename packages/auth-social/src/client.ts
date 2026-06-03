@@ -1,6 +1,12 @@
 export { configureAuth } from './client/configure.js';
 export { useAuth } from './client/use-auth.js';
 export { authActions } from './client/actions.js';
+export {
+  getStoredSessionToken,
+  storeSessionToken,
+  clearSessionToken,
+  fetchSession,
+} from './client/actions.js';
 export { detectPlatform, getPlatform, setPlatformOverride } from './client/platform.js';
 export {
   AuthThemeProvider,
