@@ -1,14 +1,25 @@
 import React, { useState } from 'react';
 import type { OrgRole } from '../types.js';
+import { useTeamManagementTheme } from '../team-management-theme.js';
 import { RoleSelect } from './RoleSelect.js';
-import { getTeamTheme } from '../theme.js';
+import './TeamManagementStyles.css';
 
-interface AddMemberFormProps {
+export interface AddMemberFormProps {
   onSubmit: (data: { email: string; role: OrgRole; name?: string }) => Promise<void>;
+  formClassName?: string;
+  submitButtonClassName?: string;
+  inputClassName?: string;
+  errorClassName?: string;
 }
 
-export function AddMemberForm({ onSubmit }: AddMemberFormProps): React.ReactElement {
-  const theme = getTeamTheme();
+export function AddMemberForm({
+  onSubmit,
+  formClassName = '',
+  submitButtonClassName = '',
+  inputClassName = '',
+  errorClassName = '',
+}: AddMemberFormProps): React.ReactElement {
+  const { cssVars } = useTeamManagementTheme();
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [role, setRole] = useState<OrgRole>('member');
@@ -40,15 +51,10 @@ export function AddMemberForm({ onSubmit }: AddMemberFormProps): React.ReactElem
     <form
       data-testid="add-member-form"
       onSubmit={handleSubmit}
-      className="rounded-lg border p-4 shadow-sm"
-      style={{ backgroundColor: '#fff', borderColor: theme.brass }}
+      className={`tm-card p-4 shadow-sm ${formClassName}`.trim()}
+      style={cssVars}
     >
-      <h3
-        className="text-sm font-semibold mb-3"
-        style={{ fontFamily: theme.fontHeading, color: theme.brick }}
-      >
-        Add person to org
-      </h3>
+      <h3 className="tm-heading text-sm font-semibold mb-3">Add person to org</h3>
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
         <input
           data-testid="add-member-email"
@@ -58,8 +64,7 @@ export function AddMemberForm({ onSubmit }: AddMemberFormProps): React.ReactElem
           onChange={(e) => setEmail(e.target.value)}
           required
           disabled={submitting}
-          className="rounded-md border px-3 py-2 text-sm"
-          style={{ borderColor: theme.brass }}
+          className={`tm-input px-3 py-2 text-sm ${inputClassName}`.trim()}
         />
         <input
           data-testid="add-member-name"
@@ -68,21 +73,23 @@ export function AddMemberForm({ onSubmit }: AddMemberFormProps): React.ReactElem
           value={name}
           onChange={(e) => setName(e.target.value)}
           disabled={submitting}
-          className="rounded-md border px-3 py-2 text-sm"
-          style={{ borderColor: theme.brass }}
+          className={`tm-input px-3 py-2 text-sm ${inputClassName}`.trim()}
         />
         <RoleSelect value={role} onChange={setRole} disabled={submitting} disabledRoles={['owner']} />
         <button
           data-testid="add-member-submit"
           type="submit"
           disabled={submitting || !email.trim()}
-          className="rounded-md px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-          style={{ backgroundColor: theme.brick }}
+          className={`tm-button-primary px-4 py-2 text-sm ${submitButtonClassName}`.trim()}
         >
           {submitting ? 'Adding…' : 'Add to roster'}
         </button>
       </div>
-      {error && <p className="mt-2 text-sm text-red-700">{error}</p>}
+      {error && (
+        <p className={`tm-error mt-2 ${errorClassName}`.trim()} data-testid="add-member-error">
+          {error}
+        </p>
+      )}
     </form>
   );
 }

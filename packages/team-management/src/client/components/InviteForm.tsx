@@ -1,14 +1,30 @@
 import React, { useState } from 'react';
 import type { OrgRole } from '../types.js';
 import { createInvitation } from '../api.js';
+import { useTeamManagementTheme } from '../team-management-theme.js';
 import { RoleSelect } from './RoleSelect.js';
+import './TeamManagementStyles.css';
 
-interface InviteFormProps {
+export interface InviteFormProps {
   orgId: number;
   onSuccess: () => void;
+  inviteFormClassName?: string;
+  emailInputClassName?: string;
+  submitButtonClassName?: string;
+  errorClassName?: string;
+  successClassName?: string;
 }
 
-export function InviteForm({ orgId, onSuccess }: InviteFormProps) {
+export function InviteForm({
+  orgId,
+  onSuccess,
+  inviteFormClassName = '',
+  emailInputClassName = '',
+  submitButtonClassName = '',
+  errorClassName = '',
+  successClassName = '',
+}: InviteFormProps): React.ReactElement {
+  const { cssVars } = useTeamManagementTheme();
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<OrgRole>('member');
   const [submitting, setSubmitting] = useState(false);
@@ -38,8 +54,13 @@ export function InviteForm({ orgId, onSuccess }: InviteFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
-      <h3 className="text-sm font-semibold text-slate-800 mb-3">Invite a team member</h3>
+    <form
+      data-testid="invite-form"
+      onSubmit={handleSubmit}
+      className={`tm-card tm-invite-form ${inviteFormClassName}`.trim()}
+      style={cssVars}
+    >
+      <h3 className="tm-heading text-sm mb-3">Invite a team member</h3>
       <div className="flex flex-col sm:flex-row gap-2">
         <input
           type="email"
@@ -48,7 +69,7 @@ export function InviteForm({ orgId, onSuccess }: InviteFormProps) {
           onChange={(e) => setEmail(e.target.value)}
           required
           disabled={submitting}
-          className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-slate-50"
+          className={`tm-input flex-1 px-3 py-2 text-sm disabled:opacity-50 ${emailInputClassName}`.trim()}
         />
         <div className="w-full sm:w-36">
           <RoleSelect
@@ -60,17 +81,22 @@ export function InviteForm({ orgId, onSuccess }: InviteFormProps) {
         </div>
         <button
           type="submit"
+          data-testid="invite-submit"
           disabled={submitting || !email.trim()}
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className={`tm-button-primary px-4 py-2 text-sm ${submitButtonClassName}`.trim()}
         >
           {submitting ? 'Sending…' : 'Send Invite'}
         </button>
       </div>
       {error && (
-        <p className="mt-2 text-sm text-red-600">{error}</p>
+        <p className={`tm-error mt-2 ${errorClassName}`.trim()} data-testid="invite-error">
+          {error}
+        </p>
       )}
       {success && (
-        <p className="mt-2 text-sm text-green-600">Invitation sent successfully!</p>
+        <p className={`tm-success mt-2 ${successClassName}`.trim()} data-testid="invite-success">
+          Invitation sent successfully!
+        </p>
       )}
     </form>
   );

@@ -1,34 +1,31 @@
 import React from 'react';
-import { getTeamTheme } from '../theme.js';
+import { useTeamManagementTheme } from '../team-management-theme.js';
+import './TeamManagementStyles.css';
 
-/** PHASE 2: seat assignment — see VARSHYL_TOOLKIT_ROADMAP.md §4 */
-export function SeatUsagePanel({ memberCount }: { memberCount: number }): React.ReactElement {
-  const theme = getTeamTheme();
+export interface SeatUsagePanelProps {
+  memberCount: number;
+  panelClassName?: string;
+}
+
+export function SeatUsagePanel({
+  memberCount,
+  panelClassName = '',
+}: SeatUsagePanelProps): React.ReactElement {
+  const { cssVars } = useTeamManagementTheme();
 
   return (
-    <section
+    <div
       data-testid="seat-usage-panel"
-      aria-disabled="true"
-      className="rounded-lg border p-4 opacity-70 pointer-events-none select-none"
-      style={{
-        backgroundColor: theme.paper,
-        borderColor: theme.brass,
-        color: theme.ink,
-        fontFamily: theme.fontBody,
-      }}
+      className={`tm-card p-4 ${panelClassName}`.trim()}
+      style={cssVars}
     >
-      <h2
-        className="text-sm font-semibold mb-1"
-        style={{ fontFamily: theme.fontHeading, color: theme.brick }}
-      >
-        Seat usage
-      </h2>
-      <p className="text-sm mb-2" style={{ color: theme.ink }}>
-        Seats: unlimited during launch — paid seats coming soon.
+      <h3 className="tm-heading text-sm font-semibold mb-2">Seat usage</h3>
+      <p className="text-sm mb-2" style={{ color: 'var(--tm-ink)' }}>
+        {memberCount} {memberCount === 1 ? 'member' : 'members'} on roster
       </p>
-      <p className="text-xs" style={{ color: theme.brass }}>
-        {memberCount} people on roster · assignment controls disabled until Phase 2 billing
+      <p className="text-xs tm-muted">
+        Launch phase — unlimited seats. Billing ties to mobile-payments in Phase 2.
       </p>
-    </section>
+    </div>
   );
 }

@@ -4,7 +4,8 @@ export default defineConfig({
   test: {
     globals: false,
     environment: 'node',
-    include: ['tests/**/*.test.ts', 'tests/**/*.spec.ts'],
+    include: ['tests/**/*.test.ts', 'tests/**/*.test.tsx', 'tests/**/*.spec.ts'],
+    environmentMatchGlobs: [['tests/unit/**/*.test.tsx', 'jsdom']],
     globalSetup: ['./tests/setup/global-setup.ts'],
     testTimeout: 120_000,
     // Run test files sequentially — integration tests share a single Postgres

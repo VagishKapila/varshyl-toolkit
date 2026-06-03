@@ -1,12 +1,22 @@
 import React, { useState } from 'react';
 import { getInvitationCode } from '../api.js';
+import { useTeamManagementTheme } from '../team-management-theme.js';
+import './TeamManagementStyles.css';
 
-interface InvitationCodeDisplayProps {
+export interface InvitationCodeDisplayProps {
   orgId: number;
   invitationId: number;
+  containerClassName?: string;
+  codeClassName?: string;
 }
 
-export function InvitationCodeDisplay({ orgId, invitationId }: InvitationCodeDisplayProps) {
+export function InvitationCodeDisplay({
+  orgId,
+  invitationId,
+  containerClassName = '',
+  codeClassName = '',
+}: InvitationCodeDisplayProps): React.ReactElement {
+  const { cssVars } = useTeamManagementTheme();
   const [code, setCode] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -26,23 +36,24 @@ export function InvitationCodeDisplay({ orgId, invitationId }: InvitationCodeDis
   }
 
   return (
-    <div className="inline-flex items-center gap-2">
+    <div
+      data-testid="invitation-code-display"
+      className={`inline-flex items-center gap-2 ${containerClassName}`.trim()}
+      style={cssVars}
+    >
       {code ? (
-        <span className="font-mono text-sm font-semibold tracking-widest text-slate-900 bg-slate-100 border border-slate-300 rounded px-3 py-1 select-all">
-          {code}
-        </span>
+        <span className={`tm-code-display select-all ${codeClassName}`.trim()}>{code}</span>
       ) : (
         <button
-          onClick={handleShowCode}
+          type="button"
+          onClick={() => void handleShowCode()}
           disabled={loading}
-          className="text-xs text-blue-600 hover:text-blue-800 underline disabled:opacity-50 transition-colors"
+          className="tm-link-danger text-xs underline disabled:opacity-50"
         >
           {loading ? 'Loading…' : 'Show Code'}
         </button>
       )}
-      {error && (
-        <span className="text-xs text-red-600">{error}</span>
-      )}
+      {error && <span className="tm-error text-xs">{error}</span>}
     </div>
   );
 }

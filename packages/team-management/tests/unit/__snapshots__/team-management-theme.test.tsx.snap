@@ -1,0 +1,193 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`invite form snapshots > BrandOS placeholder theme snapshot 1`] = `
+<form
+  class="tm-card tm-invite-form"
+  data-testid="invite-form"
+  style="--tm-primary: #6366F1; --tm-primary-hover: #4F46E5; --tm-surface: #0f172a; --tm-border: #334155; --tm-ink: #f8fafc; --tm-muted: #94a3b8; --tm-danger: #f87171; --tm-success: #34d399; --tm-radius: 10px; --tm-button-radius: 10px; --tm-font-heading: "Fraunces", Georgia, serif; --tm-font-body: "Inter", system-ui, sans-serif; --tm-card-surface: #ffffff;"
+>
+  <h3
+    class="tm-heading text-sm mb-3"
+  >
+    Invite a team member
+  </h3>
+  <div
+    class="flex flex-col sm:flex-row gap-2"
+  >
+    <input
+      class="tm-input flex-1 px-3 py-2 text-sm disabled:opacity-50"
+      placeholder="colleague@company.com"
+      required=""
+      type="email"
+      value=""
+    />
+    <div
+      class="w-full sm:w-36"
+    >
+      <select
+        class="tm-select block w-full px-3 py-1.5 text-sm shadow-sm disabled:cursor-not-allowed disabled:opacity-50"
+        data-testid="role-select"
+        style="--tm-primary: #6366F1; --tm-primary-hover: #4F46E5; --tm-surface: #0f172a; --tm-border: #334155; --tm-ink: #f8fafc; --tm-muted: #94a3b8; --tm-danger: #f87171; --tm-success: #34d399; --tm-radius: 10px; --tm-button-radius: 10px; --tm-font-heading: "Fraunces", Georgia, serif; --tm-font-body: "Inter", system-ui, sans-serif; --tm-card-surface: #ffffff;"
+      >
+        <option
+          disabled=""
+          value="owner"
+        >
+          Owner
+        </option>
+        <option
+          value="admin"
+        >
+          Admin
+        </option>
+        <option
+          value="member"
+        >
+          Member
+        </option>
+        <option
+          value="viewer"
+        >
+          Viewer
+        </option>
+      </select>
+    </div>
+    <button
+      class="tm-button-primary px-4 py-2 text-sm"
+      data-testid="invite-submit"
+      disabled=""
+      type="submit"
+    >
+      Send Invite
+    </button>
+  </div>
+</form>
+`;
+
+exports[`invite form snapshots > JobSite Intel (sage) theme snapshot 1`] = `
+<form
+  class="tm-card tm-invite-form"
+  data-testid="invite-form"
+  style="--tm-primary: #3A6B5F; --tm-primary-hover: #2D544A; --tm-surface: #FAF7F0; --tm-border: #e8e0d0; --tm-ink: #211D18; --tm-muted: #8a7f6f; --tm-danger: #8B3A2F; --tm-success: #2D6A4F; --tm-radius: 12px; --tm-button-radius: 12px; --tm-font-heading: "Fraunces", Georgia, serif; --tm-font-body: "Inter", system-ui, sans-serif; --tm-card-surface: #ffffff;"
+>
+  <h3
+    class="tm-heading text-sm mb-3"
+  >
+    Invite a team member
+  </h3>
+  <div
+    class="flex flex-col sm:flex-row gap-2"
+  >
+    <input
+      class="tm-input flex-1 px-3 py-2 text-sm disabled:opacity-50"
+      placeholder="colleague@company.com"
+      required=""
+      type="email"
+      value=""
+    />
+    <div
+      class="w-full sm:w-36"
+    >
+      <select
+        class="tm-select block w-full px-3 py-1.5 text-sm shadow-sm disabled:cursor-not-allowed disabled:opacity-50"
+        data-testid="role-select"
+        style="--tm-primary: #3A6B5F; --tm-primary-hover: #2D544A; --tm-surface: #FAF7F0; --tm-border: #e8e0d0; --tm-ink: #211D18; --tm-muted: #8a7f6f; --tm-danger: #8B3A2F; --tm-success: #2D6A4F; --tm-radius: 12px; --tm-button-radius: 12px; --tm-font-heading: "Fraunces", Georgia, serif; --tm-font-body: "Inter", system-ui, sans-serif; --tm-card-surface: #ffffff;"
+      >
+        <option
+          disabled=""
+          value="owner"
+        >
+          Owner
+        </option>
+        <option
+          value="admin"
+        >
+          Admin
+        </option>
+        <option
+          value="member"
+        >
+          Member
+        </option>
+        <option
+          value="viewer"
+        >
+          Viewer
+        </option>
+      </select>
+    </div>
+    <button
+      class="tm-button-primary px-4 py-2 text-sm"
+      data-testid="invite-submit"
+      disabled=""
+      type="submit"
+    >
+      Send Invite
+    </button>
+  </div>
+</form>
+`;
+
+exports[`invite form snapshots > default theme snapshot 1`] = `
+<form
+  class="tm-card tm-invite-form"
+  data-testid="invite-form"
+  style="--tm-primary: #8B3A2F; --tm-primary-hover: #6E2E25; --tm-surface: #FAF7F0; --tm-border: #B8893E; --tm-ink: #211D18; --tm-muted: #8a7f6f; --tm-danger: #8B3A2F; --tm-success: #2D6A4F; --tm-radius: 8px; --tm-button-radius: 8px; --tm-font-heading: "Fraunces", Georgia, serif; --tm-font-body: "Inter", system-ui, sans-serif; --tm-card-surface: #ffffff;"
+>
+  <h3
+    class="tm-heading text-sm mb-3"
+  >
+    Invite a team member
+  </h3>
+  <div
+    class="flex flex-col sm:flex-row gap-2"
+  >
+    <input
+      class="tm-input flex-1 px-3 py-2 text-sm disabled:opacity-50"
+      placeholder="colleague@company.com"
+      required=""
+      type="email"
+      value=""
+    />
+    <div
+      class="w-full sm:w-36"
+    >
+      <select
+        class="tm-select block w-full px-3 py-1.5 text-sm shadow-sm disabled:cursor-not-allowed disabled:opacity-50"
+        data-testid="role-select"
+        style="--tm-primary: #8B3A2F; --tm-primary-hover: #6E2E25; --tm-surface: #FAF7F0; --tm-border: #B8893E; --tm-ink: #211D18; --tm-muted: #8a7f6f; --tm-danger: #8B3A2F; --tm-success: #2D6A4F; --tm-radius: 8px; --tm-button-radius: 8px; --tm-font-heading: "Fraunces", Georgia, serif; --tm-font-body: "Inter", system-ui, sans-serif; --tm-card-surface: #ffffff;"
+      >
+        <option
+          disabled=""
+          value="owner"
+        >
+          Owner
+        </option>
+        <option
+          value="admin"
+        >
+          Admin
+        </option>
+        <option
+          value="member"
+        >
+          Member
+        </option>
+        <option
+          value="viewer"
+        >
+          Viewer
+        </option>
+      </select>
+    </div>
+    <button
+      class="tm-button-primary px-4 py-2 text-sm"
+      data-testid="invite-submit"
+      disabled=""
+      type="submit"
+    >
+      Send Invite
+    </button>
+  </div>
+</form>
+`;
