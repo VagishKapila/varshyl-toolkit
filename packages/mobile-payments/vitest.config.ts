@@ -5,7 +5,7 @@ export default defineConfig({
   plugins: [react()],
   test: {
     environment: 'node',
-    environmentMatchGlobs: [['tests/unit/*-barrel.test.tsx', 'jsdom']],
+    environmentMatchGlobs: [['tests/unit/**/*.test.tsx', 'jsdom']],
     globalSetup: 'tests/setup/global-setup.ts',
     include: ['tests/**/*.test.ts', 'tests/**/*.test.tsx', 'tests/**/*.spec.ts'],
     testTimeout: 120_000,

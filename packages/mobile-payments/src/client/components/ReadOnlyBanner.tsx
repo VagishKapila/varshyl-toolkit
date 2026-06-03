@@ -1,19 +1,19 @@
 import React from 'react';
-import { getSubscriptionTheme } from '../configure.js';
+import { usePaymentsTheme } from '../payments-theme.js';
+import './PaywallStyles.css';
 
-export function ReadOnlyBanner(): React.ReactElement {
-  const theme = getSubscriptionTheme();
+export interface ReadOnlyBannerProps {
+  bannerClassName?: string;
+}
+
+export function ReadOnlyBanner({ bannerClassName = '' }: ReadOnlyBannerProps): React.ReactElement {
+  const { cssVars } = usePaymentsTheme();
+
   return (
     <div
       data-testid="read-only-banner"
-      style={{
-        background: theme.brass,
-        color: theme.paper,
-        padding: '12px 16px',
-        borderRadius: '8px',
-        fontFamily: theme.fontBody,
-        marginBottom: '16px',
-      }}
+      className={`mp-read-only-banner ${bannerClassName}`.trim()}
+      style={cssVars}
     >
       Your subscription has lapsed. You can view existing data but cannot create or edit.
     </div>

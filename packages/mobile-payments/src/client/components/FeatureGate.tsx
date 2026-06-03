@@ -1,13 +1,16 @@
 import React from 'react';
 import type { AccessMode } from '../../types.js';
-import { getSubscriptionTheme } from '../configure.js';
+import { usePaymentsTheme } from '../payments-theme.js';
+import './PaywallStyles.css';
 
-interface FeatureGateProps {
+export interface FeatureGateProps {
   accessMode: AccessMode;
   children: React.ReactNode;
   fallback?: React.ReactNode;
   /** Shown when write is blocked (e.g. paywall link). */
   blockedAction?: React.ReactNode;
+  gateClassName?: string;
+  blockedMessageClassName?: string;
 }
 
 export function FeatureGate({
@@ -15,28 +18,26 @@ export function FeatureGate({
   children,
   fallback,
   blockedAction,
+  gateClassName = '',
+  blockedMessageClassName = '',
 }: FeatureGateProps): React.ReactElement {
-  const theme = getSubscriptionTheme();
+  const { cssVars } = usePaymentsTheme();
 
   if (accessMode.canWrite) {
     return <>{children}</>;
   }
 
   return (
-    <div data-testid="feature-gate-blocked">
+    <div data-testid="feature-gate-blocked" className={gateClassName.trim() || undefined} style={cssVars}>
       {fallback}
-      <div
-        style={{
-          opacity: 0.5,
-          pointerEvents: 'none',
-          fontFamily: theme.fontBody,
-        }}
-        aria-disabled
-      >
+      <div className="mp-feature-gate__blocked" aria-disabled>
         {children}
       </div>
       {blockedAction ?? (
-        <p data-testid="feature-gate-message" style={{ color: theme.brick, marginTop: '8px' }}>
+        <p
+          className={`mp-feature-gate__message ${blockedMessageClassName}`.trim()}
+          data-testid="feature-gate-message"
+        >
           Subscribe to unlock this action.
         </p>
       )}
