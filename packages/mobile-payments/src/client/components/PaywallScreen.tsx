@@ -1,15 +1,30 @@
 import React, { useEffect, useState } from 'react';
 import type { Offering } from '../../types.js';
-import { getSubscriptionService, getSubscriptionTheme } from '../configure.js';
+import { getSubscriptionService } from '../configure.js';
+import { usePaymentsTheme } from '../payments-theme.js';
 import { RestoreButton } from './RestoreButton.js';
+import './PaywallStyles.css';
 
-interface PaywallScreenProps {
+export interface PaywallScreenProps {
   onSubscribed?: () => void;
   onRestore?: () => void;
+  paywallClassName?: string;
+  planCardClassName?: string;
+  ctaButtonClassName?: string;
+  restoreButtonClassName?: string;
+  errorClassName?: string;
 }
 
-export function PaywallScreen({ onSubscribed, onRestore }: PaywallScreenProps): React.ReactElement {
-  const theme = getSubscriptionTheme();
+export function PaywallScreen({
+  onSubscribed,
+  onRestore,
+  paywallClassName = '',
+  planCardClassName = '',
+  ctaButtonClassName = '',
+  restoreButtonClassName = '',
+  errorClassName = '',
+}: PaywallScreenProps): React.ReactElement {
+  const { cssVars } = usePaymentsTheme();
   const [offerings, setOfferings] = useState<Offering[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -42,55 +57,48 @@ export function PaywallScreen({ onSubscribed, onRestore }: PaywallScreenProps): 
   return (
     <div
       data-testid="paywall-screen"
-      style={{
-        background: theme.paper,
-        color: theme.ink,
-        fontFamily: theme.fontBody,
-        padding: '32px',
-        maxWidth: '420px',
-        margin: '0 auto',
-        borderRadius: '12px',
-      }}
+      className={`mp-paywall ${paywallClassName}`.trim()}
+      style={cssVars}
     >
-      <h1
-        style={{ fontFamily: theme.fontHeading, color: theme.brick, marginBottom: '8px' }}
-        data-testid="paywall-title"
-      >
+      <h1 className="mp-paywall__title" data-testid="paywall-title">
         Subscribe
       </h1>
       {loading && <p data-testid="paywall-loading">Loading plans…</p>}
       {!loading && pkg && (
-        <>
-          <p data-testid="paywall-price" style={{ fontSize: '1.25rem', fontWeight: 600 }}>
+        <div className={`mp-paywall__plan-card ${planCardClassName}`.trim()}>
+          <p className="mp-paywall__price" data-testid="paywall-price">
             {pkg.priceString}/mo
           </p>
           {pkg.trialLabel && (
-            <p data-testid="paywall-trial" style={{ color: theme.brass }}>
+            <p className="mp-paywall__trial" data-testid="paywall-trial">
               {pkg.trialLabel}
             </p>
           )}
-        </>
+        </div>
       )}
-      {error && <p data-testid="paywall-error" style={{ color: theme.brick }}>{error}</p>}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '24px' }}>
+      {error && (
+        <p
+          className={`mp-paywall__error ${errorClassName}`.trim()}
+          data-testid="paywall-error"
+        >
+          {error}
+        </p>
+      )}
+      <div className="mp-paywall__actions">
         <button
           type="button"
           data-testid="paywall-subscribe"
           disabled={busy || !pkg}
           onClick={() => void subscribe()}
-          style={{
-            background: theme.brick,
-            color: theme.paper,
-            border: 'none',
-            padding: '12px 16px',
-            borderRadius: '8px',
-            fontWeight: 600,
-            cursor: busy ? 'wait' : 'pointer',
-          }}
+          className={`mp-paywall__cta ${ctaButtonClassName}`.trim()}
         >
           Subscribe
         </button>
-        <RestoreButton onRestored={onRestore} disabled={busy} />
+        <RestoreButton
+          onRestored={onRestore}
+          disabled={busy}
+          restoreButtonClassName={restoreButtonClassName}
+        />
       </div>
     </div>
   );

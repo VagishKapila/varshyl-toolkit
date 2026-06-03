@@ -1,5 +1,17 @@
 # @varshylinc/mobile-payments
 
+## 0.3.0
+
+### Minor Changes
+
+- **AuthTheme-compatible theming:** `PaymentsThemeProvider` and `usePaymentsTheme()` mirror auth-social `AuthThemeProvider` (same token shape; pass one `theme` object to both providers — modules do not cross-import per architecture).
+- **CSS variables + `PaywallStyles.css`:** Paywall, restore, read-only banner, and feature gate use `--mp-*` variables with fallbacks; default stylesheet ships in `dist/client/components/`.
+- **`*ClassName` override props** on `PaywallScreen`, `RestoreButton`, `ReadOnlyBanner`, and `FeatureGate` for product Tailwind/layout hooks.
+
+### Migration
+
+Existing consumers do not need to change anything. Default visuals match prior `DEFAULT_PAYMENTS_THEME` / inline styles. To opt into themed paywalls, wrap your app in `<PaymentsThemeProvider theme={…}>` (use the same theme as `<AuthThemeProvider>`). Legacy `configureSubscriptions({ theme })` and `SubscriptionTheme` keys remain supported.
+
 ## 0.2.0
 
 ### Minor Changes

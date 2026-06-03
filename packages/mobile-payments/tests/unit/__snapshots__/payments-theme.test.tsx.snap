@@ -1,0 +1,154 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`paywall snapshots > BrandOS placeholder theme snapshot 1`] = `
+<div
+  class="mp-paywall"
+  data-testid="paywall-screen"
+  style="--mp-primary: #6366F1; --mp-primary-hover: #4F46E5; --mp-surface: #0f172a; --mp-border: #334155; --mp-ink: #f8fafc; --mp-muted: #94a3b8; --mp-danger: #f87171; --mp-success: #34d399; --mp-radius: 10px; --mp-button-radius: 10px; --mp-font-heading: "Fraunces", Georgia, serif; --mp-font-body: "Inter", system-ui, sans-serif;"
+>
+  <h1
+    class="mp-paywall__title"
+    data-testid="paywall-title"
+  >
+    Subscribe
+  </h1>
+  <div
+    class="mp-paywall__plan-card"
+  >
+    <p
+      class="mp-paywall__price"
+      data-testid="paywall-price"
+    >
+      $35.00
+      /mo
+    </p>
+    <p
+      class="mp-paywall__trial"
+      data-testid="paywall-trial"
+    >
+      90-day free trial
+    </p>
+  </div>
+  <div
+    class="mp-paywall__actions"
+  >
+    <button
+      class="mp-paywall__cta"
+      data-testid="paywall-subscribe"
+      type="button"
+    >
+      Subscribe
+    </button>
+    <button
+      class="mp-restore-button"
+      data-testid="paywall-restore"
+      style="--mp-primary: #6366F1; --mp-primary-hover: #4F46E5; --mp-surface: #0f172a; --mp-border: #334155; --mp-ink: #f8fafc; --mp-muted: #94a3b8; --mp-danger: #f87171; --mp-success: #34d399; --mp-radius: 10px; --mp-button-radius: 10px; --mp-font-heading: "Fraunces", Georgia, serif; --mp-font-body: "Inter", system-ui, sans-serif;"
+      type="button"
+    >
+      Restore Purchases
+    </button>
+  </div>
+</div>
+`;
+
+exports[`paywall snapshots > JobSite Intel (sage) theme snapshot 1`] = `
+<div
+  class="mp-paywall"
+  data-testid="paywall-screen"
+  style="--mp-primary: #3A6B5F; --mp-primary-hover: #2D544A; --mp-surface: #FAF7F0; --mp-border: #e8e0d0; --mp-ink: #211D18; --mp-muted: #8a7f6f; --mp-danger: #8B3A2F; --mp-success: #2D6A4F; --mp-radius: 12px; --mp-button-radius: 12px; --mp-font-heading: "Fraunces", Georgia, serif; --mp-font-body: "Inter", system-ui, sans-serif;"
+>
+  <h1
+    class="mp-paywall__title"
+    data-testid="paywall-title"
+  >
+    Subscribe
+  </h1>
+  <div
+    class="mp-paywall__plan-card"
+  >
+    <p
+      class="mp-paywall__price"
+      data-testid="paywall-price"
+    >
+      $35.00
+      /mo
+    </p>
+    <p
+      class="mp-paywall__trial"
+      data-testid="paywall-trial"
+    >
+      90-day free trial
+    </p>
+  </div>
+  <div
+    class="mp-paywall__actions"
+  >
+    <button
+      class="mp-paywall__cta"
+      data-testid="paywall-subscribe"
+      type="button"
+    >
+      Subscribe
+    </button>
+    <button
+      class="mp-restore-button"
+      data-testid="paywall-restore"
+      style="--mp-primary: #3A6B5F; --mp-primary-hover: #2D544A; --mp-surface: #FAF7F0; --mp-border: #e8e0d0; --mp-ink: #211D18; --mp-muted: #8a7f6f; --mp-danger: #8B3A2F; --mp-success: #2D6A4F; --mp-radius: 12px; --mp-button-radius: 12px; --mp-font-heading: "Fraunces", Georgia, serif; --mp-font-body: "Inter", system-ui, sans-serif;"
+      type="button"
+    >
+      Restore Purchases
+    </button>
+  </div>
+</div>
+`;
+
+exports[`paywall snapshots > default theme snapshot 1`] = `
+<div
+  class="mp-paywall"
+  data-testid="paywall-screen"
+  style="--mp-primary: #8B3A2F; --mp-primary-hover: #6E2E25; --mp-surface: #FAF7F0; --mp-border: #B8893E; --mp-ink: #211D18; --mp-muted: #8a7f6f; --mp-danger: #8B3A2F; --mp-success: #2D6A4F; --mp-radius: 8px; --mp-button-radius: 8px; --mp-font-heading: "Fraunces", Georgia, serif; --mp-font-body: "Inter", system-ui, sans-serif;"
+>
+  <h1
+    class="mp-paywall__title"
+    data-testid="paywall-title"
+  >
+    Subscribe
+  </h1>
+  <div
+    class="mp-paywall__plan-card"
+  >
+    <p
+      class="mp-paywall__price"
+      data-testid="paywall-price"
+    >
+      $35.00
+      /mo
+    </p>
+    <p
+      class="mp-paywall__trial"
+      data-testid="paywall-trial"
+    >
+      90-day free trial
+    </p>
+  </div>
+  <div
+    class="mp-paywall__actions"
+  >
+    <button
+      class="mp-paywall__cta"
+      data-testid="paywall-subscribe"
+      type="button"
+    >
+      Subscribe
+    </button>
+    <button
+      class="mp-restore-button"
+      data-testid="paywall-restore"
+      style="--mp-primary: #8B3A2F; --mp-primary-hover: #6E2E25; --mp-surface: #FAF7F0; --mp-border: #B8893E; --mp-ink: #211D18; --mp-muted: #8a7f6f; --mp-danger: #8B3A2F; --mp-success: #2D6A4F; --mp-radius: 8px; --mp-button-radius: 8px; --mp-font-heading: "Fraunces", Georgia, serif; --mp-font-body: "Inter", system-ui, sans-serif;"
+      type="button"
+    >
+      Restore Purchases
+    </button>
+  </div>
+</div>
+`;

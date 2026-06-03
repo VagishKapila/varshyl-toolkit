@@ -9,6 +9,7 @@ import type { SubscriptionService } from './service/subscription-service.js';
 
 let service: SubscriptionService = createMockSubscriptionService();
 let theme: SubscriptionTheme = DEFAULT_PAYMENTS_THEME;
+let legacyThemeCustomized = false;
 let clientConfig: ClientPaymentsConfig = { orgId: '', userId: '' };
 let productConfig: ProductPaymentsConfig = DEFAULT_PRODUCT_CONFIG;
 
@@ -20,7 +21,15 @@ export function configureSubscriptions(input: {
   clientConfig = input.config;
   productConfig = input.config.product ?? DEFAULT_PRODUCT_CONFIG;
   if (input.service) service = input.service;
-  if (input.theme) theme = { ...DEFAULT_PAYMENTS_THEME, ...input.theme };
+  if (input.theme) {
+    theme = { ...DEFAULT_PAYMENTS_THEME, ...input.theme };
+    legacyThemeCustomized = true;
+  }
+}
+
+/** Used by usePaymentsTheme when PaymentsThemeProvider is absent. */
+export function getLegacySubscriptionThemeConfigured(): SubscriptionTheme | null {
+  return legacyThemeCustomized ? theme : null;
 }
 
 export function getSubscriptionService(): SubscriptionService {
