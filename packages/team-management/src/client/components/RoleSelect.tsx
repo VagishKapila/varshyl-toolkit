@@ -1,5 +1,7 @@
 import React from 'react';
 import type { OrgRole } from '../types.js';
+import { useTeamManagementTheme } from '../team-management-theme.js';
+import './TeamManagementStyles.css';
 
 const ALL_ROLES: OrgRole[] = ['owner', 'admin', 'member', 'viewer'];
 
@@ -10,20 +12,31 @@ const roleLabels: Record<OrgRole, string> = {
   viewer: 'Viewer',
 };
 
-interface RoleSelectProps {
+export interface RoleSelectProps {
   value: OrgRole;
   onChange: (r: OrgRole) => void;
   disabled?: boolean;
   disabledRoles?: OrgRole[];
+  selectClassName?: string;
 }
 
-export function RoleSelect({ value, onChange, disabled, disabledRoles = [] }: RoleSelectProps) {
+export function RoleSelect({
+  value,
+  onChange,
+  disabled,
+  disabledRoles = [],
+  selectClassName = '',
+}: RoleSelectProps): React.ReactElement {
+  const { cssVars } = useTeamManagementTheme();
+
   return (
     <select
+      data-testid="role-select"
       value={value}
       onChange={(e) => onChange(e.target.value as OrgRole)}
       disabled={disabled}
-      className="block w-full rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400"
+      className={`tm-select block w-full px-3 py-1.5 text-sm shadow-sm disabled:cursor-not-allowed disabled:opacity-50 ${selectClassName}`.trim()}
+      style={cssVars}
     >
       {ALL_ROLES.map((r) => (
         <option key={r} value={r} disabled={disabledRoles.includes(r)}>

@@ -5,7 +5,8 @@ import { useCurrentMembership } from '../hooks/useCurrentMembership.js';
 import { AddMemberForm } from '../components/AddMemberForm.js';
 import { OrgPeopleRoster } from '../components/OrgPeopleRoster.js';
 import { SeatUsagePanel } from '../components/SeatUsagePanel.js';
-import { getTeamTheme } from '../theme.js';
+import { useTeamManagementTheme } from '../team-management-theme.js';
+import '../components/TeamManagementStyles.css';
 
 export interface OrgPeoplePageProps {
   orgId: number;
@@ -16,10 +17,17 @@ export interface OrgPeoplePageProps {
     role: OrgRole;
     userId: number;
   }) => void | Promise<void>;
+  pageClassName?: string;
+  headerClassName?: string;
 }
 
-export function OrgPeoplePage({ orgId, onInvite }: OrgPeoplePageProps): React.ReactElement {
-  const theme = getTeamTheme();
+export function OrgPeoplePage({
+  orgId,
+  onInvite,
+  pageClassName = '',
+  headerClassName = '',
+}: OrgPeoplePageProps): React.ReactElement {
+  const { cssVars } = useTeamManagementTheme();
   const { membership } = useCurrentMembership();
   const { hierarchy, loading, error, addMember, updateMember, removeMember, memberCount } =
     useOrgMembers(orgId);
@@ -54,17 +62,12 @@ export function OrgPeoplePage({ orgId, onInvite }: OrgPeoplePageProps): React.Re
   return (
     <div
       data-testid="org-people-page"
-      className="max-w-4xl mx-auto px-4 py-8 min-h-screen"
-      style={{ backgroundColor: theme.paper, fontFamily: theme.fontBody, color: theme.ink }}
+      className={`tm-page max-w-4xl mx-auto px-4 py-8 min-h-screen ${pageClassName}`.trim()}
+      style={cssVars}
     >
-      <header className="mb-6">
-        <h1
-          className="text-2xl font-bold mb-1"
-          style={{ fontFamily: theme.fontHeading, color: theme.brick }}
-        >
-          Org &amp; People
-        </h1>
-        <p className="text-sm" style={{ color: theme.brass }}>
+      <header className={`mb-6 ${headerClassName}`.trim()}>
+        <h1 className="tm-heading text-2xl font-bold mb-1">Org &amp; People</h1>
+        <p className="text-sm tm-muted">
           Build your roster free during launch — billing enforcement arrives in Phase 2.
         </p>
       </header>
@@ -76,21 +79,17 @@ export function OrgPeoplePage({ orgId, onInvite }: OrgPeoplePageProps): React.Re
         <SeatUsagePanel memberCount={memberCount} />
       </div>
 
-      <div
-        data-testid="org-people-count"
-        className="text-sm mb-4 font-medium"
-        style={{ color: theme.ink }}
-      >
+      <div data-testid="org-people-count" className="text-sm mb-4 font-medium">
         {memberCount} {memberCount === 1 ? 'person' : 'people'} on roster
       </div>
 
       {loading && (
-        <div data-testid="org-people-loading" className="py-12 text-center text-sm">
+        <div data-testid="org-people-loading" className="py-12 text-center text-sm tm-muted">
           Loading roster…
         </div>
       )}
       {error && (
-        <div className="rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800">
+        <div className="tm-error rounded-md border px-4 py-3" data-testid="org-people-error">
           {error}
         </div>
       )}

@@ -54,9 +54,7 @@ app.use('/api/team', tm.router);
 **Client** — theme + Org/People page:
 
 ```tsx
-import { OrgPeoplePage, setTeamTheme } from '@varshylinc/team-management/client';
-
-setTeamTheme({ paper: '#FAF7F0', brick: '#8B3A2F' });
+import { OrgPeoplePage } from '@varshylinc/team-management/client';
 
 function TeamAdmin({ orgId }: { orgId: number }) {
   return <OrgPeoplePage orgId={orgId} />;
@@ -69,7 +67,7 @@ function TeamAdmin({ orgId }: { orgId: number }) {
 |---|---|
 | `@varshylinc/team-management` | `createServerModule`, `runMigrations`, `addOrgMember`, `listOrgMembers`, `getOrgHierarchy`, `updateOrgMember`, `removeOrgMember`, types |
 | `@varshylinc/team-management/server` | Same server exports — use when you want an explicit server-only import path |
-| `@varshylinc/team-management/client` | `OrgPeoplePage`, `MembersPage`, `useOrgMembers`, `orgAdminActions`, `setTeamTheme`, API helpers, … |
+| `@varshylinc/team-management/client` | `OrgPeoplePage`, `MembersPage`, `TeamManagementThemeProvider`, `useTeamManagementTheme`, `useOrgMembers`, `orgAdminActions`, `setTeamTheme`, API helpers, … |
 
 ## Database
 
@@ -77,7 +75,74 @@ Bring your own Postgres. Call `runMigrations()` (via the module instance or stan
 
 ## Theming
 
-Themeable via `setTeamTheme()`. Ships a Blueprint & Brick default (`DEFAULT_TEAM_THEME`).
+Team UI reads **AuthTheme-compatible** tokens via `TeamManagementThemeProvider` (same shape as auth-social — pass one `theme` object to both providers; modules do not cross-import).
+
+### Recommended: dual provider at app root
+
+```tsx
+import { AuthThemeProvider } from '@varshylinc/auth-social/client';
+import {
+  TeamManagementThemeProvider,
+  OrgPeoplePage,
+} from '@varshylinc/team-management/client';
+
+const theme = {
+  primary: '#3A6B5F',
+  primaryHover: '#2D544A',
+  surface: '#FAF7F0',
+  border: '#e8e0d0',
+  text: '#211D18',
+  textMuted: '#8a7f6f',
+  error: '#8B3A2F',
+  success: '#2D6A4F',
+  radius: '12px',
+};
+
+export function AppProviders({ children }: { children: React.ReactNode }) {
+  return (
+    <AuthThemeProvider theme={theme}>
+      <TeamManagementThemeProvider theme={theme}>{children}</TeamManagementThemeProvider>
+    </AuthThemeProvider>
+  );
+}
+```
+
+Without any provider, components render using `DEFAULT_TEAM_APP_THEME` (matches pre-0.4.0 Blueprint & Brick defaults). Dev mode logs a one-time `console.warn` pointing here.
+
+### Legacy: `setTeamTheme()`
+
+Still supported — maps `paper` / `brick` / `brass` / `ink` to the new token model:
+
+```ts
+setTeamTheme({ paper: '#FAF7F0', brick: '#8B3A2F', brass: '#B8893E', ink: '#211D18' });
+```
+
+### `*ClassName` overrides (examples)
+
+| Component | Props |
+|-----------|--------|
+| `OrgPeoplePage` | `pageClassName`, `headerClassName` |
+| `InviteForm` | `inviteFormClassName`, `emailInputClassName`, `submitButtonClassName`, `errorClassName` |
+| `MemberRow` | `memberRowClassName`, `removeButtonClassName` |
+| `DangerZoneCard` | `cardClassName`, `modalClassName`, `confirmButtonClassName` |
+
+### CSS variables (no provider)
+
+| Variable | Role |
+|----------|------|
+| `--tm-primary` | Headings, primary buttons |
+| `--tm-primary-hover` | Button hover |
+| `--tm-surface` | Page background |
+| `--tm-ink` | Body text |
+| `--tm-muted` | Secondary text |
+| `--tm-danger` | Errors, remove actions, danger zone |
+| `--tm-success` | Success messages |
+| `--tm-border` | Borders |
+| `--tm-radius` / `--tm-button-radius` | Corners |
+| `--tm-card-surface` | Card backgrounds |
+| `--tm-font-heading` / `--tm-font-body` | Typography |
+
+Optional: `@import '@varshylinc/team-management/dist/client/components/TeamManagementStyles.css'` in your bundler.
 
 ## See also
 
