@@ -1,0 +1,16 @@
+{
+  "exportDir": "out",
+  "iosPublicDir": "ios/App/App/public",
+  "androidAssetsDir": "android/app/src/main/assets/public",
+  "platforms": ["ios", "android"],
+  "verifyAndroidManifest": true,
+  "onMissingFiles": "fail",
+  "checks": [
+    {
+      "name": "Danger Zone (account deletion)",
+      "globs": ["_next/static/chunks/app/home/settings/*.js"],
+      "mustContain": ["Delete My Account", "Danger zone"],
+      "platforms": ["ios", "android"]
+    }
+  ]
+}

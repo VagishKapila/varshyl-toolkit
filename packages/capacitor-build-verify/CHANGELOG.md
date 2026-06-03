@@ -1,5 +1,15 @@
 # @varshylinc/capacitor-build-verify
 
+## 0.2.0
+
+### Minor Changes
+
+- **Android preset checks:** `capacitor-basic` validates non-empty `androidAssetsDir` when `platforms` includes `android`.
+- **`--enforce-fresh-sync` for Android:** same 60s mtime guard as iOS, applied to `android/app/src/main/assets/public` (configurable via `androidAssetsDir`).
+- **AndroidManifest preset check:** optional (default on) — verifies `android/app/src/main/AndroidManifest.xml` references `appId` from `capacitor.config`.
+- Config: `platforms` and `verifyAndroidManifest` for preset scope.
+- Integration fixtures: `android-pass`, `android-stale-sync`.
+
 ## 0.1.0
 
 ### Minor Changes
