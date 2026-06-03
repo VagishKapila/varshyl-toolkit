@@ -1,0 +1,63 @@
+{
+  "name": "@varshylinc/capacitor-build-verify",
+  "version": "0.1.0",
+  "description": "Verify Next.js static export and Capacitor native bundles contain required UI strings before cap sync or App Store builds.",
+  "author": "Vagish Kapila (Varshyl Inc.)",
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/VagishKapila/varshyl-toolkit/tree/main/packages/capacitor-build-verify#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/VagishKapila/varshyl-toolkit.git",
+    "directory": "packages/capacitor-build-verify"
+  },
+  "bugs": {
+    "url": "https://github.com/VagishKapila/varshyl-toolkit/issues"
+  },
+  "keywords": [
+    "capacitor",
+    "nextjs",
+    "static-export",
+    "verification",
+    "ios",
+    "android",
+    "app-store"
+  ],
+  "type": "module",
+  "private": false,
+  "files": [
+    "dist",
+    "LICENSE"
+  ],
+  "main": "./dist/cli.js",
+  "types": "./dist/verify.d.ts",
+  "bin": {
+    "varshyl-cap-verify": "./dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/verify.d.ts",
+      "import": "./dist/verify.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "lint": "eslint src --ext .ts --max-warnings 0"
+  },
+  "dependencies": {
+    "fast-glob": "^3.3.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.7",
+    "@typescript-eslint/eslint-plugin": "^7.8.0",
+    "@typescript-eslint/parser": "^7.8.0",
+    "eslint": "^8.57.0",
+    "typescript": "^5.4.5",
+    "vitest": "^1.6.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  }
+}

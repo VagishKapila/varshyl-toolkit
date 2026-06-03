@@ -1,0 +1,11 @@
+{
+  "exportDir": "out",
+  "checks": [
+    {
+      "name": "Danger Zone (account deletion)",
+      "globs": ["_next/static/chunks/app/home/settings/*.js"],
+      "mustContain": ["Delete My Account", "Danger zone"],
+      "platforms": ["ios"]
+    }
+  ]
+}
