@@ -1,8 +1,8 @@
-import { readFileSync, existsSync, statSync, readdirSync } from 'node:fs';
+import { readFileSync, existsSync, statSync, readdirSync, utimesSync } from 'node:fs';
 import { resolve } from 'node:path';
 import fg from 'fast-glob';
-import type { BundleCheck, OnMissingFiles, VerifyConfig } from './config.js';
-import { loadConfig, resolveSearchDirs } from './config.js';
+import type { BundleCheck, OnMissingFiles, Platform, VerifyConfig } from './config.js';
+import { loadConfig, resolvePresetPlatforms, resolveSearchDirs } from './config.js';
 
 export type CheckStatus = 'pass' | 'fail' | 'warn';
 
@@ -25,27 +25,48 @@ export interface VerifyReport {
   results: CheckResult[];
 }
 
+const FRESH_SYNC_MAX_AGE_SEC = 60;
+const DEFAULT_ANDROID_MANIFEST = 'android/app/src/main/AndroidManifest.xml';
+
 function dirIsNonEmpty(absDir: string): boolean {
   if (!existsSync(absDir)) return false;
   return readdirSync(absDir).length > 0;
 }
 
-function readWebDirFromCapacitorConfig(cwd: string): string | null {
+function readCapacitorConfigText(cwd: string): string | null {
   const candidates = ['capacitor.config.ts', 'capacitor.config.json'];
   for (const file of candidates) {
     const path = resolve(cwd, file);
     if (!existsSync(path)) continue;
-    const text = readFileSync(path, 'utf8');
-    const match = text.match(/webDir\s*:\s*['"]([^'"]+)['"]/);
-    if (match?.[1]) return match[1];
-    if (file.endsWith('.json')) {
-      try {
-        const json = JSON.parse(text) as { webDir?: string };
-        if (json.webDir) return json.webDir;
-      } catch {
-        /* ignore */
-      }
-    }
+    return readFileSync(path, 'utf8');
+  }
+  return null;
+}
+
+function readWebDirFromCapacitorConfig(cwd: string): string | null {
+  const text = readCapacitorConfigText(cwd);
+  if (!text) return null;
+  const match = text.match(/webDir\s*:\s*['"]([^'"]+)['"]/);
+  if (match?.[1]) return match[1];
+  try {
+    const json = JSON.parse(text) as { webDir?: string };
+    if (json.webDir) return json.webDir;
+  } catch {
+    /* not json */
+  }
+  return null;
+}
+
+function readAppIdFromCapacitorConfig(cwd: string): string | null {
+  const text = readCapacitorConfigText(cwd);
+  if (!text) return null;
+  const match = text.match(/appId\s*:\s*['"]([^'"]+)['"]/);
+  if (match?.[1]) return match[1];
+  try {
+    const json = JSON.parse(text) as { appId?: string };
+    if (json.appId) return json.appId;
+  } catch {
+    /* not json */
   }
   return null;
 }
@@ -61,6 +82,113 @@ function absoluteSearchDirs(cwd: string, config: VerifyConfig, platforms: Bundle
     label,
     abs: resolve(cwd, path),
   }));
+}
+
+function runDirFreshnessCheck(
+  dirLabel: string,
+  configPath: string,
+  absDir: string,
+): CheckResult {
+  if (!existsSync(absDir)) {
+    return {
+      name: `${dirLabel} dir recently synced`,
+      status: 'fail',
+      message: `${configPath} not found: ${absDir}`,
+      details: [absDir],
+    };
+  }
+  const mtimeMs = statSync(absDir).mtimeMs;
+  const ageSec = (Date.now() - mtimeMs) / 1000;
+  if (ageSec > FRESH_SYNC_MAX_AGE_SEC) {
+    return {
+      name: `${dirLabel} dir recently synced`,
+      status: 'fail',
+      message: `${configPath} last modified ${Math.round(ageSec)}s ago (max ${FRESH_SYNC_MAX_AGE_SEC}s with --enforce-fresh-sync)`,
+      details: [absDir],
+    };
+  }
+  return {
+    name: `${dirLabel} dir recently synced`,
+    status: 'pass',
+    message: `${configPath} updated ${Math.round(ageSec)}s ago`,
+    details: [absDir],
+  };
+}
+
+function runNativeDirNonEmptyCheck(
+  platformLabel: Platform,
+  configKey: 'iosPublicDir' | 'androidAssetsDir',
+  config: VerifyConfig,
+  cwd: string,
+): CheckResult {
+  const relPath = config[configKey];
+  const abs = resolve(cwd, relPath);
+  const name =
+    platformLabel === 'ios'
+      ? 'iOS public directory exists'
+      : 'Android assets directory exists';
+
+  if (!existsSync(abs)) {
+    return {
+      name,
+      status: 'fail',
+      message: `${configKey} not found: ${abs}`,
+      details: [abs],
+    };
+  }
+  if (!dirIsNonEmpty(abs)) {
+    return {
+      name,
+      status: 'fail',
+      message: `${configKey} is empty: ${abs}`,
+      details: [abs],
+    };
+  }
+  return {
+    name,
+    status: 'pass',
+    message: `${configKey} is present and non-empty: ${abs}`,
+    details: [abs],
+  };
+}
+
+function runAndroidManifestCheck(cwd: string): CheckResult {
+  const manifestPath = resolve(cwd, DEFAULT_ANDROID_MANIFEST);
+  if (!existsSync(manifestPath)) {
+    return {
+      name: 'AndroidManifest package matches appId',
+      status: 'fail',
+      message: `AndroidManifest.xml not found: ${manifestPath}`,
+      details: [manifestPath],
+    };
+  }
+
+  const appId = readAppIdFromCapacitorConfig(cwd);
+  if (!appId) {
+    return {
+      name: 'AndroidManifest package matches appId',
+      status: 'warn',
+      message: 'Could not read appId from capacitor.config.ts/json — skipped',
+    };
+  }
+
+  const manifest = readFileSync(manifestPath, 'utf8');
+  const hasPackage = manifest.includes(`package="${appId}"`) || manifest.includes(`package='${appId}'`);
+  if (!hasPackage) {
+    return {
+      name: 'AndroidManifest package matches appId',
+      status: 'fail',
+      message: `AndroidManifest.xml does not reference appId "${appId}"`,
+      details: [manifestPath, `Expected package="${appId}"`],
+    };
+  }
+
+  return {
+    name: 'AndroidManifest package matches appId',
+    status: 'pass',
+    message: `AndroidManifest.xml references appId "${appId}"`,
+    details: [manifestPath],
+  };
 }
 
 async function runBundleCheck(
@@ -121,6 +249,7 @@ async function runBundleCheck(
 
 function runPresetBasic(cwd: string, config: VerifyConfig, enforceFreshSync: boolean): CheckResult[] {
   const results: CheckResult[] = [];
+  const platforms = resolvePresetPlatforms(config);
   const exportAbs = resolve(cwd, config.exportDir);
 
   if (!existsSync(exportAbs)) {
@@ -164,32 +293,33 @@ function runPresetBasic(cwd: string, config: VerifyConfig, enforceFreshSync: boo
     });
   }
 
+  if (platforms.includes('ios')) {
+    results.push(runNativeDirNonEmptyCheck('ios', 'iosPublicDir', config, cwd));
+  }
+
+  if (platforms.includes('android')) {
+    results.push(runNativeDirNonEmptyCheck('android', 'androidAssetsDir', config, cwd));
+
+    const verifyManifest = config.verifyAndroidManifest !== false;
+    if (verifyManifest) {
+      results.push(runAndroidManifestCheck(cwd));
+    }
+  }
+
   if (enforceFreshSync) {
-    const iosPublic = resolve(cwd, config.iosPublicDir);
-    if (!existsSync(iosPublic)) {
-      results.push({
-        name: 'iOS public dir recently synced',
-        status: 'fail',
-        message: `iosPublicDir not found: ${iosPublic}`,
-      });
-    } else {
-      const mtimeMs = statSync(iosPublic).mtimeMs;
-      const ageSec = (Date.now() - mtimeMs) / 1000;
-      if (ageSec > 60) {
-        results.push({
-          name: 'iOS public dir recently synced',
-          status: 'fail',
-          message: `iosPublicDir last modified ${Math.round(ageSec)}s ago (max 60s with --enforce-fresh-sync)`,
-          details: [iosPublic],
-        });
-      } else {
-        results.push({
-          name: 'iOS public dir recently synced',
-          status: 'pass',
-          message: `iosPublicDir updated ${Math.round(ageSec)}s ago`,
-          details: [iosPublic],
-        });
-      }
+    if (platforms.includes('ios')) {
+      results.push(
+        runDirFreshnessCheck('iOS public', 'iosPublicDir', resolve(cwd, config.iosPublicDir)),
+      );
+    }
+    if (platforms.includes('android')) {
+      results.push(
+        runDirFreshnessCheck(
+          'Android assets',
+          'androidAssetsDir',
+          resolve(cwd, config.androidAssetsDir),
+        ),
+      );
     }
   }
 
@@ -228,4 +358,16 @@ export function formatHuman(report: VerifyReport): string {
   lines.push('');
   lines.push(report.ok ? 'All checks passed.' : 'One or more checks failed.');
   return lines.join('\n');
+}
+
+/** Test helper: touch a directory so --enforce-fresh-sync passes. */
+export function touchDirForFreshSync(absDir: string): void {
+  const now = Date.now() / 1000;
+  utimesSync(absDir, now, now);
+}
+
+/** Test helper: age a directory so --enforce-fresh-sync fails. */
+export function ageDirForStaleSync(absDir: string, ageSec = 120): void {
+  const old = (Date.now() - ageSec * 1000) / 1000;
+  utimesSync(absDir, old, old);
 }

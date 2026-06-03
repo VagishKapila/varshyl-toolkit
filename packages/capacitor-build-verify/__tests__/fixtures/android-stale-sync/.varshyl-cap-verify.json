@@ -1,0 +1,6 @@
+{
+  "exportDir": "out",
+  "androidAssetsDir": "android/app/src/main/assets/public",
+  "platforms": ["android"],
+  "checks": []
+}
