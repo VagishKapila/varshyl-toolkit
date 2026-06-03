@@ -8,18 +8,25 @@
   "scripts": {
     "build": "pnpm -r build",
     "test": "pnpm -r test",
+    "test:integration": "vitest run --config vitest.config.ts",
     "typecheck": "pnpm -r typecheck",
     "lint": "pnpm -r lint",
     "prepush": "bash scripts/prepush-check.sh",
-    "verify": "pnpm typecheck && pnpm test && pnpm build && bash scripts/verify-no-cross-imports.sh"
+    "verify": "pnpm typecheck && pnpm build && pnpm test && pnpm test:integration && bash scripts/verify-no-cross-imports.sh"
   },
   "engines": {
     "node": ">=20",
     "pnpm": ">=9"
   },
   "devDependencies": {
+    "@playwright/test": "^1.44.0",
+    "@varshylinc/auth-social": "workspace:*",
+    "@varshylinc/mobile-payments": "workspace:*",
+    "@varshylinc/onboarding-consent-engine": "workspace:*",
+    "@varshylinc/team-management": "workspace:*",
+    "@vitejs/plugin-react": "^4.2.1",
     "typescript": "^5.4.5",
-    "@playwright/test": "^1.44.0"
+    "vitest": "^1.6.0"
   },
   "packageManager": "pnpm@9.1.0"
 }
