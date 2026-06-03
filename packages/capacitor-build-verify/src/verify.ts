@@ -152,7 +152,7 @@ function runNativeDirNonEmptyCheck(
   };
 }
 
-function runAndroidManifestCheck(cwd: string, config: VerifyConfig): CheckResult {
+function runAndroidManifestCheck(cwd: string): CheckResult {
   const manifestPath = resolve(cwd, DEFAULT_ANDROID_MANIFEST);
   if (!existsSync(manifestPath)) {
     return {
@@ -302,7 +302,7 @@ function runPresetBasic(cwd: string, config: VerifyConfig, enforceFreshSync: boo
 
     const verifyManifest = config.verifyAndroidManifest !== false;
     if (verifyManifest) {
-      results.push(runAndroidManifestCheck(cwd, config));
+      results.push(runAndroidManifestCheck(cwd));
     }
   }
 
