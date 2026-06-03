@@ -1,0 +1,14 @@
+{
+  "exportDir": "out",
+  "iosPublicDir": "ios/App/App/public",
+  "androidAssetsDir": "android/app/src/main/assets/public",
+  "onMissingFiles": "fail",
+  "checks": [
+    {
+      "name": "Example — required UI string in settings chunk",
+      "globs": ["_next/static/chunks/app/settings/**/*.js"],
+      "mustContain": ["Your required label"],
+      "platforms": ["ios"]
+    }
+  ]
+}
