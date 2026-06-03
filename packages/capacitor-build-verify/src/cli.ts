@@ -9,7 +9,7 @@ function printUsage(): void {
 Options:
   --config <path>           Config file (default: .varshyl-cap-verify.json)
   --preset capacitor-basic  Run built-in export / webDir / freshness checks
-  --enforce-fresh-sync      Require ios public dir modified within 60s (with preset)
+  --enforce-fresh-sync      Require ios/android native dirs modified within 60s (with preset)
   --format human|json       Output format (default: human)
   --cwd <dir>               Working directory (default: process.cwd())
   -h, --help                Show this help

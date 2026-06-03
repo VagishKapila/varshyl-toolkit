@@ -1,6 +1,6 @@
 {
   "name": "@varshylinc/capacitor-build-verify",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Verify Next.js static export and Capacitor native bundles contain required UI strings before cap sync or App Store builds.",
   "author": "Vagish Kapila (Varshyl Inc.)",
   "license": "Apache-2.0",
