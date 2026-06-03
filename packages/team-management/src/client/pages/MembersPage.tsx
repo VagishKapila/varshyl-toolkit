@@ -9,14 +9,18 @@ import { PendingTransferBanner } from '../components/PendingTransferBanner.js';
 import { RoleBadge } from '../components/RoleBadge.js';
 import { removeMember, changeMemberRole, revokeInvitation, resendInvitation } from '../api.js';
 import type { OrgRole } from '../types.js';
+import { useTeamManagementTheme } from '../team-management-theme.js';
+import '../components/TeamManagementStyles.css';
 
-interface MembersPageProps {
+export interface MembersPageProps {
   orgId: number;
+  pageClassName?: string;
 }
 
 type ActiveTab = 'active' | 'former' | 'invitations';
 
-export function MembersPage({ orgId }: MembersPageProps) {
+export function MembersPage({ orgId, pageClassName = '' }: MembersPageProps) {
+  const { cssVars } = useTeamManagementTheme();
   const [tab, setTab] = useState<ActiveTab>('active');
   const { membership } = useCurrentMembership();
   const { members, loading: membersLoading, error: membersError, refresh: refreshMembers } = useMembers(orgId);
@@ -69,8 +73,12 @@ export function MembersPage({ orgId }: MembersPageProps) {
   const formerOnly = formerMembers.filter((m) => m.removed_at);
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold text-slate-900 mb-6">Team Members</h1>
+    <div
+      data-testid="members-page"
+      className={`tm-page max-w-4xl mx-auto px-4 py-8 ${pageClassName}`.trim()}
+      style={cssVars}
+    >
+      <h1 className="tm-heading text-2xl font-bold mb-6">Team Members</h1>
 
       {transfer && membership && (
         <div className="mb-6">

@@ -1,14 +1,17 @@
 import React from 'react';
 import type { OrgHierarchyGroup, OrgRole, PublicMember } from '../types.js';
+import { useTeamManagementTheme } from '../team-management-theme.js';
 import { RoleBadge } from './RoleBadge.js';
 import { RoleSelect } from './RoleSelect.js';
-import { getTeamTheme } from '../theme.js';
+import './TeamManagementStyles.css';
 
-interface OrgPeopleRosterProps {
+export interface OrgPeopleRosterProps {
   hierarchy: OrgHierarchyGroup[];
   canManage: boolean;
   onRoleChange: (userId: number, role: OrgRole) => void;
   onRemove: (userId: number) => void;
+  rosterClassName?: string;
+  memberRowClassName?: string;
 }
 
 export function OrgPeopleRoster({
@@ -16,20 +19,23 @@ export function OrgPeopleRoster({
   canManage,
   onRoleChange,
   onRemove,
+  rosterClassName = '',
+  memberRowClassName = '',
 }: OrgPeopleRosterProps): React.ReactElement {
-  const theme = getTeamTheme();
+  const { cssVars } = useTeamManagementTheme();
 
   return (
-    <div data-testid="org-people-roster" className="space-y-4">
+    <div
+      data-testid="org-people-roster"
+      className={`space-y-4 ${rosterClassName}`.trim()}
+      style={cssVars}
+    >
       {hierarchy.map((group) => (
         <section key={group.role} data-testid={`hierarchy-${group.role}`}>
-          <h3
-            className="text-xs font-semibold uppercase tracking-wide mb-2"
-            style={{ color: theme.brass, fontFamily: theme.fontHeading }}
-          >
+          <h3 className="tm-heading text-xs font-semibold uppercase tracking-wide mb-2 tm-muted">
             {group.role}
           </h3>
-          <ul className="rounded-lg border overflow-hidden" style={{ borderColor: theme.brass }}>
+          <ul className="tm-card rounded-lg overflow-hidden">
             {group.members.map((member) => (
               <OrgPeopleRow
                 key={member.user_id}
@@ -37,6 +43,7 @@ export function OrgPeopleRoster({
                 canManage={canManage && member.role !== 'owner'}
                 onRoleChange={onRoleChange}
                 onRemove={onRemove}
+                memberRowClassName={memberRowClassName}
               />
             ))}
           </ul>
@@ -51,29 +58,27 @@ function OrgPeopleRow({
   canManage,
   onRoleChange,
   onRemove,
+  memberRowClassName,
 }: {
   member: PublicMember;
   canManage: boolean;
   onRoleChange: (userId: number, role: OrgRole) => void;
   onRemove: (userId: number) => void;
+  memberRowClassName?: string;
 }): React.ReactElement {
-  const theme = getTeamTheme();
+  const { cssVars } = useTeamManagementTheme();
 
   return (
     <li
       data-testid={`member-row-${member.user_id}`}
-      className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-4 py-3 border-b last:border-b-0"
-      style={{ borderColor: theme.brass, backgroundColor: '#fff' }}
+      className={`flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-4 py-3 tm-member-row last:border-b-0 ${memberRowClassName ?? ''}`.trim()}
+      style={cssVars}
     >
       <div>
-        <div className="text-sm font-medium" style={{ color: theme.ink }}>
+        <div className="text-sm font-medium" style={{ color: 'var(--tm-ink)' }}>
           {member.name ?? member.email}
         </div>
-        {member.name && (
-          <div className="text-xs" style={{ color: theme.brass }}>
-            {member.email}
-          </div>
-        )}
+        {member.name && <div className="text-xs tm-muted">{member.email}</div>}
       </div>
       <div className="flex items-center gap-3">
         {canManage ? (
@@ -90,8 +95,7 @@ function OrgPeopleRow({
             data-testid={`remove-member-${member.user_id}`}
             type="button"
             onClick={() => onRemove(member.user_id)}
-            className="text-xs font-medium"
-            style={{ color: theme.brick }}
+            className="tm-link-danger text-xs"
           >
             Remove
           </button>

@@ -1,5 +1,17 @@
 # Changelog — @varshylinc/team-management
 
+## 0.4.0
+
+### Minor Changes
+
+- **AuthTheme-compatible theming:** `TeamManagementThemeProvider` and `useTeamManagementTheme()` mirror auth-social `AuthThemeProvider` (same token shape; pass one `theme` object to both providers).
+- **CSS variables + `TeamManagementStyles.css`:** Org/people components use `--tm-*` variables with fallbacks; default stylesheet ships in `dist/client/components/`.
+- **`*ClassName` override props** on `OrgPeoplePage`, `MembersPage`, `InviteForm`, `MemberRow`, `RoleSelect`, `RoleBadge`, `AddMemberForm`, `OrgPeopleRoster`, `SeatUsagePanel`, `DangerZoneCard`, `PendingTransferBanner`, and `InvitationCodeDisplay`.
+
+### Migration
+
+Existing consumers do not need to change anything. Default visuals match prior `DEFAULT_TEAM_THEME` / inline styles. To opt into themed team UI, wrap your app in `<TeamManagementThemeProvider theme={…}>` (use the same theme as `<AuthThemeProvider>`). Legacy `setTeamTheme()` remains supported.
+
 ## 0.3.0
 
 ### Minor Changes

@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
 import type { OwnershipTransfer } from '../types.js';
 import { acceptTransfer, cancelTransfer } from '../api.js';
+import { useTeamManagementTheme } from '../team-management-theme.js';
+import './TeamManagementStyles.css';
 
-interface PendingTransferBannerProps {
+export interface PendingTransferBannerProps {
   transfer: OwnershipTransfer;
   currentUserId: number;
   orgId: number;
   onAction: () => void;
+  bannerClassName?: string;
+  acceptButtonClassName?: string;
 }
 
 function formatDate(iso: string): string {
@@ -23,7 +27,10 @@ export function PendingTransferBanner({
   currentUserId,
   orgId,
   onAction,
-}: PendingTransferBannerProps) {
+  bannerClassName = '',
+  acceptButtonClassName = '',
+}: PendingTransferBannerProps): React.ReactElement {
+  const { cssVars } = useTeamManagementTheme();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -56,43 +63,43 @@ export function PendingTransferBanner({
   }
 
   return (
-    <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 shadow-sm">
+    <div
+      data-testid="pending-transfer-banner"
+      className={`tm-transfer-banner shadow-sm ${bannerClassName}`.trim()}
+      style={cssVars}
+    >
       <div className="flex flex-col sm:flex-row sm:items-center gap-3">
         <div className="flex-1">
-          <p className="text-sm font-semibold text-amber-900">
-            Pending Ownership Transfer
-          </p>
-          <p className="text-sm text-amber-800 mt-0.5">
+          <p className="text-sm font-semibold tm-heading">Pending Ownership Transfer</p>
+          <p className="text-sm mt-0.5">
             {isTarget
-              ? `You have been invited to become the new owner of this organization.`
+              ? 'You have been invited to become the new owner of this organization.'
               : `An ownership transfer has been initiated to user #${transfer.to_user_id}.`}
           </p>
-          <p className="text-xs text-amber-700 mt-1">
-            Expires {formatDate(transfer.expires_at)}
-          </p>
+          <p className="text-xs tm-muted mt-1">Expires {formatDate(transfer.expires_at)}</p>
         </div>
         {isTarget && (
           <div className="flex gap-2 shrink-0">
             <button
+              type="button"
               onClick={handleAccept}
               disabled={submitting}
-              className="rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:opacity-50 transition-colors"
+              className={`tm-button-primary px-4 py-2 text-sm ${acceptButtonClassName}`.trim()}
             >
               Accept
             </button>
             <button
+              type="button"
               onClick={handleDecline}
               disabled={submitting}
-              className="rounded-md border border-amber-400 bg-white px-4 py-2 text-sm font-medium text-amber-800 hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-400 disabled:opacity-50 transition-colors"
+              className="tm-button-ghost px-4 py-2 text-sm"
             >
               Decline
             </button>
           </div>
         )}
       </div>
-      {error && (
-        <p className="mt-2 text-sm text-red-600">{error}</p>
-      )}
+      {error && <p className="tm-error mt-2">{error}</p>}
     </div>
   );
 }

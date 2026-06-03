@@ -1,11 +1,16 @@
 import React, { useState } from 'react';
+import { useTeamManagementTheme } from '../team-management-theme.js';
+import './TeamManagementStyles.css';
 
-interface DangerZoneCardProps {
+export interface DangerZoneCardProps {
   title: string;
   description: string;
   buttonLabel: string;
   onConfirm: () => Promise<void> | void;
   confirmPrompt?: string;
+  cardClassName?: string;
+  modalClassName?: string;
+  confirmButtonClassName?: string;
 }
 
 export function DangerZoneCard({
@@ -14,7 +19,11 @@ export function DangerZoneCard({
   buttonLabel,
   onConfirm,
   confirmPrompt,
-}: DangerZoneCardProps) {
+  cardClassName = '',
+  modalClassName = '',
+  confirmButtonClassName = '',
+}: DangerZoneCardProps): React.ReactElement {
+  const { cssVars } = useTeamManagementTheme();
   const [showModal, setShowModal] = useState(false);
   const [confirmText, setConfirmText] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -39,15 +48,20 @@ export function DangerZoneCard({
 
   return (
     <>
-      <div className="border border-red-200 rounded-lg p-5 bg-red-50">
+      <div
+        data-testid="danger-zone-card"
+        className={`tm-danger-zone ${cardClassName}`.trim()}
+        style={cssVars}
+      >
         <div className="flex flex-col sm:flex-row sm:items-center gap-4">
           <div className="flex-1">
-            <h3 className="text-sm font-semibold text-red-800">{title}</h3>
-            <p className="mt-1 text-sm text-red-700">{description}</p>
+            <h3 className="tm-danger-zone__title">{title}</h3>
+            <p className="mt-1 text-sm tm-muted">{description}</p>
           </div>
           <button
+            type="button"
             onClick={() => setShowModal(true)}
-            className="shrink-0 rounded-md border border-red-600 bg-white px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1 transition-colors"
+            className="tm-button-ghost shrink-0 px-4 py-2 text-sm font-medium"
           >
             {buttonLabel}
           </button>
@@ -56,13 +70,16 @@ export function DangerZoneCard({
 
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
-            <h2 className="text-lg font-semibold text-slate-900 mb-2">{title}</h2>
-            <p className="text-sm text-slate-600 mb-4">{description}</p>
+          <div
+            className={`tm-card w-full max-w-md p-6 shadow-2xl ${modalClassName}`.trim()}
+            style={cssVars}
+          >
+            <h2 className="tm-heading text-lg font-semibold mb-2">{title}</h2>
+            <p className="text-sm tm-muted mb-4">{description}</p>
 
             {confirmPrompt && (
               <div className="mb-4">
-                <p className="text-sm text-slate-700 mb-1">
+                <p className="text-sm mb-1">
                   Type <strong className="font-mono">{confirmPrompt}</strong> to confirm:
                 </p>
                 <input
@@ -70,27 +87,31 @@ export function DangerZoneCard({
                   value={confirmText}
                   onChange={(e) => setConfirmText(e.target.value)}
                   placeholder={confirmPrompt}
-                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                  className="tm-input w-full px-3 py-2 text-sm"
                 />
               </div>
             )}
 
-            {error && (
-              <p className="mb-3 text-sm text-red-600">{error}</p>
-            )}
+            {error && <p className="tm-error mb-3">{error}</p>}
 
             <div className="flex gap-3 justify-end">
               <button
-                onClick={() => { setShowModal(false); setConfirmText(''); setError(null); }}
+                type="button"
+                onClick={() => {
+                  setShowModal(false);
+                  setConfirmText('');
+                  setError(null);
+                }}
                 disabled={submitting}
-                className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 transition-colors"
+                className="tm-button-ghost px-4 py-2 text-sm"
               >
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={handleConfirm}
                 disabled={!isConfirmed || submitting}
-                className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className={`tm-button-primary px-4 py-2 text-sm ${confirmButtonClassName}`.trim()}
               >
                 {submitting ? 'Processing…' : buttonLabel}
               </button>

@@ -29,8 +29,14 @@ export { usePendingInvitations } from './hooks/usePendingInvitations.js';
 export { usePendingTransfer } from './hooks/usePendingTransfer.js';
 
 export { orgAdminActions } from './actions.js';
+export {
+  TeamManagementThemeProvider,
+  useTeamManagementTheme,
+} from './team-management-theme.js';
+export type { TeamManagementThemeProviderProps } from './team-management-theme.js';
 export { getTeamTheme, setTeamTheme, DEFAULT_TEAM_THEME } from './theme.js';
-export type { TeamManagementTheme } from './theme.js';
+export { DEFAULT_TEAM_APP_THEME } from './team-theme-config.js';
+export type { TeamManagementTheme, TeamAppTheme } from './team-theme-config.js';
 
 // API
 export {
