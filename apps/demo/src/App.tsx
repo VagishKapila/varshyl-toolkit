@@ -1,16 +1,21 @@
-import { useMemo, useState, type ReactElement } from 'react';
+import { useEffect, useMemo, useState, type ReactElement } from 'react';
 import { QaInput } from './QaInput.js';
 import {
   SorenActionCard,
   SorenAvatar,
   SorenConfirmRow,
   SorenMicButton,
+  SorenNotifOnboarding,
   SorenProvider,
   SorenQuickNote,
   SorenWaveform,
+  scheduleDailyReminder,
   useSoren,
   type SorenAdapterConfig,
 } from '@varshylinc/soren-react';
+
+const ACTIVE_PROJECTS = 3;
+const USER_FIRST_NAME = 'Sam';
 
 const TOKEN_ENDPOINT = 'https://varshyl-voice-engine-production.up.railway.app/token';
 
@@ -79,6 +84,10 @@ function Stage({ savedNotes, dailyLog }: { savedNotes: string[]; dailyLog: strin
       >
         JobSite Intel
       </p>
+
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+        <SorenNotifOnboarding />
+      </div>
 
       <section
         style={{
@@ -159,8 +168,12 @@ export function App(): ReactElement {
     onFiled: (text) => setDailyLog((prev) => [...prev, text]),
   });
 
+  useEffect(() => {
+    void scheduleDailyReminder(); // FEAT 5: arm the 3pm daily-log reminder
+  }, []);
+
   return (
-    <SorenProvider config={config}>
+    <SorenProvider config={config} activeProjectCount={ACTIVE_PROJECTS} userFirstName={USER_FIRST_NAME}>
       <Stage savedNotes={savedNotes} dailyLog={dailyLog} />
     </SorenProvider>
   );

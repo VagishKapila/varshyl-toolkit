@@ -41,10 +41,19 @@ export type { SorenAvatarProps } from './SorenAvatar.js';
 export { SorenConfirmRow } from './SorenConfirmRow.js';
 export type { SorenConfirmRowProps } from './SorenConfirmRow.js';
 
+export { SorenNotifOnboarding } from './SorenNotifOnboarding.js';
+export type { SorenNotifOnboardingProps } from './SorenNotifOnboarding.js';
+
 export { cssVar, tokens, stateColor, ensureStyles } from './styles.js';
 
 // Re-export core contracts + the TTS entry point for convenience.
-export { sorenSpeak, interruptSoren, isSorenSpeaking } from '@varshylinc/soren-core';
+export {
+  sorenSpeak,
+  interruptSoren,
+  isSorenSpeaking,
+  scheduleDailyReminder,
+  maybeMorningBriefing,
+} from '@varshylinc/soren-core';
 export type {
   VoiceState,
   SorenAdapterConfig,
