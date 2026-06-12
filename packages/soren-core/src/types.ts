@@ -74,6 +74,12 @@ export interface SorenAdapterConfig {
    * confirm. `photoUrls` are optional already-uploaded photo URLs.
    */
   saveQuickNote?: (text: string, photoUrls?: string[]) => Promise<void>;
+  /**
+   * File a saved note to the host's daily log. Called by SorenConfirmRow when
+   * the user accepts the "file to your daily log?" follow-up. Wire this to the
+   * host's existing daily-log creation endpoint.
+   */
+  fileToDailyLog?: (note: string, photoUrls?: string[]) => Promise<void>;
   /** Optional CSS custom-property overrides, e.g. `{ '--soren-accent': '...' }`. */
   theme?: Record<string, string>;
 }
@@ -88,6 +94,21 @@ export interface SorenAdapterConfig {
 export interface SorenAction {
   type: 'quick_note' | 'confirm' | 'disambiguate';
   payload: unknown;
+}
+
+/**
+ * Payload shape for a `confirm` {@link SorenAction}. `kind` routes the accept
+ * handler (e.g. `file_daily_log` → {@link SorenAdapterConfig.fileToDailyLog}).
+ */
+export interface SorenConfirmPayload {
+  kind: 'file_daily_log' | string;
+  /** Prompt spoken aloud and shown in the confirmation row. */
+  prompt: string;
+  /** The note text carried through from the saved quick note. */
+  note?: string;
+  photoUrls?: string[];
+  confirmLabel?: string;
+  cancelLabel?: string;
 }
 
 /** User-facing voice preferences, persisted by the host. */

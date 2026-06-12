@@ -9,6 +9,7 @@ export type {
   SorenToolDefinition,
   SorenAdapterConfig,
   SorenAction,
+  SorenConfirmPayload,
   SorenVoiceSettings,
   SorenTokenResponse,
   SorenApiEnvelope,

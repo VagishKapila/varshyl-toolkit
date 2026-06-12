@@ -1,7 +1,9 @@
 import { useMemo, useState, type ReactElement } from 'react';
+import { QaInput } from './QaInput.js';
 import {
   SorenActionCard,
   SorenAvatar,
+  SorenConfirmRow,
   SorenMicButton,
   SorenProvider,
   SorenQuickNote,
@@ -12,7 +14,12 @@ import {
 
 const TOKEN_ENDPOINT = 'https://varshyl-voice-engine-production.up.railway.app/token';
 
-function useJobSiteConfig(onSaved: (text: string, photos: number) => void): SorenAdapterConfig {
+interface JobSiteHandlers {
+  onSaved: (text: string, photos: number) => void;
+  onFiled: (text: string) => void;
+}
+
+function useJobSiteConfig({ onSaved, onFiled }: JobSiteHandlers): SorenAdapterConfig {
   return useMemo<SorenAdapterConfig>(
     () => ({
       productId: 'jobsite-intel',
@@ -24,8 +31,13 @@ function useJobSiteConfig(onSaved: (text: string, photos: number) => void): Sore
         await new Promise((r) => setTimeout(r, 400)); // mock host latency
         onSaved(text, photoUrls?.length ?? 0);
       },
+      // Mock of the host's daily-log creation endpoint.
+      fileToDailyLog: async (note) => {
+        await new Promise((r) => setTimeout(r, 400));
+        onFiled(note);
+      },
     }),
-    [onSaved],
+    [onSaved, onFiled],
   );
 }
 
@@ -50,9 +62,8 @@ function Bubble({ who, text }: { who: 'You' | 'Soren'; text: string }): ReactEle
   );
 }
 
-function Stage({ savedNotes }: { savedNotes: string[] }): ReactElement {
+function Stage({ savedNotes, dailyLog }: { savedNotes: string[]; dailyLog: string[] }): ReactElement {
   const { state, lastTranscript, lastResponse, proposeAction } = useSoren();
-  const [draft, setDraft] = useState('add a note: inspector confirmed Friday');
 
   return (
     <main style={{ maxWidth: '30rem', margin: '0 auto', padding: '1.5rem 1.25rem 8rem' }}>
@@ -84,6 +95,7 @@ function Stage({ savedNotes }: { savedNotes: string[] }): ReactElement {
         {state === 'listening' || state === 'speaking' ? (
           <SorenWaveform style={{ width: '60%' }} />
         ) : null}
+        <SorenConfirmRow />
       </section>
 
       {lastTranscript || lastResponse ? (
@@ -118,41 +130,20 @@ function Stage({ savedNotes }: { savedNotes: string[] }): ReactElement {
         </section>
       ) : null}
 
-      <section style={{ marginTop: '2rem', opacity: 0.6 }}>
-        <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--sage)', marginBottom: '0.3rem' }}>
-          QA only — simulate a transcript
-        </label>
-        <div style={{ display: 'flex', gap: '0.4rem' }}>
-          <input
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            style={{
-              flex: 1,
-              fontSize: '0.8rem',
-              padding: '0.45rem 0.6rem',
-              borderRadius: '0.45rem',
-              border: '1px solid var(--sage)',
-              background: 'var(--surface)',
-              color: 'var(--ink)',
-            }}
-          />
-          <button
-            type="button"
-            onClick={() => proposeAction({ type: 'quick_note', payload: { text: draft.replace(/^.*?note[:,]?\s*/i, '') } })}
-            style={{
-              fontSize: '0.8rem',
-              padding: '0.45rem 0.7rem',
-              borderRadius: '0.45rem',
-              border: 'none',
-              background: 'var(--sage)',
-              color: '#fff',
-              cursor: 'pointer',
-            }}
-          >
-            Send
-          </button>
-        </div>
-      </section>
+      {dailyLog.length > 0 ? (
+        <section style={{ marginTop: '1.25rem' }}>
+          <h2 style={{ fontSize: '0.85rem', color: 'var(--sage)', marginBottom: '0.4rem' }}>Daily log</h2>
+          <ul style={{ paddingLeft: '1.1rem', margin: 0 }}>
+            {dailyLog.map((n, i) => (
+              <li key={i} style={{ padding: '0.15rem 0' }}>
+                {n}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      <QaInput />
 
       <SorenMicButton />
     </main>
@@ -161,13 +152,16 @@ function Stage({ savedNotes }: { savedNotes: string[] }): ReactElement {
 
 export function App(): ReactElement {
   const [savedNotes, setSavedNotes] = useState<string[]>([]);
-  const config = useJobSiteConfig((text, photos) =>
-    setSavedNotes((prev) => [...prev, photos > 0 ? `${text} (${photos} photo)` : text]),
-  );
+  const [dailyLog, setDailyLog] = useState<string[]>([]);
+  const config = useJobSiteConfig({
+    onSaved: (text, photos) =>
+      setSavedNotes((prev) => [...prev, photos > 0 ? `${text} (${photos} photo)` : text]),
+    onFiled: (text) => setDailyLog((prev) => [...prev, text]),
+  });
 
   return (
     <SorenProvider config={config}>
-      <Stage savedNotes={savedNotes} />
+      <Stage savedNotes={savedNotes} dailyLog={dailyLog} />
     </SorenProvider>
   );
 }

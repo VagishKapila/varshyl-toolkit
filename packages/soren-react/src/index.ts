@@ -30,6 +30,9 @@ export type { SorenQuickNoteProps } from './SorenQuickNote.js';
 export { SorenAvatar } from './SorenAvatar.js';
 export type { SorenAvatarProps } from './SorenAvatar.js';
 
+export { SorenConfirmRow } from './SorenConfirmRow.js';
+export type { SorenConfirmRowProps } from './SorenConfirmRow.js';
+
 export { cssVar, tokens, stateColor, ensureStyles } from './styles.js';
 
 // Re-export core contracts for convenience.
@@ -37,6 +40,7 @@ export type {
   VoiceState,
   SorenAdapterConfig,
   SorenAction,
+  SorenConfirmPayload,
   SorenToolDefinition,
   SorenVoiceSettings,
   SorenTokenResponse,

@@ -5,9 +5,12 @@ import {
   type CSSProperties,
   type ReactElement,
 } from 'react';
+import type { SorenConfirmPayload } from '@varshylinc/soren-core';
 import { useSoren } from './SorenProvider.js';
 import { parseQuickNote } from './connection.js';
 import { sizes, tokens } from './styles.js';
+
+const FILE_PROMPT = 'Got it. Want me to file that to your daily log?';
 
 export interface SorenQuickNoteProps {
   className?: string;
@@ -62,15 +65,25 @@ export function SorenQuickNote({ className, style }: SorenQuickNoteProps): React
 
   const onConfirm = async (): Promise<void> => {
     setSaving(true);
+    const urls = photos.length ? photos.map((f) => URL.createObjectURL(f)) : undefined;
+    const saved = noteText;
     try {
-      const photoUrls = photos.map((f) => URL.createObjectURL(f));
-      await config.saveQuickNote?.(noteText, photoUrls.length ? photoUrls : undefined);
-      speak('Got it, note saved');
-      reset();
+      await config.saveQuickNote?.(saved, urls);
     } catch {
       speak("Sorry, I couldn't save that note");
       setSaving(false);
+      return;
     }
+    reset();
+    // Follow-up: ask whether to file the saved note to the daily log.
+    speak(FILE_PROMPT);
+    const payload: SorenConfirmPayload = {
+      kind: 'file_daily_log',
+      prompt: FILE_PROMPT,
+      note: saved,
+      photoUrls: urls,
+    };
+    proposeAction({ type: 'confirm', payload });
   };
 
   const cardStyle: CSSProperties = {
