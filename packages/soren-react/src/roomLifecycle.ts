@@ -64,15 +64,33 @@ export function wireRoom(room: Room, audioEls: HTMLAudioElement[], h: RoomHandle
       track.detach().forEach((el) => el.remove()),
     )
     .on(RoomEvent.ParticipantAttributesChanged, (_changed: Record<string, string>, p: Participant) => {
-      if (!p.isLocal) h.onAgentState(p.attributes?.['lk.agent.state']);
+      if (p.isLocal) return;
+      const signal = p.attributes?.['lk.agent.state'];
+      console.info(`[soren] agent state (attr): ${signal ?? '(none)'}`);
+      h.onAgentState(signal);
     })
     .on(RoomEvent.DataReceived, (payload: Uint8Array, _p?: unknown, _k?: unknown, topic?: string) => {
-      if (topic === 'agent-state') h.onAgentState(new TextDecoder().decode(payload).trim());
+      if (topic === 'agent-state') {
+        const signal = new TextDecoder().decode(payload).trim();
+        console.info(`[soren] agent state (data): ${signal}`);
+        h.onAgentState(signal);
+      }
     })
     .on(RoomEvent.TranscriptionReceived, (segments: TranscriptionSegment[], p?: Participant) => {
-      const text = segments.filter((s) => s.final).map((s) => s.text).join(' ').trim();
+      // Some engines/agents never flag `final` on the Groq path. Prefer final
+      // segments, but fall back to interim text so the transcript (and the
+      // quick-note card it drives) is never silently dropped on Android.
+      const finals = segments.filter((s) => s.final);
+      const chosen = finals.length ? finals : segments;
+      const text = chosen.map((s) => s.text).join(' ').trim();
+      const fromAgent = Boolean(p && !p.isLocal);
+      console.info(
+        `[soren] transcription: segments=${segments.length} finals=${finals.length} ` +
+          `local=${p?.isLocal ?? 'n/a'} identity=${p?.identity ?? 'n/a'} ` +
+          `${fromAgent ? 'agent' : 'user'} text="${text}"`,
+      );
       if (!text) return;
-      if (p && !p.isLocal) h.onAgentResponse(text);
+      if (fromAgent) h.onAgentResponse(text);
       else h.onUserTranscript(text);
     })
     .on(RoomEvent.Disconnected, h.onDisconnect);

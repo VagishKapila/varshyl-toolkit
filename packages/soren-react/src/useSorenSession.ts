@@ -110,6 +110,7 @@ export function useSorenSession(
     wireRoom(room, audioEls, {
       onAgentState: applyAgentState,
       onUserTranscript: (text) => {
+        console.info(`[soren] user transcript → lastTranscript: "${text}"`);
         setLastTranscript(text);
         dispatch({ type: 'TRANSCRIPT_RECEIVED', transcript: text });
       },

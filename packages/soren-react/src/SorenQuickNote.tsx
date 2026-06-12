@@ -40,6 +40,7 @@ export function SorenQuickNote({ className, style }: SorenQuickNoteProps): React
   useEffect(() => {
     if (!lastTranscript || lastTranscript === handledRef.current) return;
     const parsed = parseQuickNote(lastTranscript);
+    console.info(`[soren] quick-note parse: transcript="${lastTranscript}" → ${parsed ? `note="${parsed}"` : 'no match'}`);
     if (parsed) {
       handledRef.current = lastTranscript;
       setNoteText(parsed);
@@ -74,9 +75,12 @@ export function SorenQuickNote({ className, style }: SorenQuickNoteProps): React
     setSaving(true);
     const urls = photos.length ? photos.map((f) => URL.createObjectURL(f)) : undefined;
     const saved = noteText;
+    console.info(`[soren] saveQuickNote start: "${saved}" photos=${urls?.length ?? 0}`);
     try {
       await config.saveQuickNote?.(saved, urls);
-    } catch {
+      console.info('[soren] saveQuickNote success');
+    } catch (err) {
+      console.error('[soren] saveQuickNote failed:', err);
       void sorenSpeak("Sorry, I couldn't save that note");
       setSaving(false);
       submittingRef.current = false;
