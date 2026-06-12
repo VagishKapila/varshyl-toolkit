@@ -17,6 +17,8 @@ export interface RoomHandlers {
   onUserTranscript: (text: string) => void;
   onAgentResponse: (text: string) => void;
   onDisconnect: () => void;
+  /** Fires once when the local participant starts speaking (VAD onset). */
+  onBargeIn: () => void;
 }
 
 /**
@@ -50,7 +52,13 @@ export function attachAudio(track: RemoteTrack, sink: HTMLAudioElement[]): void 
  * an `agent-state` data-topic fallback; transcripts via TranscriptionReceived.
  */
 export function wireRoom(room: Room, audioEls: HTMLAudioElement[], h: RoomHandlers): void {
+  let localSpeaking = false; // tracks VAD onset (edge, not level)
   room
+    .on(RoomEvent.ActiveSpeakersChanged, (speakers: Participant[]) => {
+      const now = speakers.some((s) => s.isLocal);
+      if (now && !localSpeaking) h.onBargeIn();
+      localSpeaking = now;
+    })
     .on(RoomEvent.TrackSubscribed, (track: RemoteTrack) => attachAudio(track, audioEls))
     .on(RoomEvent.TrackUnsubscribed, (track: RemoteTrack) =>
       track.detach().forEach((el) => el.remove()),

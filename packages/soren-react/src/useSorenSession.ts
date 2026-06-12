@@ -4,6 +4,7 @@ import {
   DEFAULT_VOICE_SETTINGS,
   INITIAL_VOICE_STATE,
   SOREN_AUDIO_CAPTURE_DEFAULTS,
+  interruptSoren,
   voiceReducer,
   type SorenAction,
   type SorenAdapterConfig,
@@ -27,6 +28,8 @@ export interface SorenSession {
   stopListening: () => void;
   proposeAction: (action: SorenAction | null) => void;
   updateSettings: (patch: Partial<SorenVoiceSettings>) => void;
+  /** True while Soren is producing voice output (agent track speaking). */
+  isSorenSpeaking: boolean;
 }
 
 function mapAgentState(signal: string | undefined): VoiceState | null {
@@ -114,6 +117,12 @@ export function useSorenSession(
       onDisconnect: () => {
         if (!closing) void reconnect();
       },
+      // FEAT 2: user spoke over Soren — cancel TTS, pause agent audio, listen.
+      onBargeIn: () => {
+        interruptSoren();
+        audioEls.forEach((el) => el.pause());
+        dispatch({ type: 'START_LISTENING' });
+      },
     });
 
     setConnection('connecting');
@@ -158,12 +167,14 @@ export function useSorenSession(
   );
   const proposeAction = useCallback((a: SorenAction | null): void => setPendingAction(a), []);
 
+  const isSorenSpeaking = state === 'speaking';
+
   return useMemo(
     () => ({
       state, connection, lastTranscript, lastResponse, pendingAction, settings,
-      startListening, stopListening, proposeAction, updateSettings,
+      startListening, stopListening, proposeAction, updateSettings, isSorenSpeaking,
     }),
     [state, connection, lastTranscript, lastResponse, pendingAction, settings,
-      startListening, stopListening, proposeAction, updateSettings],
+      startListening, stopListening, proposeAction, updateSettings, isSorenSpeaking],
   );
 }

@@ -18,8 +18,29 @@ export interface SorenSpeakOptions {
   voiceName?: string;
 }
 
+let speaking = false;
+
 function hasSpeech(): boolean {
   return typeof window !== 'undefined' && 'speechSynthesis' in window;
+}
+
+/** Whether Soren's client-side TTS is currently producing audio. */
+export function isSorenSpeaking(): boolean {
+  return speaking;
+}
+
+/**
+ * Stop any in-progress Soren speech immediately (barge-in). Cancels the
+ * speechSynthesis queue and clears the speaking flag. Audio elements owned by
+ * the LiveKit agent track are paused by the caller (soren-react), since core
+ * does not hold DOM references to them.
+ *
+ * TODO(elevenlabs): also pause/teardown the ElevenLabs <audio> element here once
+ * the primary TTS path attaches one.
+ */
+export function interruptSoren(): void {
+  if (hasSpeech()) window.speechSynthesis.cancel();
+  speaking = false;
 }
 
 function pickVoice(synth: SpeechSynthesis, voiceName?: string): SpeechSynthesisVoice | null {
@@ -48,9 +69,14 @@ export async function sorenSpeak(text: string, options?: SorenSpeakOptions): Pro
     utterance.rate = options?.rate ?? DEFAULT_RATE;
     const voice = pickVoice(synth, options?.voiceName);
     if (voice) utterance.voice = voice;
-    utterance.onend = () => resolve();
-    utterance.onerror = () => resolve();
+    const done = (): void => {
+      speaking = false;
+      resolve();
+    };
+    utterance.onend = done;
+    utterance.onerror = done;
     synth.cancel();
+    speaking = true;
     synth.speak(utterance);
   });
 }

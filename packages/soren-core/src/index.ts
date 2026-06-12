@@ -24,4 +24,4 @@ export type { SorenPersona, PersonaPromptOverrides } from './persona.js';
 export { buildPersonaPrompt, default as sorenPersona } from './persona.js';
 
 export type { SorenSpeakOptions } from './speech.js';
-export { sorenSpeak } from './speech.js';
+export { sorenSpeak, interruptSoren, isSorenSpeaking } from './speech.js';

@@ -46,6 +46,7 @@ vi.mock('livekit-client', () => {
     Room: FakeRoom,
     Track: { Kind: { Audio: 'audio', Video: 'video' } },
     RoomEvent: {
+      ActiveSpeakersChanged: 'activeSpeakersChanged',
       TrackSubscribed: 'trackSubscribed',
       TrackUnsubscribed: 'trackUnsubscribed',
       ParticipantAttributesChanged: 'participantAttributesChanged',
@@ -126,6 +127,21 @@ describe('SorenMicButton + SorenProvider (mocked LiveKit)', () => {
     // processing -> idle (agent done)
     emitAgentState('idle');
     expect(micState()).toBe('idle');
+  });
+
+  it('barges in: local speech while Soren speaks returns to listening', async () => {
+    renderButton();
+    await waitFor(() => expect(micState()).toBe('idle'));
+
+    fireEvent.click(screen.getByRole('button')); // idle -> listening
+    emitAgentState('speaking'); // listening -> speaking
+    expect(micState()).toBe('speaking');
+
+    // VAD onset: local participant becomes an active speaker.
+    act(() => {
+      lk.room?.emit('activeSpeakersChanged', [{ isLocal: true }]);
+    });
+    expect(micState()).toBe('listening');
   });
 
   it('connects via the mocked LiveKit room without a real connection', async () => {
