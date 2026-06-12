@@ -2,13 +2,12 @@ import { useEffect, useMemo, useState, type ReactElement } from 'react';
 import { QaInput } from './QaInput.js';
 import {
   SorenActionCard,
-  SorenAvatar,
   SorenConfirmRow,
   SorenMicButton,
   SorenNotifOnboarding,
+  SorenOrb,
   SorenProvider,
   SorenQuickNote,
-  SorenWaveform,
   scheduleDailyReminder,
   useSoren,
   type SorenAdapterConfig,
@@ -68,7 +67,8 @@ function Bubble({ who, text }: { who: 'You' | 'Soren'; text: string }): ReactEle
 }
 
 function Stage({ savedNotes, dailyLog }: { savedNotes: string[]; dailyLog: string[] }): ReactElement {
-  const { state, lastTranscript, lastResponse, proposeAction } = useSoren();
+  const { lastTranscript, lastResponse, pendingAction, proposeAction } = useSoren();
+  const showConfirm = pendingAction?.type === 'confirm';
 
   return (
     <main style={{ maxWidth: '30rem', margin: '0 auto', padding: '1.5rem 1.25rem 8rem' }}>
@@ -91,20 +91,28 @@ function Stage({ savedNotes, dailyLog }: { savedNotes: string[]; dailyLog: strin
 
       <section
         style={{
-          background: 'var(--card)',
-          borderRadius: '1.25rem',
-          padding: '1.75rem 1.25rem 1.5rem',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          gap: '1rem',
+          gap: '1.25rem',
+          padding: '2rem 0 1.25rem',
         }}
       >
-        <SorenAvatar />
-        {state === 'listening' || state === 'speaking' ? (
-          <SorenWaveform style={{ width: '60%' }} />
+        <SorenOrb fullBleed={false} />
+        {showConfirm ? (
+          <div
+            style={{
+              width: '100%',
+              maxWidth: '24rem',
+              background: 'var(--card)',
+              color: 'var(--ink)',
+              borderRadius: '0.75rem',
+              padding: '1rem',
+            }}
+          >
+            <SorenConfirmRow />
+          </div>
         ) : null}
-        <SorenConfirmRow />
       </section>
 
       {lastTranscript || lastResponse ? (

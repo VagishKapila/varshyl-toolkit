@@ -38,6 +38,14 @@ export { sortByNewest } from './photoPicker.js';
 export { SorenAvatar } from './SorenAvatar.js';
 export type { SorenAvatarProps } from './SorenAvatar.js';
 
+export { SorenOrb } from './SorenOrb.js';
+export type { SorenOrbProps } from './SorenOrb.js';
+
+export { SorenWaveBars } from './SorenWaveBars.js';
+export type { SorenWaveBarsProps } from './SorenWaveBars.js';
+
+export { useAudioLevels } from './useAudioLevels.js';
+
 export { SorenConfirmRow } from './SorenConfirmRow.js';
 export type { SorenConfirmRowProps } from './SorenConfirmRow.js';
 

@@ -87,6 +87,26 @@ const KEYFRAMES = `
 @keyframes soren-spin {
   to { transform: rotate(360deg); }
 }
+@keyframes soren-breathe {
+  0%, 100% { transform: scale(0.95); }
+  50% { transform: scale(1.05); }
+}
+@keyframes soren-glow {
+  0%, 100% { opacity: 0.35; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.12); }
+}
+@keyframes soren-bar-idle {
+  0%, 100% { height: 20%; }
+  50% { height: 34%; }
+}
+@keyframes soren-bar-speak {
+  0%, 100% { height: 28%; }
+  50% { height: 92%; }
+}
+@keyframes soren-flash {
+  0% { opacity: 0.85; }
+  100% { opacity: 0; }
+}
 `;
 
 /** Inject animation keyframes once (no-op in non-DOM / SSR environments). */
