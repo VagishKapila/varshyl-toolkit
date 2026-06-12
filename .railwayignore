@@ -1,0 +1,7 @@
+# Keep the railway up upload lean. Workspace package/app dirs MUST stay so the
+# pnpm lockfile resolves; only exclude heavy/unrelated paths.
+corporate/
+**/node_modules/
+**/dist/
+.git/
+.cursor/

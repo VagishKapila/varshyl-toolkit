@@ -4,11 +4,18 @@ on:
   push:
     tags:
       - '*-v[0-9]+.[0-9]+.[0-9]+'
+      # Soren packages use an npm-style `pkg@X.Y.Z` tag scheme and publish to a
+      # different registry (GitHub Packages), handled by the dedicated jobs below.
+      - 'soren-core@[0-9]+.[0-9]+.[0-9]+'
+      - 'soren-react@[0-9]+.[0-9]+.[0-9]+'
 
 jobs:
   release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
+    # The GitHub Release + npm publish jobs only handle the `*-vX.Y.Z` scheme.
+    # Soren `pkg@X.Y.Z` tags are handled by publish-soren-* jobs below.
+    if: ${{ !startsWith(github.ref_name, 'soren-core@') && !startsWith(github.ref_name, 'soren-react@') }}
 
     permissions:
       contents: write
@@ -123,3 +130,85 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_PROVENANCE: 'true'
+
+  # ── Soren packages — GitHub Packages publish (INERT) ─────────────────────────
+  # soren-core and soren-react are currently private:true and publish to GitHub
+  # Packages (npm.pkg.github.com), NOT npmjs.com. These jobs mirror the npm
+  # publish pattern above but the publish STEP is gated behind the repo variable
+  # SOREN_PUBLISH_ENABLED so nothing is published until the registry strategy is
+  # finalized. To enable a first publish:
+  #   1. Set the package's package.json "private": false
+  #   2. Resolve @varshylinc scope ↔ GitHub Packages ownership
+  #      (GH Packages requires the scope to match the owning org/user)
+  #   3. Set repo variable SOREN_PUBLISH_ENABLED = true
+  publish-soren-core:
+    name: Publish soren-core (GitHub Packages)
+    runs-on: ubuntu-latest
+    if: ${{ startsWith(github.ref_name, 'soren-core@') }}
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://npm.pkg.github.com'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9.1.0
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Build soren-core
+        run: pnpm --filter @varshylinc/soren-core build
+
+      - name: Publish soren-core (inert until SOREN_PUBLISH_ENABLED=true)
+        if: ${{ vars.SOREN_PUBLISH_ENABLED == 'true' }}
+        run: pnpm --filter @varshylinc/soren-core publish --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish-soren-react:
+    name: Publish soren-react (GitHub Packages)
+    runs-on: ubuntu-latest
+    if: ${{ startsWith(github.ref_name, 'soren-react@') }}
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://npm.pkg.github.com'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9.1.0
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Build soren-react (+ soren-core dependency)
+        run: pnpm --filter @varshylinc/soren-react... build
+
+      - name: Publish soren-react (inert until SOREN_PUBLISH_ENABLED=true)
+        if: ${{ vars.SOREN_PUBLISH_ENABLED == 'true' }}
+        run: pnpm --filter @varshylinc/soren-react publish --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

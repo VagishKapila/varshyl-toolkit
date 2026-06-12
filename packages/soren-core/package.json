@@ -1,0 +1,57 @@
+{
+  "name": "@varshylinc/soren-core",
+  "version": "0.1.0",
+  "description": "Framework-agnostic contracts and pure logic for the Soren voice layer: voice state machine, persona prompt builder, and adapter/tool types.",
+  "author": "Vagish Kapila (Varshyl Inc.)",
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/VagishKapila/varshyl-toolkit/tree/main/packages/soren-core#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/VagishKapila/varshyl-toolkit.git",
+    "directory": "packages/soren-core"
+  },
+  "bugs": {
+    "url": "https://github.com/VagishKapila/varshyl-toolkit/issues"
+  },
+  "keywords": [
+    "soren",
+    "voice",
+    "livekit",
+    "state-machine",
+    "persona",
+    "varshyl",
+    "typescript"
+  ],
+  "private": true,
+  "files": [
+    "dist",
+    "LICENSE"
+  ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json --noEmit",
+    "test": "vitest run",
+    "lint": "eslint src --ext .ts,.tsx --max-warnings 0"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^7.8.0",
+    "@typescript-eslint/parser": "^7.8.0",
+    "eslint": "^8.57.0",
+    "tsup": "^8.5.0",
+    "typescript": "^5.4.5",
+    "vitest": "^1.6.0"
+  }
+}
