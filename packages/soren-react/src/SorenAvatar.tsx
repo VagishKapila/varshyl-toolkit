@@ -28,6 +28,12 @@ function statusColor(state: VoiceState): string {
   return tokens.onSurface;
 }
 
+function orbAnimation(state: VoiceState): string | undefined {
+  if (state === 'listening') return 'soren-orb-pulse 2s ease-in-out infinite';
+  if (state === 'speaking') return 'soren-orb-pulse 1s ease-in-out infinite';
+  return undefined;
+}
+
 /**
  * Central Soren presence: a gradient orb with a white "S", the name, and a
  * state-driven status line. Animations (pulse / ring / spin) are layered on by
@@ -45,8 +51,12 @@ export function SorenAvatar({
     ensureStyles();
   }, []);
 
+  const showRing = state === 'listening' || state === 'speaking';
+  const showSpinner = state === 'processing' || state === 'connecting';
+
   const orbStyle: CSSProperties = {
     position: 'relative',
+    zIndex: 1,
     width: size,
     height: size,
     borderRadius: '9999px',
@@ -59,6 +69,16 @@ export function SorenAvatar({
     fontSize: size * 0.42,
     lineHeight: 1,
     userSelect: 'none',
+    animation: orbAnimation(state),
+  };
+
+  const stage: CSSProperties = {
+    position: 'relative',
+    width: size,
+    height: size,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   };
 
   return (
@@ -74,8 +94,45 @@ export function SorenAvatar({
         ...style,
       }}
     >
-      <span data-soren-orb="" style={orbStyle} aria-hidden="true">
-        S
+      <span style={stage}>
+        {showRing ? (
+          <span
+            aria-hidden="true"
+            style={{
+              position: 'absolute',
+              inset: 0,
+              borderRadius: '9999px',
+              background: tokens.gradient,
+              animation: 'soren-ring 2s ease-out infinite',
+            }}
+          />
+        ) : null}
+        {showSpinner ? (
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 100 100"
+            style={{
+              position: 'absolute',
+              width: size + 16,
+              height: size + 16,
+              animation: 'soren-spin 0.9s linear infinite',
+            }}
+          >
+            <circle
+              cx="50"
+              cy="50"
+              r="46"
+              fill="none"
+              stroke={tokens.processing}
+              strokeWidth="6"
+              strokeLinecap="round"
+              strokeDasharray="70 220"
+            />
+          </svg>
+        ) : null}
+        <span data-soren-orb="" style={orbStyle} aria-hidden="true">
+          S
+        </span>
       </span>
       <span style={{ fontWeight: 600, fontSize: '1.05rem' }}>{name}</span>
       <span role="status" aria-live="polite" style={{ fontSize: '0.9rem', color: statusColor(state) }}>

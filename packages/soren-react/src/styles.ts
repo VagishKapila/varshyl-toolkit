@@ -75,6 +75,18 @@ const KEYFRAMES = `
   0%, 100% { transform: scaleY(0.35); }
   50% { transform: scaleY(1); }
 }
+@keyframes soren-orb-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+@keyframes soren-ring {
+  0% { transform: scale(1); opacity: 0.7; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+@keyframes soren-spin {
+  to { transform: rotate(360deg); }
+}
 `;
 
 /** Inject animation keyframes once (no-op in non-DOM / SSR environments). */
