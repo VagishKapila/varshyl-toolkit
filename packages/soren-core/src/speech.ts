@@ -43,8 +43,32 @@ export function interruptSoren(): void {
   speaking = false;
 }
 
-function pickVoice(synth: SpeechSynthesis, voiceName?: string): SpeechSynthesisVoice | null {
-  const voices = synth.getVoices();
+function isAndroid(): boolean {
+  return typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent);
+}
+
+/**
+ * Resolve the voice list. On Android Chrome `getVoices()` is empty on first
+ * call and only populates after the `voiceschanged` event — so wait for it
+ * (capped at 1s, since some devices never fire it) before selecting a voice.
+ */
+function loadVoices(synth: SpeechSynthesis): Promise<SpeechSynthesisVoice[]> {
+  const existing = synth.getVoices();
+  if (existing.length) return Promise.resolve(existing);
+  return new Promise((resolve) => {
+    let settled = false;
+    const finish = (): void => {
+      if (settled) return;
+      settled = true;
+      synth.removeEventListener('voiceschanged', finish);
+      resolve(synth.getVoices());
+    };
+    synth.addEventListener('voiceschanged', finish);
+    setTimeout(finish, 1000);
+  });
+}
+
+function pickVoice(voices: SpeechSynthesisVoice[], voiceName?: string): SpeechSynthesisVoice | null {
   if (!voices.length) return null;
   const wanted = voiceName ?? PREFERRED_VOICE;
   return voices.find((v) => v.name === wanted) ?? voices[0] ?? null;
@@ -63,11 +87,20 @@ function pickVoice(synth: SpeechSynthesis, voiceName?: string): SpeechSynthesisV
 export async function sorenSpeak(text: string, options?: SorenSpeakOptions): Promise<void> {
   if (!text || !hasSpeech()) return;
   const synth = window.speechSynthesis;
+
+  const voices = await loadVoices(synth);
+  const voice = pickVoice(voices, options?.voiceName);
+  console.info(`[soren] sorenSpeak voice: ${voice?.name ?? '(engine default)'} | "${text.slice(0, 48)}"`);
+
+  // Android Chrome stalls if a new utterance is queued while one is speaking/
+  // pending — cancel first, then give the engine a beat before re-speaking.
+  if (synth.speaking || synth.pending) synth.cancel();
+  if (isAndroid()) await new Promise((r) => setTimeout(r, 100));
+
   await new Promise<void>((resolve) => {
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.pitch = options?.pitch ?? DEFAULT_PITCH;
     utterance.rate = options?.rate ?? DEFAULT_RATE;
-    const voice = pickVoice(synth, options?.voiceName);
     if (voice) utterance.voice = voice;
     const done = (): void => {
       speaking = false;
@@ -75,7 +108,6 @@ export async function sorenSpeak(text: string, options?: SorenSpeakOptions): Pro
     };
     utterance.onend = done;
     utterance.onerror = done;
-    synth.cancel();
     speaking = true;
     synth.speak(utterance);
   });
