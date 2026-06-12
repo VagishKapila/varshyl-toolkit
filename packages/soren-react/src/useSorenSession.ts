@@ -26,7 +26,6 @@ export interface SorenSession {
   stopListening: () => void;
   proposeAction: (action: SorenAction | null) => void;
   updateSettings: (patch: Partial<SorenVoiceSettings>) => void;
-  speak: (text: string) => void;
 }
 
 function mapAgentState(signal: string | undefined): VoiceState | null {
@@ -156,17 +155,13 @@ export function useSorenSession(
     [],
   );
   const proposeAction = useCallback((a: SorenAction | null): void => setPendingAction(a), []);
-  const speak = useCallback((text: string): void => {
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
-    window.speechSynthesis.speak(new SpeechSynthesisUtterance(text));
-  }, []);
 
   return useMemo(
     () => ({
       state, connection, lastTranscript, lastResponse, pendingAction, settings,
-      startListening, stopListening, proposeAction, updateSettings, speak,
+      startListening, stopListening, proposeAction, updateSettings,
     }),
     [state, connection, lastTranscript, lastResponse, pendingAction, settings,
-      startListening, stopListening, proposeAction, updateSettings, speak],
+      startListening, stopListening, proposeAction, updateSettings],
   );
 }

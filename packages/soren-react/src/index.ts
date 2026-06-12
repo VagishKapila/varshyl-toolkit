@@ -35,12 +35,14 @@ export type { SorenConfirmRowProps } from './SorenConfirmRow.js';
 
 export { cssVar, tokens, stateColor, ensureStyles } from './styles.js';
 
-// Re-export core contracts for convenience.
+// Re-export core contracts + the TTS entry point for convenience.
+export { sorenSpeak } from '@varshylinc/soren-core';
 export type {
   VoiceState,
   SorenAdapterConfig,
   SorenAction,
   SorenConfirmPayload,
+  SorenSpeakOptions,
   SorenToolDefinition,
   SorenVoiceSettings,
   SorenTokenResponse,

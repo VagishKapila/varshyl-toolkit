@@ -2,7 +2,8 @@
  * @varshylinc/soren-core
  *
  * Framework-agnostic contracts + pure logic for the Soren voice layer.
- * No React, no DOM. Consumed by the soren-react package and by hosts.
+ * No React. Browser globals (used only by the speech utility) are guarded by
+ * `typeof window`, so the package stays import-safe in Node/SSR.
  */
 export type {
   VoiceState,
@@ -21,3 +22,6 @@ export { voiceReducer, INITIAL_VOICE_STATE } from './stateMachine.js';
 
 export type { SorenPersona, PersonaPromptOverrides } from './persona.js';
 export { buildPersonaPrompt, default as sorenPersona } from './persona.js';
+
+export type { SorenSpeakOptions } from './speech.js';
+export { sorenSpeak } from './speech.js';

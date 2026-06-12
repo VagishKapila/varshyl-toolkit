@@ -5,7 +5,7 @@ import {
   type CSSProperties,
   type ReactElement,
 } from 'react';
-import type { SorenConfirmPayload } from '@varshylinc/soren-core';
+import { sorenSpeak, type SorenConfirmPayload } from '@varshylinc/soren-core';
 import { useSoren } from './SorenProvider.js';
 import { parseQuickNote } from './connection.js';
 import { pickFiles } from './photoPicker.js';
@@ -24,11 +24,11 @@ export interface SorenQuickNoteProps {
  * confirm calls `config.saveQuickNote`. Photos are optional via a camera icon
  * (`capture="environment"` opens the device camera on mobile).
  *
- * On save, Soren speaks "Got it, note saved" using the browser speech engine —
- * the hosted engine has no verified client-invokable TTS-for-arbitrary-text API.
+ * On save, Soren speaks the daily-log follow-up via `sorenSpeak` (the single
+ * TTS entry point; speechSynthesis today, ElevenLabs when the engine is wired).
  */
 export function SorenQuickNote({ className, style }: SorenQuickNoteProps): ReactElement | null {
-  const { lastTranscript, pendingAction, proposeAction, config, speak } = useSoren();
+  const { lastTranscript, pendingAction, proposeAction, config } = useSoren();
   const [noteText, setNoteText] = useState<string | null>(null);
   const [photos, setPhotos] = useState<File[]>([]);
   const [saving, setSaving] = useState(false);
@@ -92,14 +92,14 @@ export function SorenQuickNote({ className, style }: SorenQuickNoteProps): React
     try {
       await config.saveQuickNote?.(saved, urls);
     } catch {
-      speak("Sorry, I couldn't save that note");
+      void sorenSpeak("Sorry, I couldn't save that note");
       setSaving(false);
       submittingRef.current = false;
       return;
     }
     reset();
     // Follow-up: ask whether to file the saved note to the daily log.
-    speak(FILE_PROMPT);
+    void sorenSpeak(FILE_PROMPT);
     const payload: SorenConfirmPayload = {
       kind: 'file_daily_log',
       prompt: FILE_PROMPT,

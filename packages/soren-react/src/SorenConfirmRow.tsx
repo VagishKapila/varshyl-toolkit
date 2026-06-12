@@ -1,5 +1,5 @@
 import { useState, type CSSProperties, type ReactElement } from 'react';
-import type { SorenConfirmPayload } from '@varshylinc/soren-core';
+import { sorenSpeak, type SorenConfirmPayload } from '@varshylinc/soren-core';
 import { useSoren } from './SorenProvider.js';
 import { sizes, tokens } from './styles.js';
 
@@ -15,7 +15,7 @@ export interface SorenConfirmRowProps {
  * `config.fileToDailyLog`; "Skip" dismisses. Returns null when nothing pending.
  */
 export function SorenConfirmRow({ className, style }: SorenConfirmRowProps): ReactElement | null {
-  const { pendingAction, proposeAction, config, speak } = useSoren();
+  const { pendingAction, proposeAction, config } = useSoren();
   const [busy, setBusy] = useState(false);
 
   if (pendingAction?.type !== 'confirm') return null;
@@ -32,10 +32,10 @@ export function SorenConfirmRow({ className, style }: SorenConfirmRowProps): Rea
       if (payload.kind === 'file_daily_log') {
         await config.fileToDailyLog?.(payload.note ?? '', payload.photoUrls);
       }
-      speak('Filed to your daily log.');
+      void sorenSpeak('Filed to your daily log.');
       proposeAction(null);
     } catch {
-      speak("Sorry, I couldn't file that.");
+      void sorenSpeak("Sorry, I couldn't file that.");
       setBusy(false);
     }
   };
