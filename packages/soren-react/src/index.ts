@@ -27,6 +27,14 @@ export type { SorenSettingsToggleProps } from './SorenSettingsToggle.js';
 export { SorenQuickNote } from './SorenQuickNote.js';
 export type { SorenQuickNoteProps } from './SorenQuickNote.js';
 
+export { SorenPhotoPicker } from './SorenPhotoPicker.js';
+export type { SorenPhotoPickerProps } from './SorenPhotoPicker.js';
+
+export { SorenCamera } from './SorenCamera.js';
+export type { SorenCameraProps } from './SorenCamera.js';
+
+export { sortByNewest } from './photoPicker.js';
+
 export { SorenAvatar } from './SorenAvatar.js';
 export type { SorenAvatarProps } from './SorenAvatar.js';
 
