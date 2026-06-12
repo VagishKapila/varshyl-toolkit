@@ -149,3 +149,15 @@ export const DEFAULT_VOICE_SETTINGS: SorenVoiceSettings = {
   readAloud: true,
   voiceProfile: 'calm',
 };
+
+/**
+ * Microphone capture constraints applied to Soren's local audio track. A plain,
+ * LiveKit-free object so it lives in core; soren-react passes it to the room's
+ * `audioCaptureDefaults` at init. Cleans up jobsite background noise (machinery,
+ * wind) and echo before the audio reaches Whisper.
+ */
+export const SOREN_AUDIO_CAPTURE_DEFAULTS = {
+  noiseSuppression: true,
+  echoCancellation: true,
+  autoGainControl: true,
+} as const;

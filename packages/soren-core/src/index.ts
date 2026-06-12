@@ -15,7 +15,7 @@ export type {
   SorenTokenResponse,
   SorenApiEnvelope,
 } from './types.js';
-export { DEFAULT_VOICE_SETTINGS } from './types.js';
+export { DEFAULT_VOICE_SETTINGS, SOREN_AUDIO_CAPTURE_DEFAULTS } from './types.js';
 
 export type { VoiceEvent } from './stateMachine.js';
 export { voiceReducer, INITIAL_VOICE_STATE } from './stateMachine.js';

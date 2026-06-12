@@ -3,6 +3,7 @@ import { Room } from 'livekit-client';
 import {
   DEFAULT_VOICE_SETTINGS,
   INITIAL_VOICE_STATE,
+  SOREN_AUDIO_CAPTURE_DEFAULTS,
   voiceReducer,
   type SorenAction,
   type SorenAdapterConfig,
@@ -78,7 +79,8 @@ export function useSorenSession(
     let closing = false;
     let attempts = 0;
     const audioEls: HTMLAudioElement[] = [];
-    const room = new Room();
+    // FEAT 1: noise suppression / echo cancellation / AGC on the mic track.
+    const room = new Room({ audioCaptureDefaults: { ...SOREN_AUDIO_CAPTURE_DEFAULTS } });
     roomRef.current = room;
 
     const reconnect = async (): Promise<void> => {
