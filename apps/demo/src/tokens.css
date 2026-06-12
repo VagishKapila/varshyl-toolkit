@@ -10,13 +10,15 @@
   --soren-2: #a855f7;
   --soren-3: #ec4899;
   --surface: #FBF8F1;
+  --card: #F5F1E8;
   --ink: #2D3B36;
   --sage: #7C9B8A;
 
-  /* Map the palette onto the soren-react component variables */
-  --soren-accent: var(--soren-1);
-  --soren-on-accent: var(--surface);
-  --soren-surface: var(--surface);
+  /* Map the palette onto the soren-react component variables.
+     Sage is the primary/mic color; cards use the warm --card tone. */
+  --soren-accent: var(--sage);
+  --soren-on-accent: #ffffff;
+  --soren-surface: var(--card);
   --soren-on-surface: var(--ink);
   --soren-muted: var(--sage);
   --soren-listening: var(--sage);

@@ -23,6 +23,11 @@ export const tokens = {
   processing: cssVar('processing', 'hsl(43 96% 56%)'),
   speaking: cssVar('speaking', 'hsl(206 90% 55%)'),
   error: cssVar('error', 'hsl(0 72% 55%)'),
+  /** Soren brand gradient (orb/avatar). Stops resolve from --soren-1/2/3. */
+  gradient: `linear-gradient(135deg, ${cssVar('1', 'hsl(243 75% 59%)')}, ${cssVar(
+    '2',
+    'hsl(280 89% 63%)',
+  )}, ${cssVar('3', 'hsl(330 81% 60%)')})`,
 } as const;
 
 /**

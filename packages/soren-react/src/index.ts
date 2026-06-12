@@ -27,6 +27,9 @@ export type { SorenSettingsToggleProps } from './SorenSettingsToggle.js';
 export { SorenQuickNote } from './SorenQuickNote.js';
 export type { SorenQuickNoteProps } from './SorenQuickNote.js';
 
+export { SorenAvatar } from './SorenAvatar.js';
+export type { SorenAvatarProps } from './SorenAvatar.js';
+
 export { cssVar, tokens, stateColor, ensureStyles } from './styles.js';
 
 // Re-export core contracts for convenience.
