@@ -10,7 +10,7 @@ import {
   type VoiceState,
 } from '@varshylinc/soren-core';
 import { MAX_RECONNECT_ATTEMPTS, backoffMs, delay, mintToken } from './connection.js';
-import { wireRoom } from './roomLifecycle.js';
+import { resumeAudio, wireRoom } from './roomLifecycle.js';
 
 /** Transport-level connection status, distinct from the {@link VoiceState}. */
 export type SorenConnection = 'idle' | 'connecting' | 'connected' | 'reconnecting' | 'failed';
@@ -142,7 +142,9 @@ export function useSorenSession(
   }, [autoConnect, config, applyAgentState]);
 
   const startListening = useCallback((): void => {
-    void roomRef.current?.localParticipant?.setMicrophoneEnabled(true);
+    const room = roomRef.current;
+    if (room) void resumeAudio(room); // unlock iOS audio on this user gesture
+    void room?.localParticipant?.setMicrophoneEnabled(true);
     dispatch({ type: 'START_LISTENING' });
   }, []);
   const stopListening = useCallback((): void => {

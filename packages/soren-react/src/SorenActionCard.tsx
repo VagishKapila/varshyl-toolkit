@@ -1,5 +1,5 @@
 import { type CSSProperties, type ReactElement } from 'react';
-import { tokens } from './styles.js';
+import { sizes, tokens } from './styles.js';
 
 export interface SorenActionOption {
   label: string;
@@ -49,6 +49,7 @@ export function SorenActionCard({
             onClick={() => onSelect(opt.value)}
             style={{
               textAlign: 'left',
+              minHeight: sizes.tapMin,
               padding: '0.625rem 0.875rem',
               borderRadius: '0.5rem',
               border: `1px solid ${tokens.muted}`,

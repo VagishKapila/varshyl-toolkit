@@ -19,6 +19,20 @@ export interface RoomHandlers {
   onDisconnect: () => void;
 }
 
+/**
+ * Resume audio playback after a user gesture. iOS Safari (and Chrome Android)
+ * block autoplay until the user interacts; the mic-button tap is that gesture.
+ * `room.startAudio()` resumes the shared AudioContext so the agent's
+ * ElevenLabs track becomes audible. Safe to call repeatedly.
+ */
+export async function resumeAudio(room: Room): Promise<void> {
+  try {
+    await room.startAudio();
+  } catch {
+    /* no-op: not yet connected, or already started */
+  }
+}
+
 /** Attach a subscribed audio track to a hidden, autoplaying element. */
 export function attachAudio(track: RemoteTrack, sink: HTMLAudioElement[]): void {
   if (track.kind !== Track.Kind.Audio) return;

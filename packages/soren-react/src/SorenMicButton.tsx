@@ -1,6 +1,6 @@
 import { useEffect, type CSSProperties, type ReactElement } from 'react';
 import { useSoren } from './SorenProvider.js';
-import { ensureStyles, stateColor, tokens } from './styles.js';
+import { ensureStyles, sizes, stateColor, tokens } from './styles.js';
 
 export interface SorenMicButtonProps {
   /** Override default bottom-right floating position. */
@@ -9,11 +9,18 @@ export interface SorenMicButtonProps {
   style?: CSSProperties;
 }
 
+// Offsets fold the iOS safe-area insets in so the button never sits behind the
+// home bar (bottom) or the notch (sides in landscape).
+const bottomOffset = `calc(${sizes.micBottom} + env(safe-area-inset-bottom))`;
+const topOffset = `calc(${sizes.micBottom} + env(safe-area-inset-top))`;
+const rightOffset = `calc(${sizes.micInset} + env(safe-area-inset-right))`;
+const leftOffset = `calc(${sizes.micInset} + env(safe-area-inset-left))`;
+
 const POSITION: Record<NonNullable<SorenMicButtonProps['position']>, CSSProperties> = {
-  'bottom-right': { bottom: '1.5rem', right: '1.5rem' },
-  'bottom-left': { bottom: '1.5rem', left: '1.5rem' },
-  'top-right': { top: '1.5rem', right: '1.5rem' },
-  'top-left': { top: '1.5rem', left: '1.5rem' },
+  'bottom-right': { bottom: bottomOffset, right: rightOffset },
+  'bottom-left': { bottom: bottomOffset, left: leftOffset },
+  'top-right': { top: topOffset, right: rightOffset },
+  'top-left': { top: topOffset, left: leftOffset },
 };
 
 const LABEL: Record<string, string> = {
@@ -46,8 +53,10 @@ export function SorenMicButton({
   const buttonStyle: CSSProperties = {
     position: 'fixed',
     ...POSITION[position],
-    width: '3.5rem',
-    height: '3.5rem',
+    width: sizes.micTarget,
+    height: sizes.micTarget,
+    minWidth: sizes.micTarget,
+    minHeight: sizes.micTarget,
     borderRadius: '9999px',
     border: 'none',
     cursor: 'pointer',

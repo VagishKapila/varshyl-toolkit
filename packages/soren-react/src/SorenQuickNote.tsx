@@ -7,7 +7,7 @@ import {
 } from 'react';
 import { useSoren } from './SorenProvider.js';
 import { parseQuickNote } from './connection.js';
-import { tokens } from './styles.js';
+import { sizes, tokens } from './styles.js';
 
 export interface SorenQuickNoteProps {
   className?: string;
@@ -86,6 +86,7 @@ export function SorenQuickNote({ className, style }: SorenQuickNoteProps): React
   };
   const btn = (bg: string): CSSProperties => ({
     flex: 1,
+    minHeight: sizes.tapMin,
     padding: '0.625rem 0.875rem',
     borderRadius: '0.5rem',
     border: 'none',
@@ -102,16 +103,24 @@ export function SorenQuickNote({ className, style }: SorenQuickNoteProps): React
 
       <label
         data-soren-quicknote-camera=""
-        style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem', color: tokens.muted, cursor: 'pointer' }}
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '0.4rem',
+          minHeight: sizes.tapMin,
+          fontSize: '0.85rem',
+          color: tokens.muted,
+          cursor: 'pointer',
+        }}
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <path d="M4 8h3l1.5-2h7L17 8h3v11H4V8Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
           <circle cx="12" cy="13" r="3.2" stroke="currentColor" strokeWidth="2" />
         </svg>
-        {photos.length > 0 ? `${photos.length} photo(s) attached` : 'Add photo (optional)'}
+        {photos.length > 0 ? `${photos.length} file(s) attached` : 'Add photo / video (optional)'}
         <input
           type="file"
-          accept="image/*"
+          accept="image/*,video/*"
           capture="environment"
           multiple
           hidden

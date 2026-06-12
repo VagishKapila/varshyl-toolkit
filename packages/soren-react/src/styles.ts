@@ -25,6 +25,20 @@ export const tokens = {
   error: cssVar('error', 'hsl(0 72% 55%)'),
 } as const;
 
+/**
+ * Sizing tokens for mobile touch targets. Every value is a CSS variable with a
+ * fallback, so hosts can tune tap sizes without editing components.
+ * - `micTarget`: floating mic button (>= 64x64 per mobile guidelines)
+ * - `micBottom`: mic offset from the bottom, added to the iOS safe-area inset
+ * - `tapMin`: minimum height for card/action/camera buttons (>= 48px)
+ */
+export const sizes = {
+  micTarget: cssVar('mic-size', '64px'),
+  micBottom: cssVar('mic-bottom', '24px'),
+  micInset: cssVar('mic-inset', '24px'),
+  tapMin: cssVar('tap-min', '48px'),
+} as const;
+
 /** Pick the accent color for a given voice state. */
 export function stateColor(state: VoiceState): string {
   switch (state) {
