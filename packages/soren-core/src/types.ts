@@ -56,14 +56,38 @@ export interface SorenToolDefinition {
 export interface SorenAdapterConfig {
   /** Stable product identifier, e.g. `constructinv`. Sent when minting tokens. */
   productId: string;
-  /** Base URL of the host's Soren API / token mint endpoint. No trailing slash. */
+  /** Base URL of the host's Soren API. No trailing slash. Used for tool endpoints. */
   apiBaseUrl: string;
+  /**
+   * Full URL of the LiveKit token mint endpoint, e.g.
+   * `https://varshyl-voice-engine-production.up.railway.app/token`.
+   * The client POSTs `{ persona, productId }` and reads back the enveloped
+   * {@link SorenTokenResponse}.
+   */
+  tokenEndpoint: string;
   /** Returns the current host auth token, or null when unauthenticated. */
   getAuthToken: () => string | null;
   /** Product tools exposed to the agent. */
   tools: SorenToolDefinition[];
+  /**
+   * Persist a quick note (Q1 Quick Notes feature). Called by SorenQuickNote on
+   * confirm. `photoUrls` are optional already-uploaded photo URLs.
+   */
+  saveQuickNote?: (text: string, photoUrls?: string[]) => Promise<void>;
   /** Optional CSS custom-property overrides, e.g. `{ '--soren-accent': '...' }`. */
   theme?: Record<string, string>;
+}
+
+/**
+ * A structured action surfaced by Soren to the UI.
+ *
+ * - `quick_note`   — propose saving a note; payload `{ text, photoUrls? }`
+ * - `confirm`      — generic yes/no confirmation; payload is host-defined
+ * - `disambiguate` — ask the user to choose among options; payload host-defined
+ */
+export interface SorenAction {
+  type: 'quick_note' | 'confirm' | 'disambiguate';
+  payload: unknown;
 }
 
 /** User-facing voice preferences, persisted by the host. */
@@ -75,18 +99,26 @@ export interface SorenVoiceSettings {
 }
 
 /**
- * Response contract for the token mint endpoint
- * (`POST {apiBaseUrl}/token`).
+ * Inner `data` payload of the token mint endpoint response.
  *
- * UNVERIFIED: the exact wire shape was not in the handoff doc. The runtime
- * HUD mints a LiveKit JWT via `POST /api/token`; this is the minimal shape the
- * client needs to connect. Adjust when the engine contract is confirmed.
+ * VERIFIED against the live engine on 2026-06-11:
+ * `POST {tokenEndpoint}` → `{ data: SorenTokenResponse, error, message }`.
+ * Note: the engine mints a NEW `roomName` per request (no session resume).
  */
 export interface SorenTokenResponse {
-  /** LiveKit realtime server URL (wss://…). */
-  serverUrl: string;
   /** Short-lived LiveKit access token (JWT). */
   token: string;
+  /** LiveKit room the token grants access to (unique per mint). */
+  roomName: string;
+  /** LiveKit realtime server URL (wss://…). */
+  liveKitUrl: string;
+}
+
+/** Standard `{ data, error, message }` envelope used by the voice engine API. */
+export interface SorenApiEnvelope<T> {
+  data: T | null;
+  error: string | null;
+  message: string;
 }
 
 /** Safe defaults for {@link SorenVoiceSettings}. */

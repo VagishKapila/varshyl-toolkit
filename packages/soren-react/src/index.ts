@@ -7,6 +7,11 @@
 export { SorenProvider, useSoren } from './SorenProvider.js';
 export type { SorenProviderProps, SorenContextValue } from './SorenProvider.js';
 
+export { useSorenSession } from './useSorenSession.js';
+export type { SorenSession, SorenConnection } from './useSorenSession.js';
+
+export { mintToken, parseQuickNote, backoffMs } from './connection.js';
+
 export { SorenMicButton } from './SorenMicButton.js';
 export type { SorenMicButtonProps } from './SorenMicButton.js';
 
@@ -19,13 +24,18 @@ export type { SorenActionCardProps, SorenActionOption } from './SorenActionCard.
 export { SorenSettingsToggle } from './SorenSettingsToggle.js';
 export type { SorenSettingsToggleProps } from './SorenSettingsToggle.js';
 
+export { SorenQuickNote } from './SorenQuickNote.js';
+export type { SorenQuickNoteProps } from './SorenQuickNote.js';
+
 export { cssVar, tokens, stateColor, ensureStyles } from './styles.js';
 
 // Re-export core contracts for convenience.
 export type {
   VoiceState,
   SorenAdapterConfig,
+  SorenAction,
   SorenToolDefinition,
   SorenVoiceSettings,
   SorenTokenResponse,
+  SorenApiEnvelope,
 } from '@varshylinc/soren-core';

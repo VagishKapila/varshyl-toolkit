@@ -8,8 +8,10 @@ export type {
   VoiceState,
   SorenToolDefinition,
   SorenAdapterConfig,
+  SorenAction,
   SorenVoiceSettings,
   SorenTokenResponse,
+  SorenApiEnvelope,
 } from './types.js';
 export { DEFAULT_VOICE_SETTINGS } from './types.js';
 

@@ -34,19 +34,32 @@ vi.mock('livekit-client', () => {
       this.handlers.set(event, (this.handlers.get(event) ?? []).filter((f) => f !== cb));
       return this;
     }
+    removeAllListeners(): this {
+      this.handlers.clear();
+      return this;
+    }
     emit(event: string, ...args: unknown[]): void {
       (this.handlers.get(event) ?? []).forEach((f) => f(...args));
     }
   }
   return {
     Room: FakeRoom,
-    RoomEvent: { DataReceived: 'dataReceived', Disconnected: 'disconnected' },
+    Track: { Kind: { Audio: 'audio', Video: 'video' } },
+    RoomEvent: {
+      TrackSubscribed: 'trackSubscribed',
+      TrackUnsubscribed: 'trackUnsubscribed',
+      ParticipantAttributesChanged: 'participantAttributesChanged',
+      DataReceived: 'dataReceived',
+      TranscriptionReceived: 'transcriptionReceived',
+      Disconnected: 'disconnected',
+    },
   };
 });
 
 const config: SorenAdapterConfig = {
   productId: 'smoke-test',
   apiBaseUrl: 'https://api.test',
+  tokenEndpoint: 'https://engine.test/token',
   getAuthToken: () => 'host-token',
   tools: [],
 };
@@ -72,7 +85,11 @@ beforeEach(() => {
     vi.fn(async () => ({
       ok: true,
       status: 200,
-      json: async () => ({ serverUrl: 'wss://livekit.test', token: 'lk-token' }),
+      json: async () => ({
+        data: { token: 'lk-token', roomName: 'soren-test-1', liveKitUrl: 'wss://livekit.test' },
+        error: null,
+        message: 'Token issued successfully.',
+      }),
     })),
   );
 });
