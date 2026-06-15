@@ -1,0 +1,57 @@
+:root {
+  --surface: #fbf8f1;
+  --card: #f5f1e8;
+  --ink: #2d3b36;
+  --sage: #7c9b8a;
+  --soren-gradient: linear-gradient(135deg, #6366f1, #a855f7, #ec4899);
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root { height: 100%; margin: 0; }
+
+body {
+  background: var(--surface);
+  color: var(--ink);
+  font-family: Inter, system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.harness {
+  min-height: 100dvh;
+  max-width: 520px;
+  margin: 0 auto;
+  padding: calc(env(safe-area-inset-top) + 20px) 16px calc(env(safe-area-inset-bottom) + 24px);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.orb {
+  width: 92px; height: 92px; border-radius: 50%;
+  background: var(--soren-gradient);
+  display: grid; place-items: center;
+  color: #fff; font-size: 38px; font-weight: 700;
+  box-shadow: 0 10px 32px rgba(99, 102, 241, 0.35);
+  margin: 4px auto 0;
+}
+.orb[data-busy="true"] { animation: orb-pulse 1.4s ease-in-out infinite; }
+@keyframes orb-pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+
+.name { text-align: center; font-weight: 600; margin: 0; }
+.status { text-align: center; color: var(--sage); font-size: 14px; margin: 0; min-height: 18px; }
+
+.speech {
+  background: var(--card); border-radius: 16px; padding: 12px 14px;
+  font-size: 15px; line-height: 1.4; box-shadow: 0 4px 16px rgba(0,0,0,.08);
+}
+.speech::before { content: "Soren"; display: block; font-size: 11px; opacity: .55; margin-bottom: 4px; }
+
+.utterances { display: flex; flex-direction: column; gap: 8px; margin-top: auto; }
+.utterances h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; opacity: .5; margin: 8px 0 0; }
+.say {
+  text-align: left; min-height: 52px; padding: 0 16px; border: 1px solid rgba(45,59,54,.12);
+  border-radius: 14px; background: #fff; color: var(--ink); font-size: 15px; cursor: pointer;
+}
+.say:active { transform: scale(.99); }
+.card-slot { display: flex; justify-content: center; }

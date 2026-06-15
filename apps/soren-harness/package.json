@@ -1,0 +1,26 @@
+{
+  "name": "@varshylinc/soren-harness",
+  "version": "0.0.0",
+  "description": "STEP 2 end-to-end harness for @varshylinc/soren: drives the reference adapter (all 5 verbs) through the card-first UI. NOT a product.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "pnpm --filter @varshylinc/soren build && vite build",
+    "preview": "vite preview --host",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "echo 'soren-harness is the manual STEP 2 harness — no unit tests'"
+  },
+  "dependencies": {
+    "@varshylinc/soren": "workspace:*",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.1",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.2.1",
+    "typescript": "^5.4.5",
+    "vite": "^5.2.0"
+  }
+}

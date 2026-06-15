@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@varshylinc/soren": ["../../packages/soren/src/index.ts"],
+      "@varshylinc/soren/reference": ["../../packages/soren/src/reference/index.ts"],
+      "@varshylinc/soren/react": ["../../packages/soren/src/react/index.tsx"]
+    }
+  },
+  "include": ["src", "vite.config.ts"]
+}
