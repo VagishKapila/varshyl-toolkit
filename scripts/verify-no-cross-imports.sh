@@ -59,10 +59,13 @@ for pkg_dir in "$PACKAGES_DIR"/*/; do
       continue
     fi
     for scope in "@varshylinc" "@varshyl"; do
-      if grep -r "${scope}/${other_pkg}" "$src_dir" --include="*.ts" --include="*.tsx" -l 2>/dev/null | grep -q .; then
+      # Require the specifier to terminate with a quote or a subpath slash so
+      # that e.g. "@varshylinc/soren" does not falsely match "@varshylinc/soren-core".
+      pattern="${scope}/${other_pkg}['\"/]"
+      if grep -rE "$pattern" "$src_dir" --include="*.ts" --include="*.tsx" -l 2>/dev/null | grep -q .; then
         echo "❌ CROSS-IMPORT VIOLATION: $pkg_name imports from ${scope}/${other_pkg}"
         echo "   Violating files:"
-        grep -r "${scope}/${other_pkg}" "$src_dir" --include="*.ts" --include="*.tsx" -l
+        grep -rE "$pattern" "$src_dir" --include="*.ts" --include="*.tsx" -l
         ERRORS=$((ERRORS + 1))
       fi
     done

@@ -1,0 +1,90 @@
+{
+  "name": "@varshylinc/soren",
+  "version": "0.1.0",
+  "description": "Soren — a conversational voice concierge for Varshyl products. Server-side adapter contract (the 5 verbs), card-first result types, and React card UI. The persona/voice/brain live in the varshyl-voice engine; this package is the adapter contract + result surface.",
+  "author": "Vagish Kapila (Varshyl Inc.)",
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/VagishKapila/varshyl-toolkit/tree/main/packages/soren#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/VagishKapila/varshyl-toolkit.git",
+    "directory": "packages/soren"
+  },
+  "bugs": {
+    "url": "https://github.com/VagishKapila/varshyl-toolkit/issues"
+  },
+  "keywords": [
+    "soren",
+    "voice",
+    "concierge",
+    "livekit",
+    "adapter",
+    "skill",
+    "varshyl",
+    "typescript"
+  ],
+  "private": true,
+  "files": [
+    "dist",
+    "LICENSE"
+  ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./server": {
+      "types": "./dist/server/index.d.ts",
+      "import": "./dist/server/index.mjs",
+      "require": "./dist/server/index.js"
+    },
+    "./reference": {
+      "types": "./dist/reference/index.d.ts",
+      "import": "./dist/reference/index.mjs",
+      "require": "./dist/reference/index.js"
+    },
+    "./react": {
+      "types": "./dist/react/index.d.ts",
+      "import": "./dist/react/index.mjs",
+      "require": "./dist/react/index.js"
+    }
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json --noEmit",
+    "test": "vitest run",
+    "lint": "eslint src --ext .ts,.tsx --max-warnings 0"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@testing-library/react": "^16.0.0",
+    "@types/react": "^18.3.1",
+    "@types/react-dom": "^18.3.1",
+    "@types/node": "^20.12.7",
+    "@typescript-eslint/eslint-plugin": "^7.8.0",
+    "@typescript-eslint/parser": "^7.8.0",
+    "@vitejs/plugin-react": "^4.2.1",
+    "eslint": "^8.57.0",
+    "jsdom": "^24.0.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tsup": "^8.5.0",
+    "typescript": "^5.4.5",
+    "vitest": "^1.6.0"
+  }
+}
