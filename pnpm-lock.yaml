@@ -266,6 +266,10 @@ importers:
         version: 1.6.1(@types/node@20.19.40)(jsdom@24.1.3)
 
   packages/mobile-payments:
+    dependencies:
+      express:
+        specifier: ^4.18.3
+        version: 4.22.1
     devDependencies:
       '@revenuecat/purchases-capacitor':
         specifier: ^10.0.0
@@ -276,6 +280,9 @@ importers:
       '@testing-library/react':
         specifier: ^16.0.0
         version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@18.3.7(@types/react@18.3.28))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@types/express':
+        specifier: ^4.17.21
+        version: 4.17.25
       '@types/node':
         specifier: ^20.12.7
         version: 20.19.40
