@@ -1,12 +1,16 @@
-import React from 'react';
+import React, { useLayoutEffect } from 'react';
 import { usePaymentsTheme } from '../payments-theme.js';
-import './PaywallStyles.css';
+import { ensurePaywallStyles } from './injectPaywallStyles.js';
 
 export interface ReadOnlyBannerProps {
   bannerClassName?: string;
 }
 
 export function ReadOnlyBanner({ bannerClassName = '' }: ReadOnlyBannerProps): React.ReactElement {
+  useLayoutEffect(() => {
+    ensurePaywallStyles();
+  }, []);
+
   const { cssVars } = usePaymentsTheme();
 
   return (

@@ -49,7 +49,7 @@ describe('@varshylinc/mobile-payments/client barrel', () => {
         >
           <span>ok</span>
         </Client.FeatureGate>
-        <Client.PaywallScreen />
+        <Client.PaywallScreen platform="ios" price="$35.00" trialDays={90} />
       </>,
     );
 

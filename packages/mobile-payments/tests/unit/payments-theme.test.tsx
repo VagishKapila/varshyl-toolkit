@@ -12,6 +12,7 @@ import {
 } from '../../src/client.js';
 
 const mockService = createMockSubscriptionService();
+const PAYWALL_PROPS = { platform: 'ios' as const, price: '$35.00', trialDays: 90 };
 
 beforeEach(() => {
   vi.spyOn(console, 'warn').mockImplementation(() => {});
@@ -52,7 +53,7 @@ const BRANDOS_THEME = {
 
 describe('legacy path (no PaymentsThemeProvider)', () => {
   it('PaywallScreen renders with default theme', async () => {
-    render(<PaywallScreen />);
+    render(<PaywallScreen {...PAYWALL_PROPS} />);
     await waitFor(() => expect(screen.getByTestId('paywall-price')).toBeTruthy());
     const root = screen.getByTestId('paywall-screen') as HTMLDivElement;
     expect(root.style.getPropertyValue('--mp-surface')).toBe('#FAF7F0');
@@ -83,7 +84,7 @@ describe('PaymentsThemeProvider', () => {
   it('PaywallScreen CTA uses sage primary from theme', async () => {
     render(
       <PaymentsThemeProvider theme={JOBSITE_THEME}>
-        <PaywallScreen />
+        <PaywallScreen {...PAYWALL_PROPS} />
       </PaymentsThemeProvider>,
     );
     await waitFor(() => expect(screen.getByTestId('paywall-subscribe')).toBeTruthy());
@@ -96,7 +97,7 @@ describe('PaymentsThemeProvider', () => {
   it('does not warn when PaymentsThemeProvider is present', async () => {
     render(
       <PaymentsThemeProvider theme={JOBSITE_THEME}>
-        <PaywallScreen />
+        <PaywallScreen {...PAYWALL_PROPS} />
       </PaymentsThemeProvider>,
     );
     await waitFor(() => expect(screen.getByTestId('paywall-title')).toBeTruthy());
@@ -108,6 +109,7 @@ describe('*ClassName overrides', () => {
   it('PaywallScreen applies custom class names', async () => {
     render(
       <PaywallScreen
+        {...PAYWALL_PROPS}
         paywallClassName="custom-paywall"
         planCardClassName="custom-plan"
         ctaButtonClassName="custom-cta"
@@ -145,7 +147,7 @@ describe('paywall snapshots', () => {
   it('default theme snapshot', async () => {
     const { container } = render(
       <PaymentsThemeProvider>
-        <PaywallScreen />
+        <PaywallScreen {...PAYWALL_PROPS} />
       </PaymentsThemeProvider>,
     );
     await waitFor(() => expect(screen.getByTestId('paywall-price')).toBeTruthy());
@@ -155,7 +157,7 @@ describe('paywall snapshots', () => {
   it('JobSite Intel (sage) theme snapshot', async () => {
     const { container } = render(
       <PaymentsThemeProvider theme={JOBSITE_THEME}>
-        <PaywallScreen />
+        <PaywallScreen {...PAYWALL_PROPS} />
       </PaymentsThemeProvider>,
     );
     await waitFor(() => expect(screen.getByTestId('paywall-price')).toBeTruthy());
@@ -165,7 +167,7 @@ describe('paywall snapshots', () => {
   it('BrandOS placeholder theme snapshot', async () => {
     const { container } = render(
       <PaymentsThemeProvider theme={BRANDOS_THEME}>
-        <PaywallScreen />
+        <PaywallScreen {...PAYWALL_PROPS} />
       </PaymentsThemeProvider>,
     );
     await waitFor(() => expect(screen.getByTestId('paywall-price')).toBeTruthy());

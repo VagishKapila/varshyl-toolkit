@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useLayoutEffect } from 'react';
 import type { AccessMode } from '../../types.js';
 import { usePaymentsTheme } from '../payments-theme.js';
-import './PaywallStyles.css';
+import { ensurePaywallStyles } from './injectPaywallStyles.js';
 
 export interface FeatureGateProps {
   accessMode: AccessMode;
@@ -21,6 +21,10 @@ export function FeatureGate({
   gateClassName = '',
   blockedMessageClassName = '',
 }: FeatureGateProps): React.ReactElement {
+  useLayoutEffect(() => {
+    ensurePaywallStyles();
+  }, []);
+
   const { cssVars } = usePaymentsTheme();
 
   if (accessMode.canWrite) {

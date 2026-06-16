@@ -20,7 +20,8 @@ exports[`paywall snapshots > BrandOS placeholder theme snapshot 1`] = `
       data-testid="paywall-price"
     >
       $35.00
-      /mo
+      /
+      month
     </p>
     <p
       class="mp-paywall__trial"
@@ -48,6 +49,29 @@ exports[`paywall snapshots > BrandOS placeholder theme snapshot 1`] = `
       Restore Purchases
     </button>
   </div>
+  <div
+    class="mp-disclosure"
+    data-testid="paywall-disclosure"
+  >
+    <p>
+      90
+      -day free trial, then 
+      $35.00
+      /
+      month
+      .
+    </p>
+    <p>
+      Payment will be charged to your 
+      App Store
+       account at confirmation of purchase. Subscription automatically renews unless auto-renew is turned off at least 24 hours before the end of the current period.
+    </p>
+    <p>
+      Manage or cancel your subscription in your 
+      App Store
+       account settings.
+    </p>
+  </div>
 </div>
 `;
 
@@ -71,7 +95,8 @@ exports[`paywall snapshots > JobSite Intel (sage) theme snapshot 1`] = `
       data-testid="paywall-price"
     >
       $35.00
-      /mo
+      /
+      month
     </p>
     <p
       class="mp-paywall__trial"
@@ -99,6 +124,29 @@ exports[`paywall snapshots > JobSite Intel (sage) theme snapshot 1`] = `
       Restore Purchases
     </button>
   </div>
+  <div
+    class="mp-disclosure"
+    data-testid="paywall-disclosure"
+  >
+    <p>
+      90
+      -day free trial, then 
+      $35.00
+      /
+      month
+      .
+    </p>
+    <p>
+      Payment will be charged to your 
+      App Store
+       account at confirmation of purchase. Subscription automatically renews unless auto-renew is turned off at least 24 hours before the end of the current period.
+    </p>
+    <p>
+      Manage or cancel your subscription in your 
+      App Store
+       account settings.
+    </p>
+  </div>
 </div>
 `;
 
@@ -122,7 +170,8 @@ exports[`paywall snapshots > default theme snapshot 1`] = `
       data-testid="paywall-price"
     >
       $35.00
-      /mo
+      /
+      month
     </p>
     <p
       class="mp-paywall__trial"
@@ -149,6 +198,29 @@ exports[`paywall snapshots > default theme snapshot 1`] = `
     >
       Restore Purchases
     </button>
+  </div>
+  <div
+    class="mp-disclosure"
+    data-testid="paywall-disclosure"
+  >
+    <p>
+      90
+      -day free trial, then 
+      $35.00
+      /
+      month
+      .
+    </p>
+    <p>
+      Payment will be charged to your 
+      App Store
+       account at confirmation of purchase. Subscription automatically renews unless auto-renew is turned off at least 24 hours before the end of the current period.
+    </p>
+    <p>
+      Manage or cancel your subscription in your 
+      App Store
+       account settings.
+    </p>
   </div>
 </div>
 `;

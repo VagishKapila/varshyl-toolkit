@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useLayoutEffect } from 'react';
 import { getSubscriptionService } from '../configure.js';
 import { usePaymentsTheme } from '../payments-theme.js';
-import './PaywallStyles.css';
+import { ensurePaywallStyles } from './injectPaywallStyles.js';
 
 export interface RestoreButtonProps {
   onRestored?: () => void;
@@ -14,6 +14,10 @@ export function RestoreButton({
   disabled,
   restoreButtonClassName = '',
 }: RestoreButtonProps): React.ReactElement {
+  useLayoutEffect(() => {
+    ensurePaywallStyles();
+  }, []);
+
   const { cssVars } = usePaymentsTheme();
 
   const restore = async () => {

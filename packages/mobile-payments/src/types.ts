@@ -53,6 +53,14 @@ export interface Offering {
   packages: OfferingPackage[];
 }
 
+/** Apple 3.1.1 / Google Play Billing disclosure inputs for PaywallScreen. */
+export interface PaywallConfig {
+  platform: 'ios' | 'android';
+  price: string;
+  period?: string;
+  trialDays?: number;
+}
+
 export interface UpsertSubscriptionInput {
   orgId: string;
   productSlug: string;

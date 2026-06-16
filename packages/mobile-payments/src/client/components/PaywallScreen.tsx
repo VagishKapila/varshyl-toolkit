@@ -1,11 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useState } from 'react';
 import type { Offering } from '../../types.js';
 import { getSubscriptionService } from '../configure.js';
 import { usePaymentsTheme } from '../payments-theme.js';
 import { RestoreButton } from './RestoreButton.js';
-import './PaywallStyles.css';
+import { ensurePaywallStyles } from './injectPaywallStyles.js';
 
 export interface PaywallScreenProps {
+  platform: 'ios' | 'android';
+  price: string;
+  period?: string;
+  trialDays?: number;
   onSubscribed?: () => void;
   onRestore?: () => void;
   paywallClassName?: string;
@@ -15,7 +19,38 @@ export interface PaywallScreenProps {
   errorClassName?: string;
 }
 
+const PaywallDisclosure = ({
+  price,
+  period,
+  trialDays,
+  platform,
+}: {
+  price: string;
+  period: string;
+  trialDays?: number;
+  platform: 'ios' | 'android';
+}) => {
+  const store = platform === 'ios' ? 'App Store' : 'Google Play';
+  return (
+    <div className="mp-disclosure" data-testid="paywall-disclosure">
+      {trialDays != null && trialDays > 0 && (
+        <p>{trialDays}-day free trial, then {price}/{period}.</p>
+      )}
+      <p>
+        Payment will be charged to your {store} account at confirmation of purchase.
+        Subscription automatically renews unless auto-renew is turned off at least 24 hours
+        before the end of the current period.
+      </p>
+      <p>Manage or cancel your subscription in your {store} account settings.</p>
+    </div>
+  );
+};
+
 export function PaywallScreen({
+  platform,
+  price,
+  period = 'month',
+  trialDays,
   onSubscribed,
   onRestore,
   paywallClassName = '',
@@ -24,6 +59,10 @@ export function PaywallScreen({
   restoreButtonClassName = '',
   errorClassName = '',
 }: PaywallScreenProps): React.ReactElement {
+  useLayoutEffect(() => {
+    ensurePaywallStyles();
+  }, []);
+
   const { cssVars } = usePaymentsTheme();
   const [offerings, setOfferings] = useState<Offering[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,6 +70,7 @@ export function PaywallScreen({
   const [error, setError] = useState<string | null>(null);
 
   const pkg = offerings[0]?.packages[0];
+  const displayPrice = pkg?.priceString ?? price;
 
   useEffect(() => {
     getSubscriptionService()
@@ -67,7 +107,7 @@ export function PaywallScreen({
       {!loading && pkg && (
         <div className={`mp-paywall__plan-card ${planCardClassName}`.trim()}>
           <p className="mp-paywall__price" data-testid="paywall-price">
-            {pkg.priceString}/mo
+            {displayPrice}/{period}
           </p>
           {pkg.trialLabel && (
             <p className="mp-paywall__trial" data-testid="paywall-trial">
@@ -100,6 +140,12 @@ export function PaywallScreen({
           restoreButtonClassName={restoreButtonClassName}
         />
       </div>
+      <PaywallDisclosure
+        price={displayPrice}
+        period={period}
+        trialDays={trialDays}
+        platform={platform}
+      />
     </div>
   );
 }

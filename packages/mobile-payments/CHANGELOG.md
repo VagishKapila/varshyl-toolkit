@@ -1,5 +1,12 @@
 # @varshylinc/mobile-payments
 
+## 0.4.0
+
+### Patch Changes
+
+- Fix CSS tarball bug — inline styles instead of ESM .css import
+- Paywall copy updated for Apple 3.1.1 + Google Play Billing compliance
+
 ## 0.3.0
 
 ### Minor Changes

@@ -58,6 +58,10 @@ export function PaymentsDemoPage(): React.ReactElement {
 
       {(status === 'none' || status === 'lapsed') && (
         <PaywallScreen
+          platform="ios"
+          price="$35.00"
+          period="month"
+          trialDays={90}
           onSubscribed={() => {
             void refresh();
           }}
