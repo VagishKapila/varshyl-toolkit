@@ -12,6 +12,14 @@ import {
   MpError,
   DEFAULT_MP_CONNECTION_TIMEOUT_MS,
   DEFAULT_MP_OPERATION_TIMEOUT_MS,
+  grantsRouter,
+  hasGrantedAccess,
+  grantAccess,
+  revokeAccess,
+  listGrants,
+  createPromoCode,
+  redeemPromoCode,
+  listPromoCodes,
 } from './server/index.js';
 
 export {
@@ -29,6 +37,14 @@ export {
   MpError,
   DEFAULT_MP_CONNECTION_TIMEOUT_MS,
   DEFAULT_MP_OPERATION_TIMEOUT_MS,
+  grantsRouter,
+  hasGrantedAccess,
+  grantAccess,
+  revokeAccess,
+  listGrants,
+  createPromoCode,
+  redeemPromoCode,
+  listPromoCodes,
 };
 
 export type { SubscriptionStore } from './server/store.js';
@@ -49,4 +65,6 @@ export type {
   SeatAssignment,
   Offering,
   OfferingPackage,
+  GrantRecord,
+  PromoCode,
 } from './types.js';
