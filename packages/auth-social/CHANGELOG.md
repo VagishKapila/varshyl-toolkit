@@ -1,6 +1,6 @@
 # @varshylinc/auth-social
 
-## [0.5.0] - 2026-06-16
+## 0.5.0
 
 ### Added
 - `appleClientId` and `googleClientId` in `AuthConfig` now accept
