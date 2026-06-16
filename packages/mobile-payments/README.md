@@ -1,189 +1,222 @@
 # @varshylinc/mobile-payments
 
-> Seat-aware in-app subscriptions for Capacitor apps via RevenueCat: Apple IAP + Google Play Billing, free trials, paywall UI, and read-only enforcement on lapse.
+In-app subscription payments for iOS and Android.
+Built on RevenueCat. Apple 3.1.1 + Google Play Billing compliant.
+Drop-in paywall, feature gates, restore purchases — ready in 30 minutes.
 
-![npm](https://img.shields.io/npm/v/@varshylinc/mobile-payments)
-![license](https://img.shields.io/npm/l/@varshylinc/mobile-payments)
+---
 
-Part of the **Varshyl Toolkit** — a set of independent, composable packages for building Capacitor + web SaaS apps.
+## What this package does
 
-## Screenshots
+- Wraps RevenueCat's Capacitor SDK into a clean TypeScript API
+- Renders a compliant paywall with all required Apple + Google legal text
+- Gates features behind an active subscription
+- Handles purchase, restore, webhook verification, and seat tracking
+- Works on iOS (App Store) and Android (Google Play)
 
-In-app paywall with pricing, free trial, subscribe, and restore — ready for RevenueCat on iOS and Android.
+---
 
-![Subscription paywall showing monthly price, 90-day free trial, and Subscribe / Restore buttons](https://varshyl-toolkit-demo.netlify.app/screenshots/paywall.png)
+## Requirements
 
-## What it does
+- RevenueCat account (free at revenuecat.com)
+- Apple Developer account (for iOS)
+- Google Play Developer account (for Android)
+- Capacitor app (iOS + Android)
 
-Manages org-keyed subscription state for Capacitor mobile apps. Syncs purchase events from RevenueCat webhooks, tracks seat assignments, and exposes server-side write guards plus client paywall/gate components. When a subscription lapses, users retain read access but lose write permission — enforced on the server, not just in the UI.
+---
 
-## Install
+## Step 1 — RevenueCat Dashboard Setup (browser, ~15 min)
 
+Do this ONCE before writing any code.
+
+### 1a. Create your app in RevenueCat
+1. Go to app.revenuecat.com → New Project
+2. Add iOS app → enter your bundle ID (e.g. com.yourcompany.yourapp)
+3. Add Android app → enter your package name
+4. Copy your iOS API key and Android API key — you'll need these in Step 3
+
+### 1b. Create a Product
+1. Go to Products → New Product
+2. Product identifier: match exactly what you set in App Store Connect / Google Play
+   Example: yourapp_monthly
+3. Type: Auto-Renewable Subscription
+4. Duration: 1 month
+5. If offering a free trial: set it here as an Introductory Offer
+
+### 1c. Create an Entitlement
+1. Go to Entitlements → New Entitlement
+2. Identifier: pro (or whatever gates your premium features)
+3. Attach your product to this entitlement
+
+### 1d. Create an Offering
+1. Go to Offerings → New Offering
+2. Identifier: default (must be exactly "default")
+3. Add a Package → identifier: $rc_monthly
+4. Attach your product to this package
+
+### 1e. Verify in RevenueCat dashboard
+Before moving to code, confirm:
+- ✅ App linked with correct bundle ID
+- ✅ Product created and attached to entitlement
+- ✅ Offering "default" exists with package "$rc_monthly"
+- ✅ API keys copied (iOS + Android separate keys)
+
+---
+
+## Step 2 — App Store Connect Setup (browser, ~10 min)
+
+1. Go to appstoreconnect.apple.com → your app → Subscriptions
+2. Create Subscription Group (e.g. "Pro Access")
+3. Create subscription matching your RevenueCat product identifier
+4. Set price + duration (must match RevenueCat)
+5. Add Introductory Offer if applicable (free trial)
+6. Submit for review (Apple reviews subscription products separately)
+
+---
+
+## Step 3 — Install + Configure (code, ~10 min)
+
+### Install
 ```bash
-npm install @varshylinc/mobile-payments
+pnpm add @varshylinc/mobile-payments
 ```
 
-Peer dependencies: `pg` (server), `react` (client).
+### Configure (run once at app startup, before any paywall)
+```typescript
+import { configureMobilePayments } from '@varshylinc/mobile-payments';
 
-For real StoreKit / Play Billing on device, also install `@revenuecat/purchases-capacitor` and use `@varshylinc/mobile-payments/client/revenuecat`. CI and local dev can use `createMockSubscriptionService()` — no RevenueCat SDK required.
-
-## Quick start
-
-**Server** — migrate, create store, enforce writes, mount webhook:
-
-```ts
-import { Pool } from 'pg';
-import express from 'express';
-import {
-  createSubscriptionStore,
-  runMigrations,
-  assertCanWrite,
-  createRevenueCatWebhookHandler,
-} from '@varshylinc/mobile-payments';
-
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-await runMigrations(pool);
-
-const store = createSubscriptionStore(pool, {
-  product: {
-    productSlug: 'myapp',
-    entitlementId: 'premium',
-    monthlyProductId: 'myapp_premium_monthly',
-  },
-  revenueCatWebhookSecret: process.env.REVENUECAT_WEBHOOK_SECRET,
-});
-
-app.post('/api/payments/webhooks/revenuecat', createRevenueCatWebhookHandler(store, config));
-
-app.post('/api/items', async (req, res) => {
-  if (!(await assertCanWrite(store, orgId, userId))) {
-    return res.status(403).json({ error: 'Subscription required' });
-  }
-  // … create item
+await configureMobilePayments({
+  revenueCatApiKey: platform === 'ios'
+    ? process.env.REVENUECAT_IOS_KEY
+    : process.env.REVENUECAT_ANDROID_KEY,
+  platform: 'ios', // or 'android'
+  price: '$35.00',
+  period: 'month',
+  trialDays: 90,      // omit if no trial
+  entitlement: 'pro', // must match RevenueCat dashboard
 });
 ```
 
-**Client** — configure with mock or RevenueCat service:
+---
+
+## Step 4 — Add the Paywall (code, ~5 min)
 
 ```tsx
-import {
-  configureSubscriptions,
-  PaywallScreen,
-  FeatureGate,
-  useSubscription,
-  createMockSubscriptionService,
-} from '@varshylinc/mobile-payments/client';
+import { PaywallScreen } from '@varshylinc/mobile-payments/client';
 
-configureSubscriptions({
-  config: { orgId: 'org-123', userId: 'user-456' },
-  service: createMockSubscriptionService(),
-  theme: { accent: '#059669' },
-});
-
-function App() {
-  const { accessMode } = useSubscription();
-  return (
-    <FeatureGate accessMode={accessMode}>
-      <CreateButton />
-    </FeatureGate>
-  );
-}
+<PaywallScreen
+  platform="ios"
+  price="$35.00"
+  period="month"
+  trialDays={90}
+  onSubscribed={() => {
+    // user successfully subscribed — unlock your app
+    router.push('/dashboard');
+  }}
+  onRestore={() => {
+    // user restored a previous purchase
+    router.push('/dashboard');
+  }}
+/>
 ```
 
-## Entry points
+The paywall automatically includes all required Apple + Google
+legal disclosure text. Do not add it yourself — doing so twice
+will cause App Store rejection.
 
-| Import path | Exports |
-|---|---|
-| `@varshylinc/mobile-payments` | `createSubscriptionStore`, `runMigrations`, `assertCanWrite`, `getAccessModeForUser`, `createRevenueCatWebhookHandler`, `createMockSubscriptionStore`, `assignBuyerSeat`, types |
-| `@varshylinc/mobile-payments/client` | `configureSubscriptions`, `PaymentsThemeProvider`, `usePaymentsTheme`, `useSubscription`, `PaywallScreen`, `FeatureGate`, `ReadOnlyBanner`, `RestoreButton`, `subscriptionActions`, `createMockSubscriptionService`, … |
-| `@varshylinc/mobile-payments/client/revenuecat` | `createRevenueCatSubscriptionService` — requires optional peer `@revenuecat/purchases-capacitor` |
+---
 
-## Database
-
-Bring your own Postgres. Call `runMigrations(pool)` on boot. Tables use the `mp_` prefix (`mp_subscriptions`, `mp_subscription_events`, `mp_seat_assignments`).
-
-## Theming
-
-Paywall UI reads **AuthTheme-compatible** tokens via `PaymentsThemeProvider` (conceptual parity with `@varshylinc/auth-social` — toolkit modules cannot import each other, so use the **same** `theme` object on both providers).
-
-### Recommended: dual provider at app root
+## Step 5 — Gate Features
 
 ```tsx
-import { AuthThemeProvider } from '@varshylinc/auth-social/client';
-import {
-  PaymentsThemeProvider,
-  PaywallScreen,
-  configureSubscriptions,
-} from '@varshylinc/mobile-payments/client';
+import { FeatureGate } from '@varshylinc/mobile-payments/client';
 
-const theme = {
-  primary: '#3A6B5F',
-  primaryHover: '#2D544A',
-  surface: '#FAF7F0',
-  border: '#e8e0d0',
-  text: '#211D18',
-  textMuted: '#8a7f6f',
-  error: '#8B3A2F',
-  success: '#2D6A4F',
-  radius: '12px',
-};
-
-export function AppProviders({ children }: { children: React.ReactNode }) {
-  return (
-    <AuthThemeProvider theme={theme}>
-      <PaymentsThemeProvider theme={theme}>{children}</PaymentsThemeProvider>
-    </AuthThemeProvider>
-  );
-}
+<FeatureGate fallback={<PaywallScreen ... />}>
+  <YourPremiumFeature />
+</FeatureGate>
 ```
 
-Without any provider, components still render using `DEFAULT_PAYMENTS_APP_THEME` (matches pre-0.3.0 JobSite defaults). Dev mode logs a one-time `console.warn` pointing here.
+---
 
-### Legacy: `configureSubscriptions({ theme })`
+## Step 6 — Restore Purchases (required by Apple)
 
-Still supported — maps `paper` / `brick` / `brass` / `ink` to the new token model:
+Apple requires a "Restore Purchases" button be accessible to users.
+This is included automatically in PaywallScreen.
+If you build a custom paywall, include RestoreButton:
 
-```ts
-configureSubscriptions({
-  config: { orgId, userId },
-  theme: { paper: '#FAF7F0', brick: '#8B3A2F', brass: '#B8893E', ink: '#211D18' },
+```tsx
+import { RestoreButton } from '@varshylinc/mobile-payments/client';
+
+<RestoreButton onRestore={() => router.push('/dashboard')} />
+```
+
+---
+
+## Apple + Google Compliance
+
+This package handles compliance automatically. Here is what
+is included and why — so you understand what App Store review
+will look for:
+
+### Apple (guideline 3.1.1)
+- ✅ All purchases go through Apple IAP — no external payment links
+- ✅ Price and period displayed clearly on paywall
+- ✅ "Payment will be charged to your App Store account at
+     confirmation of purchase" — required exact language
+- ✅ Auto-renewal notice — required
+- ✅ Cancel/manage instructions linking to App Store settings
+- ✅ Restore Purchases button — required and accessible
+- ✅ Free trial length stated clearly if applicable
+
+### Google Play Billing
+- ✅ All purchases go through Google Play Billing
+- ✅ Same disclosure text, store-aware (shows "Google Play" copy)
+- ✅ Subscription management instructions
+
+### What you must NOT do (causes rejection)
+- ❌ Do not add a "Buy on our website" or "Subscribe at yoursite.com" link
+- ❌ Do not mention prices outside the paywall that differ from IAP price
+- ❌ Do not show external payment forms inside the app
+- ❌ Do not duplicate the legal disclosure text — it is already included
+
+---
+
+## Environment Variables
+
+Add these to your .env (never commit real keys):
+
+```
+REVENUECAT_IOS_API_KEY=appl_xxxxxxxxxxxx
+REVENUECAT_ANDROID_API_KEY=goog_xxxxxxxxxxxx
+```
+
+---
+
+## Webhook Setup (optional but recommended)
+
+Webhooks let your server know when subscriptions change
+(renewal, cancellation, billing issue) without polling.
+
+1. RevenueCat dashboard → Integrations → Webhooks
+2. Add endpoint: https://yourapi.com/webhooks/revenuecat
+3. Use the server-side webhook handler:
+
+```typescript
+import { handleRevenueCatWebhook } from '@varshylinc/mobile-payments';
+
+app.post('/webhooks/revenuecat', async (req, res) => {
+  const result = await handleRevenueCatWebhook(req, {
+    secret: process.env.REVENUECAT_WEBHOOK_SECRET,
+    onSubscribed: async (userId) => { /* grant access */ },
+    onCancelled: async (userId) => { /* revoke access */ },
+    onBillingIssue: async (userId) => { /* notify user */ },
+  });
+  res.json(result);
 });
 ```
 
-### `*ClassName` overrides
+---
 
-| Component | Props |
-|-----------|--------|
-| `PaywallScreen` | `paywallClassName`, `planCardClassName`, `ctaButtonClassName`, `restoreButtonClassName`, `errorClassName` |
-| `RestoreButton` | `restoreButtonClassName` |
-| `ReadOnlyBanner` | `bannerClassName` |
-| `FeatureGate` | `gateClassName`, `blockedMessageClassName` |
+## QA Checklist (run before App Store submission)
 
-### CSS variables (no provider)
-
-Set on a parent of paywall UI:
-
-| Variable | Role |
-|----------|------|
-| `--mp-primary` | CTA, titles |
-| `--mp-primary-hover` | CTA hover |
-| `--mp-surface` | Card background |
-| `--mp-ink` | Body text |
-| `--mp-muted` | Secondary text, banner |
-| `--mp-danger` | Errors, blocked messages |
-| `--mp-success` | Success states (reserved) |
-| `--mp-border` | Outlines |
-| `--mp-radius` / `--mp-button-radius` | Corners |
-| `--mp-font-heading` / `--mp-font-body` | Typography |
-
-Optional: `@import '@varshylinc/mobile-payments/dist/client/components/PaywallStyles.css'` in your bundler.
-
-## See also
-
-- [@varshylinc/team-management](../team-management) — seat assignment for multi-user orgs (Phase 2)
-- [@varshylinc/auth-social](../auth-social) — user identity for seat mapping
-- [@varshylinc/onboarding-consent-engine](../onboarding-consent-engine) — consent before paywall
-
-## License
-
-Apache-2.0 © Vagish Kapila / Varshyl Inc.
+See QA.md for the full checklist.
