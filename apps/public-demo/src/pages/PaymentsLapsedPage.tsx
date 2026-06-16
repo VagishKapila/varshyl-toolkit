@@ -35,6 +35,10 @@ export function PaymentsLapsedPage(): React.ReactElement {
       </p>
       <ReadOnlyBanner />
       <PaywallScreen
+        platform="ios"
+        price="$35.00"
+        period="month"
+        trialDays={90}
         onSubscribed={() => void refresh()}
         onRestore={() => void refresh()}
       />
