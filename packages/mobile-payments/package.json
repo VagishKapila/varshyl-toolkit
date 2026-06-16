@@ -1,6 +1,6 @@
 {
   "name": "@varshylinc/mobile-payments",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Seat-aware in-app subscriptions for Capacitor apps via RevenueCat: Apple IAP + Google Play Billing, free trials, paywall UI, and read-only enforcement on lapse.",
   "author": "Vagish Kapila (Varshyl Inc.)",
   "license": "Apache-2.0",
@@ -65,7 +65,9 @@
     "test": "vitest run",
     "lint": "eslint src --ext .ts,.tsx --max-warnings 0"
   },
-  "dependencies": {},
+  "dependencies": {
+    "express": "^4.18.3"
+  },
   "peerDependencies": {
     "@revenuecat/purchases-capacitor": "^10.0.0",
     "express": "^4.18.0",
@@ -93,7 +95,6 @@
     "@typescript-eslint/parser": "^7.8.0",
     "@testcontainers/postgresql": "^10.28.0",
     "eslint": "^8.57.0",
-    "express": "^4.18.3",
     "jsdom": "^24.0.0",
     "pg": "^8.11.5",
     "react": "^18.3.1",
