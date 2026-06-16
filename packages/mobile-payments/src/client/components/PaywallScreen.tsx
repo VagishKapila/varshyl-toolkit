@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useState } from 'react';
 import type { Offering } from '../../types.js';
 import { getSubscriptionService } from '../configure.js';
 import { usePaymentsTheme } from '../payments-theme.js';
 import { RestoreButton } from './RestoreButton.js';
-import './PaywallStyles.css';
+import { ensurePaywallStyles } from './injectPaywallStyles.js';
 
 export interface PaywallScreenProps {
   onSubscribed?: () => void;
@@ -24,6 +24,10 @@ export function PaywallScreen({
   restoreButtonClassName = '',
   errorClassName = '',
 }: PaywallScreenProps): React.ReactElement {
+  useLayoutEffect(() => {
+    ensurePaywallStyles();
+  }, []);
+
   const { cssVars } = usePaymentsTheme();
   const [offerings, setOfferings] = useState<Offering[]>([]);
   const [loading, setLoading] = useState(true);
