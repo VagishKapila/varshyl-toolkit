@@ -31,9 +31,9 @@ export async function mpSelfTest(opts: MpSelfTestOptions): Promise<MpSelfTestRes
   try {
     const result = await runMigrations(opts.pool, undefined, { connectionTimeoutMs });
     const totalMigrations = result.applied.length + result.skipped.length;
-    if (totalMigrations !== MP_MIGRATIONS.length || MP_MIGRATIONS.length !== 3) {
+    if (totalMigrations !== MP_MIGRATIONS.length || MP_MIGRATIONS.length !== 4) {
       throw new MpError(
-        `Expected 3 bundled migrations, found ${MP_MIGRATIONS.length} bundled and ${totalMigrations} executed/skipped`,
+        `Expected 4 bundled migrations, found ${MP_MIGRATIONS.length} bundled and ${totalMigrations} executed/skipped`,
         'MP_MIGRATIONS_FAILED',
       );
     }

@@ -50,6 +50,11 @@
       "types": "./dist/client/service/revenuecat-service.d.ts",
       "require": "./dist/client/service/revenuecat-service.js",
       "import": "./dist/client/service/revenuecat-service.js"
+    },
+    "./express": {
+      "types": "./dist/express.d.ts",
+      "require": "./dist/express.js",
+      "import": "./dist/express.js"
     }
   },
   "publishConfig": {
