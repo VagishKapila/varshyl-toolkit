@@ -1,6 +1,6 @@
 {
   "name": "@varshylinc/auth-social",
-  "version": "0.4.2",
+  "version": "0.5.0",
   "description": "Drop-in authentication for Capacitor + web apps: Apple, Google, and email/password sign-in with sessions, password reset, a show/hide toggle, and your own user store via an adapter.",
   "author": "Vagish Kapila (Varshyl Inc.)",
   "license": "Apache-2.0",

@@ -1,8 +1,8 @@
 export interface AuthConfig {
   resetUrlBase: string;
   sessionTtlDays?: number;
-  appleClientId?: string;
-  googleClientId?: string;
+  appleClientId?: string | string[];
+  googleClientId?: string | string[];
 }
 
 export interface SocialAuthProviderLike {
