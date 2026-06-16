@@ -13,7 +13,7 @@ function payloadToVerified(payload: JWTPayload): VerifiedIdToken {
 
 export async function verifyAppleIdToken(
   idToken: string,
-  clientId?: string
+  clientId?: string | string[]
 ): Promise<VerifiedIdToken> {
   const { payload } = await jwtVerify(idToken, APPLE_JWKS, {
     issuer: 'https://appleid.apple.com',
@@ -24,7 +24,7 @@ export async function verifyAppleIdToken(
 
 export async function verifyGoogleIdToken(
   idToken: string,
-  clientId?: string
+  clientId?: string | string[]
 ): Promise<VerifiedIdToken> {
   const { payload } = await jwtVerify(idToken, GOOGLE_JWKS, {
     issuer: ['https://accounts.google.com', 'accounts.google.com'],

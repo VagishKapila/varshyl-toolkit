@@ -1,5 +1,19 @@
 # @varshylinc/auth-social
 
+## [0.5.0] - 2026-06-16
+
+### Added
+- `appleClientId` and `googleClientId` in `AuthConfig` now accept
+  `string | string[]` to support multiple simultaneous audiences
+  (e.g. Apple bundle ID + Services ID, Google iOS + Web client IDs).
+- Existing plain `string` values continue to work without any changes.
+
+### Why
+iPad OAuth on JobSite Intel requires accepting tokens from both
+the native bundle ID and the web Services ID simultaneously.
+`jose`'s `jwtVerify()` already supports `string | string[]` natively —
+this change removes the single-string coercion that was blocking it.
+
 ## 0.4.2
 
 ### Patch Changes
