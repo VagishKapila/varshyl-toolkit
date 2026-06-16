@@ -33,4 +33,10 @@ export type {
   NormalizedEvent,
   SeatAssignment,
   OfferingPackage,
+  GrantRecord,
+  PromoCode,
 } from './types.js';
+export { GrantsAdmin } from './client/components/GrantsAdmin.js';
+export type { GrantsAdminProps } from './client/components/GrantsAdmin.js';
+export { useGrants } from './client/hooks/useGrants.js';
+export type { UseGrantsOptions, UseGrantsReturn } from './client/hooks/useGrants.js';

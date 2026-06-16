@@ -88,3 +88,28 @@ export interface SubscriptionActionResult {
   error?: string;
   state?: SubscriptionState;
 }
+
+export interface GrantRecord {
+  id: string;
+  userId: string;
+  productSlug: string;
+  grantedBy: string;
+  reason: string | null;
+  expiresAt: Date | null;
+  revokedAt: Date | null;
+  createdAt: Date;
+}
+
+export interface PromoCode {
+  id: string;
+  code: string;
+  productSlug: string;
+  maxUses: number | null;
+  uses: number;
+  expiresAt: Date | null;
+  grantsPermanent: boolean;
+  grantsDays: number | null;
+  createdBy: string;
+  createdAt: Date;
+  revokedAt: Date | null;
+}

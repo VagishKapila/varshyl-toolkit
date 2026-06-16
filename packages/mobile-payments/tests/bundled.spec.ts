@@ -69,7 +69,7 @@ describeWithPostgres('bundled dist (tsup) - migrations + self-test', () => {
 
     const selfTest = await mod.mpSelfTest({ pool });
     expect(selfTest.migrationsOk).toBe(true);
-    expect(selfTest.migrationCount).toBe(3);
+    expect(selfTest.migrationCount).toBe(4);
     expect(selfTest.subscriptionsTableExists).toBe(true);
   }, 30_000);
 });

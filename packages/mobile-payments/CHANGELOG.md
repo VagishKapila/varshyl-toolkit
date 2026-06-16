@@ -1,5 +1,17 @@
 # @varshylinc/mobile-payments
 
+## 0.5.0
+
+### Minor Changes
+
+- hasGrantedAccess() — check DB grant before RevenueCat paywall
+- grantAccess() / revokeAccess() / listGrants() — server functions
+- createPromoCode() / redeemPromoCode() — promo code system
+- grantsRouter() — mount-ready Express router for admin API
+- useGrants() — React hook for admin UI integration
+- GrantsAdmin — drop-in React admin panel component
+- DB migration 003_granted_access.sql (3 new tables)
+
 ## 0.4.0
 
 ### Patch Changes

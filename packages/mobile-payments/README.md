@@ -217,6 +217,20 @@ app.post('/webhooks/revenuecat', async (req, res) => {
 
 ---
 
+## Grants admin API (optional)
+
+Mount the Express router for promo codes and manual grants (beta access, support overrides):
+
+```typescript
+import { grantsRouter } from '@varshylinc/mobile-payments/express';
+
+app.use('/api/grants', grantsRouter(pool));
+```
+
+Grant helpers (`hasGrantedAccess`, `grantAccess`, etc.) remain on the main package entry.
+
+---
+
 ## QA Checklist (run before App Store submission)
 
 See QA.md for the full checklist.
