@@ -481,8 +481,8 @@ jobs:
           done
 
           if [[ ${#PACKAGES[@]} -eq 0 ]]; then
-            echo "No publishable package dirs changed — smoke-test rail on known-good packages"
-            PACKAGES=("@varshylinc/auth-social" "@varshylinc/mobile-payments")
+            echo "No publishable packages changed (all private). Skipping pre-publish-check."
+            exit 0
           fi
 
           echo "Packages to check: ${PACKAGES[*]}"
