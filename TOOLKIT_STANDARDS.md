@@ -255,6 +255,7 @@ The publish job requires a GitHub Actions secret `NPM_TOKEN`:
 - Type: npm **Automation** token (not Classic)
 - Scope: `@varshylinc` org on npmjs.com
 - Location: repo Settings → Secrets → Actions → `NPM_TOKEN`
+- Rotation deadline: Aug 30, 2027
 - **Never commit the token value** — reference only as `${{ secrets.NPM_TOKEN }}`
 
 ### Installing toolkit packages in product repos
