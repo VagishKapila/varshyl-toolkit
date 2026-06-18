@@ -18,5 +18,6 @@ packages/onboarding-consent-engine/src/server/migrations.generated.ts
 packages/team-management/src/server/migrations.generated.ts
 packages/auth-social/src/server/migrations.generated.ts
 packages/mobile-payments/src/server/migrations.generated.ts
+packages/notifications/src/server/migrations.generated.ts
 packages/*/dist-bundled-test/
 packages/*/dist-bundled-verify/
