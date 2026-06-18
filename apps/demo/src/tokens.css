@@ -1,0 +1,54 @@
+/*
+ * Sage + Soren design tokens. This is the ONE place the brand palette is
+ * defined as CSS custom properties (per the Day-1 spec). The soren-react
+ * components read only `--soren-*` variables, which we map onto the palette
+ * below, so no component carries a hardcoded color.
+ */
+:root {
+  /* Brand palette (spec-provided) */
+  --soren-1: #6366f1;
+  --soren-2: #a855f7;
+  --soren-3: #ec4899;
+  --surface: #FBF8F1;
+  --card: #F5F1E8;
+  --ink: #2D3B36;
+  --sage: #7C9B8A;
+
+  /* Map the palette onto the soren-react component variables.
+     Sage is the primary/mic color; cards use the warm --card tone. */
+  --soren-accent: var(--sage);
+  --soren-on-accent: #ffffff;
+  --soren-surface: var(--card);
+  --soren-on-surface: var(--ink);
+  --soren-muted: var(--sage);
+  --soren-listening: var(--sage);
+  --soren-processing: var(--soren-2);
+  --soren-speaking: var(--soren-3);
+  --soren-error: hsl(0 72% 55%);
+
+  /* Jarvis orb screen (FEAT 7): dark ink bloom base. */
+  --soren-orb-bg: var(--ink);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  /* FEAT 7: dark ink Jarvis stage with a subtle central bloom. */
+  min-height: 100dvh;
+  background:
+    radial-gradient(circle at 50% 30%, rgba(124, 155, 138, 0.12), transparent 60%),
+    var(--ink);
+  color: #eae7df;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
+    env(safe-area-inset-left);
+}

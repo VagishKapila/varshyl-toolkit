@@ -6,6 +6,23 @@ set -e
 PACKAGES_DIR="$(dirname "$0")/../packages"
 ERRORS=0
 
+# Shared-contracts base layer: packages that ANY other package is allowed to
+# import. soren-core holds framework-agnostic contracts + the pure voice state
+# machine; soren-react (and future soren-* packages) intentionally depend on it
+# (contracts → components). This is a deliberate, narrow exception to the
+# "modules never import each other" rule.
+SHARED_BASE_PACKAGES=("soren-core")
+
+is_shared_base() {
+  local candidate="$1"
+  for base in "${SHARED_BASE_PACKAGES[@]}"; do
+    if [ "$base" = "$candidate" ]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
 if [ ! -d "$PACKAGES_DIR" ]; then
   echo "No packages/ directory found, skipping cross-import check."
   exit 0
@@ -35,6 +52,10 @@ for pkg_dir in "$PACKAGES_DIR"/*/; do
 
   for other_pkg in "${PACKAGE_NAMES[@]}"; do
     if [ "$other_pkg" = "$pkg_name" ]; then
+      continue
+    fi
+    # Importing a shared-contracts base package is allowed.
+    if is_shared_base "$other_pkg"; then
       continue
     fi
     for scope in "@varshylinc" "@varshyl"; do
