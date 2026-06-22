@@ -1,11 +1,14 @@
-/**
- * React UI entry for @varshylinc/soren-screen.
- * Step 2 adds SorenScreen, SorenGreeting, SorenIdentity, etc.
- */
-export type {
-  SorenAction,
-  SorenCard,
-  SorenConfig,
-  SorenSession,
-  SorenUser,
-} from './types.js';
+export {
+  SorenScreen,
+  SorenGreeting,
+  SorenIdentity,
+  SorenActions,
+  SorenChat,
+  SorenPortfolio,
+  SorenInput,
+  useSorenSession,
+  useSorenQA,
+  useSorenPortfolio,
+} from './react/index.js';
+
+export type { SorenScreenProps, SorenView } from './react/SorenScreen.js';
