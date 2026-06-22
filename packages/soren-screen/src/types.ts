@@ -30,9 +30,9 @@ export interface SorenQAResult {
   outOfScope: boolean;
 }
 
-export type SorenShareTarget = 'linkedin' | 'tiktok' | 'instagram' | (string & {});
+export type SorenShareTarget = 'linkedin' | 'tiktok' | 'instagram' | (string & Record<string, unknown>);
 
-export type SorenPdfTemplate = 'construction-superintendent' | (string & {});
+export type SorenPdfTemplate = 'construction-superintendent' | (string & Record<string, unknown>);
 
 /** Portfolio stats surfaced on the Soren portfolio card. */
 export interface SorenPortfolioData {
