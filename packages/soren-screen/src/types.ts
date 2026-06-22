@@ -110,6 +110,7 @@ export interface SorenConfig {
   qaAdapter?: SorenQAAdapter;
   portfolio?: SorenPortfolioConfig;
   serverUrl?: string;
+  speechLang?: string;
 }
 
 /** Host adapter for resolving product-specific user records. */

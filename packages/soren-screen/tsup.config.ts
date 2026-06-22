@@ -23,6 +23,8 @@ export default defineConfig({
     'pg',
     '@anthropic-ai/sdk',
     'openai',
+    '@capacitor/core',
+    '@capacitor-community/speech-recognition',
   ],
   outExtension({ format }) {
     return { js: format === 'cjs' ? '.cjs' : '.js' };

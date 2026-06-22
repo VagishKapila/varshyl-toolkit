@@ -72,6 +72,8 @@
   },
   "peerDependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
+    "@capacitor-community/speech-recognition": "^5.0.0",
+    "@capacitor/core": "^6.0.0 || ^7.0.0",
     "express": "^4.21.0",
     "openai": "^4.0.0",
     "pg": "^8.11.5",
@@ -80,6 +82,8 @@
   },
   "peerDependenciesMeta": {
     "@anthropic-ai/sdk": { "optional": true },
+    "@capacitor-community/speech-recognition": { "optional": true },
+    "@capacitor/core": { "optional": true },
     "express": { "optional": true },
     "openai": { "optional": true },
     "pg": { "optional": true },
