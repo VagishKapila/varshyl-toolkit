@@ -1,12 +1,20 @@
-/**
- * Server entry for @varshylinc/soren-screen.
- * Express routes and Q&A engine are added in Step 3.
- */
+export {
+  createSorenRouter,
+  searchQAPairs,
+  getQAPairsForProduct,
+  buildPortfolioPdf,
+  fetchPortfolioData,
+} from './server/index.js';
+
 export type {
-  SorenPortfolioConfig,
-  SorenPortfolioData,
-  SorenPortfolioPdfResult,
+  CreateSorenRouterOptions,
+  PortfolioBuilderOptions,
+} from './server/index.js';
+
+export type {
+  SorenServerConfig,
   SorenQAPair,
   SorenQAResult,
-  SorenServerConfig,
+  SorenPortfolioData,
+  SorenPortfolioPdfResult,
 } from './types.js';
