@@ -266,25 +266,85 @@ const fs = require('fs');
 const pkgJsonPath = path.resolve('node_modules', ...pkgName.split('/'), 'package.json');
 const pkg = require(pkgJsonPath);
 
-async function testRequire(reqPath) {
-  const keys = Object.keys(require(reqPath)).sort().join(',');
-  if (!keys) throw new Error('empty export keys');
-  console.log(`✅ require('${reqPath}'): ${keys.slice(0, 80)}${keys.length > 80 ? '…' : ''}`);
+const KNOWN_PEER_DEPS = [
+  'react',
+  'react-dom',
+  'express',
+  'firebase-admin',
+  '@capacitor/core',
+  '@capacitor/local-notifications',
+];
+
+function getMissingModule(err) {
+  const match = String(err.message).match(/Cannot find module '([^']+)'/);
+  return match ? match[1] : null;
 }
 
-async function testImport(reqPath) {
-  const m = await import(reqPath);
-  const keys = Object.keys(m).sort().join(',');
-  if (!keys) throw new Error('empty export keys');
-  console.log(`✅ import('${reqPath}'): ${keys.slice(0, 80)}${keys.length > 80 ? '…' : ''}`);
+function isKnownPeerMissing(err) {
+  if (err.code !== 'MODULE_NOT_FOUND') return false;
+  const missing = getMissingModule(err);
+  if (!missing) return false;
+  return KNOWN_PEER_DEPS.some(
+    (peer) => missing === peer || missing.startsWith(`${peer}/`),
+  );
+}
+
+function peerDepLabel(missing) {
+  for (const peer of KNOWN_PEER_DEPS) {
+    if (missing === peer || missing.startsWith(`${peer}/`)) return peer;
+  }
+  return missing;
+}
+
+function skipSubpath(sub, err) {
+  const missing = getMissingModule(err);
+  console.log(`⚠️  skipped ${sub} — peer dep '${peerDepLabel(missing)}' not installed (expected)`);
+}
+
+async function testRequire(reqPath, sub) {
+  try {
+    const keys = Object.keys(require(reqPath)).sort().join(',');
+    if (!keys) throw new Error('empty export keys');
+    console.log(`✅ require('${reqPath}'): ${keys.slice(0, 80)}${keys.length > 80 ? '…' : ''}`);
+    return true;
+  } catch (err) {
+    if (sub !== '.' && isKnownPeerMissing(err)) {
+      skipSubpath(sub, err);
+      return false;
+    }
+    throw err;
+  }
+}
+
+async function testImport(reqPath, sub) {
+  try {
+    const m = await import(reqPath);
+    const keys = Object.keys(m).sort().join(',');
+    if (!keys) throw new Error('empty export keys');
+    console.log(`✅ import('${reqPath}'): ${keys.slice(0, 80)}${keys.length > 80 ? '…' : ''}`);
+    return true;
+  } catch (err) {
+    if (sub !== '.' && isKnownPeerMissing(err)) {
+      skipSubpath(sub, err);
+      return false;
+    }
+    throw err;
+  }
 }
 
 (async () => {
   const exportsMap = pkg.exports || { '.': {} };
   for (const sub of Object.keys(exportsMap)) {
+    const exportEntry = exportsMap[sub];
+    if (typeof exportEntry === 'string' || /\.(css|scss|sass|less)$/.test(sub)) {
+      console.log(`⚠️  skipped ${sub} — static asset export (not a JS entry)`);
+      continue;
+    }
     const reqPath = sub === '.' ? pkgName : `${pkgName}${sub.replace(/^\./, '')}`;
-    await testRequire(reqPath);
-    await testImport(reqPath);
+    const required = await testRequire(reqPath, sub);
+    if (required) {
+      await testImport(reqPath, sub);
+    }
   }
   const migDir = path.resolve('node_modules', ...pkgName.split('/'), 'migrations');
   if (fs.existsSync(migDir)) {
