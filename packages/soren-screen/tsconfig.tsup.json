@@ -2,14 +2,18 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "composite": false,
-    "noEmit": false
+    "noEmit": false,
+    "jsx": "react-jsx",
+    "lib": ["ES2022", "DOM"]
   },
   "include": [
     "src/index.ts",
     "src/types.ts",
     "src/react.ts",
+    "src/react/**/*",
     "src/server.ts",
-    "src/adapters/jobsite.ts",
-    "src/adapters/reference.ts"
+    "src/server/**/*",
+    "src/adapters/**/*.ts",
+    "src/utils/**/*.ts"
   ]
 }

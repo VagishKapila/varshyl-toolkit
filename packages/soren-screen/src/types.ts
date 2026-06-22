@@ -88,7 +88,7 @@ export type SorenQAAdapter =
   | ((query: string) => Promise<SorenQAResult>);
 
 /**
- * Product configuration contract for @varshylinc/soren-screen.
+ * Product configuration contract for the soren-screen package.
  * Passed once by the host; drives greeting, actions, Q&A, and portfolio flows.
  */
 export interface SorenConfig {
