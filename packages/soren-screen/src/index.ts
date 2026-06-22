@@ -1,5 +1,5 @@
 /** Package version — useful for debugging and compatibility checks */
-export const VERSION = '0.2.0' as const;
+export const VERSION = '0.2.1' as const;
 
 /** Utility: returns time-of-day greeting word */
 export function timeOfDay(): 'morning' | 'afternoon' | 'evening' {

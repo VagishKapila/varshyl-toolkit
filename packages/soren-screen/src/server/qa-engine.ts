@@ -4,6 +4,7 @@ import { getQAPairsForProduct, searchQAPairs } from './keyword-qa.js';
 
 const EMBEDDING_MODEL = 'text-embedding-3-small';
 const SIMILARITY_THRESHOLD = 0.75;
+const KEYWORD_CONFIDENCE_THRESHOLD = 0.5;
 const SEED_BATCH_SIZE = 20;
 
 export { getQAPairsForProduct, searchQAPairs } from './keyword-qa.js';
@@ -104,7 +105,11 @@ export function createQAEngine(options: CreateQAEngineOptions): QAEngine {
 
       if (!vectorMode || !options.pool || !apiKey) {
         const pairs = getQAPairsForProduct(options.productId, options.qaRegistry);
-        return searchQAPairs(trimmed, pairs);
+        const result = searchQAPairs(trimmed, pairs);
+        if (result.confidence < KEYWORD_CONFIDENCE_THRESHOLD) {
+          return { answer: '', confidence: result.confidence, outOfScope: true };
+        }
+        return result;
       }
 
       const pairs = getQAPairsForProduct(options.productId, options.qaRegistry);
