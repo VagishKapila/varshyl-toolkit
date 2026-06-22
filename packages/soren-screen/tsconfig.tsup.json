@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "composite": false,
+    "noEmit": false
+  },
+  "include": [
+    "src/index.ts",
+    "src/types.ts",
+    "src/react.ts",
+    "src/server.ts",
+    "src/adapters/jobsite.ts",
+    "src/adapters/reference.ts"
+  ]
+}
