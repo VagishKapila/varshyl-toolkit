@@ -1,5 +1,6 @@
 export {
   createSorenRouter,
+  createQAEngine,
   searchQAPairs,
   getQAPairsForProduct,
   buildPortfolioPdf,

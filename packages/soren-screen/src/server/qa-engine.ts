@@ -1,57 +1,130 @@
-import type { SorenQAPair, SorenQAResult } from '../types.js';
+import type { Pool } from 'pg';
+import type { QAEngine, QAResult, SorenQAPair } from '../types.js';
+import { getQAPairsForProduct, searchQAPairs } from './keyword-qa.js';
 
-const STOP_WORDS = new Set([
-  'a', 'an', 'the', 'is', 'are', 'do', 'i', 'my', 'to', 'how', 'what', 'can', 'does', 'it',
-]);
+const EMBEDDING_MODEL = 'text-embedding-3-small';
+const SIMILARITY_THRESHOLD = 0.75;
+const SEED_BATCH_SIZE = 20;
 
-function tokenize(text: string): string[] {
-  return text
-    .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, ' ')
-    .split(/\s+/)
-    .filter((w) => w.length > 1 && !STOP_WORDS.has(w));
+export { getQAPairsForProduct, searchQAPairs } from './keyword-qa.js';
+
+async function embedText(text: string, apiKey: string): Promise<number[]> {
+  const { default: OpenAI } = await import('openai');
+  const client = new OpenAI({ apiKey });
+  const response = await client.embeddings.create({
+    model: EMBEDDING_MODEL,
+    input: text,
+  });
+  const vector = response.data[0]?.embedding;
+  if (!vector) throw new Error('OpenAI embedding response was empty');
+  return vector;
 }
 
-function scorePair(queryTokens: string[], pair: SorenQAPair): number {
-  const questionTokens = tokenize(pair.q);
-  if (questionTokens.length === 0 || queryTokens.length === 0) return 0;
-  let hits = 0;
-  for (const token of queryTokens) {
-    if (questionTokens.some((qt) => qt.includes(token) || token.includes(qt))) {
-      hits += 1;
-    }
-  }
-  return hits / Math.max(queryTokens.length, questionTokens.length);
+async function registerPgVector(pool: Pool): Promise<void> {
+  const pgvector = await import('pgvector/pg');
+  await pgvector.registerTypes(pool);
 }
 
-/** Keyword Q&A search — v1, no pgvector or Claude. */
-export function searchQAPairs(query: string, pairs: SorenQAPair[]): SorenQAResult {
-  const queryTokens = tokenize(query);
-  if (queryTokens.length === 0) {
-    return { answer: '', confidence: 0, outOfScope: true };
-  }
-
-  let best: SorenQAPair | null = null;
-  let bestScore = 0;
-
-  for (const pair of pairs) {
-    const score = scorePair(queryTokens, pair);
-    if (score > bestScore) {
-      bestScore = score;
-      best = pair;
-    }
-  }
-
-  if (!best || bestScore < 0.4) {
-    return { answer: '', confidence: bestScore, outOfScope: true };
-  }
-
-  return { answer: best.a, confidence: bestScore, outOfScope: false };
+async function countPairs(pool: Pool, productId: string): Promise<number> {
+  const result = await pool.query<{ count: string }>(
+    'SELECT COUNT(*)::text AS count FROM np_soren_qa WHERE product_id = $1',
+    [productId],
+  );
+  return Number(result.rows[0]?.count ?? 0);
 }
 
-export function getQAPairsForProduct(
+async function searchVector(
+  pool: Pool,
   productId: string,
-  registry: Record<string, SorenQAPair[]>,
-): SorenQAPair[] {
-  return registry[productId] ?? [];
+  queryEmbedding: number[],
+): Promise<QAResult> {
+  await registerPgVector(pool);
+  const pgvector = await import('pgvector/pg');
+  const vectorSql = pgvector.toSql(queryEmbedding);
+  const result = await pool.query<{ answer: string; similarity: string }>(
+    `SELECT answer, 1 - (embedding <=> $1::vector) AS similarity
+     FROM np_soren_qa
+     WHERE product_id = $2 AND embedding IS NOT NULL
+     ORDER BY embedding <=> $1::vector
+     LIMIT 1`,
+    [vectorSql, productId],
+  );
+  const row = result.rows[0];
+  if (!row) return { answer: '', confidence: 0, outOfScope: true };
+  const confidence = Number(row.similarity);
+  if (confidence < SIMILARITY_THRESHOLD) {
+    return { answer: '', confidence, outOfScope: true };
+  }
+  return { answer: row.answer, confidence, outOfScope: false };
+}
+
+async function insertPairs(
+  pool: Pool,
+  productId: string,
+  pairs: SorenQAPair[],
+  apiKey: string,
+): Promise<number> {
+  await registerPgVector(pool);
+  const pgvector = await import('pgvector/pg');
+  let inserted = 0;
+
+  for (let i = 0; i < pairs.length; i += SEED_BATCH_SIZE) {
+    const batch = pairs.slice(i, i + SEED_BATCH_SIZE);
+    for (const pair of batch) {
+      const embedding = await embedText(pair.q, apiKey);
+      const result = await pool.query(
+        `INSERT INTO np_soren_qa (product_id, question, answer, tags, embedding)
+         VALUES ($1, $2, $3, $4, $5::vector)
+         ON CONFLICT (product_id, question) DO NOTHING
+         RETURNING id`,
+        [productId, pair.q, pair.a, pair.tags ?? null, pgvector.toSql(embedding)],
+      );
+      if (result.rowCount && result.rowCount > 0) inserted += 1;
+    }
+  }
+
+  return inserted;
+}
+
+export interface CreateQAEngineOptions {
+  qaRegistry: Record<string, SorenQAPair[]>;
+  productId: string;
+  pool?: Pool;
+  openaiApiKey?: string;
+}
+
+export function createQAEngine(options: CreateQAEngineOptions): QAEngine {
+  const apiKey = options.openaiApiKey ?? process.env.OPENAI_API_KEY;
+  const vectorMode = Boolean(options.pool && apiKey);
+
+  return {
+    async search(query: string): Promise<QAResult> {
+      const trimmed = query.trim();
+      if (!trimmed) return { answer: '', confidence: 0, outOfScope: true };
+
+      if (!vectorMode || !options.pool || !apiKey) {
+        const pairs = getQAPairsForProduct(options.productId, options.qaRegistry);
+        return searchQAPairs(trimmed, pairs);
+      }
+
+      const pairs = getQAPairsForProduct(options.productId, options.qaRegistry);
+      const existing = await countPairs(options.pool, options.productId);
+      if (existing === 0 && pairs.length > 0) {
+        const seeded = await insertPairs(options.pool, options.productId, pairs, apiKey);
+        console.log(`[soren] seeded ${seeded} Q&A pairs for ${options.productId}`);
+      }
+
+      const embedding = await embedText(trimmed, apiKey);
+      return searchVector(options.pool, options.productId, embedding);
+    },
+
+    async seed(pairs: SorenQAPair[]): Promise<void> {
+      if (!vectorMode || !options.pool || !apiKey) {
+        console.log('[soren] keyword mode, skipping seed');
+        return;
+      }
+      const inserted = await insertPairs(options.pool, options.productId, pairs, apiKey);
+      console.log(`[soren] seeded ${inserted} Q&A pairs for ${options.productId}`);
+    },
+  };
 }

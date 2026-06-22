@@ -22,6 +22,7 @@ export default defineConfig({
     'express',
     'pg',
     '@anthropic-ai/sdk',
+    'openai',
   ],
   outExtension({ format }) {
     return { js: format === 'cjs' ? '.cjs' : '.js' };

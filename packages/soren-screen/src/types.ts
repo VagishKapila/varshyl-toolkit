@@ -30,6 +30,15 @@ export interface SorenQAResult {
   outOfScope: boolean;
 }
 
+/** Q&A search result (alias used by QAEngine). */
+export type QAResult = SorenQAResult;
+
+/** Pluggable Q&A engine — keyword fallback or pgvector semantic search. */
+export interface QAEngine {
+  search(query: string): Promise<QAResult>;
+  seed(pairs: SorenQAPair[]): Promise<void>;
+}
+
 export type SorenShareTarget = 'linkedin' | 'tiktok' | 'instagram' | (string & Record<string, unknown>);
 
 export type SorenPdfTemplate = 'construction-superintendent' | (string & Record<string, unknown>);
@@ -120,6 +129,8 @@ export interface SorenServerConfig {
   qaPairs?: SorenQAPair[];
   portfolio?: SorenPortfolioConfig;
   anthropicApiKey?: string;
+  openaiApiKey?: string;
+  pool?: import('pg').Pool;
 }
 
 /** Chat message in the Soren conversation thread. */
