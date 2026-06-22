@@ -1,6 +1,11 @@
 import { Router, type Request, type Response } from 'express';
 import type { SorenQAPair, SorenServerConfig } from '../types.js';
-import { buildPortfolioPdf, fetchPortfolioData } from './portfolio-builder.js';
+import {
+  buildPortfolioPdf,
+  fetchPortfolioData,
+  toPdfApiResponse,
+  toSorenPortfolioData,
+} from './portfolio-builder.js';
 import { createQAEngine, getQAPairsForProduct } from './qa-engine.js';
 
 export interface CreateSorenRouterOptions extends SorenServerConfig {
@@ -52,7 +57,7 @@ export function createSorenRouter(options: CreateSorenRouterOptions): Router {
   router.get('/portfolio/:userId', async (req: Request, res: Response) => {
     try {
       const data = await fetchPortfolioData(req.params.userId, options.portfolio?.dataSource);
-      res.json(data);
+      res.json(toSorenPortfolioData(data));
     } catch (err) {
       res.status(500).json({
         error: err instanceof Error ? err.message : 'Portfolio fetch failed',
@@ -63,12 +68,22 @@ export function createSorenRouter(options: CreateSorenRouterOptions): Router {
   router.post('/portfolio/:userId/pdf', async (req: Request, res: Response) => {
     try {
       const userId = req.params.userId;
-      const displayName = typeof req.body?.displayName === 'string' ? req.body.displayName : 'Professional';
-      const data = await fetchPortfolioData(userId, options.portfolio?.dataSource);
-      const result = await buildPortfolioPdf(userId, displayName, data, {
+      let data = await fetchPortfolioData(userId, options.portfolio?.dataSource);
+      if (typeof req.body?.firstName === 'string') {
+        data = { ...data, firstName: req.body.firstName };
+      }
+      if (typeof req.body?.lastName === 'string') {
+        data = { ...data, lastName: req.body.lastName };
+      }
+      if (typeof req.body?.displayName === 'string' && !req.body?.firstName) {
+        const parts = req.body.displayName.trim().split(/\s+/);
+        data = { ...data, firstName: parts[0] ?? data.firstName, lastName: parts.slice(1).join(' ') };
+      }
+      const result = await buildPortfolioPdf(data, {
         anthropicApiKey: options.anthropicApiKey,
+        portfolio: options.portfolio,
       });
-      res.json(result);
+      res.json(toPdfApiResponse(result));
     } catch (err) {
       res.status(500).json({
         error: err instanceof Error ? err.message : 'PDF generation failed',

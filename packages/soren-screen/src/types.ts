@@ -51,12 +51,32 @@ export interface SorenPortfolioData {
   skills: string[];
 }
 
+/** Typed portfolio record for PDF generation and dataSource returns. */
+export interface PortfolioData {
+  userId: string;
+  firstName: string;
+  lastName: string;
+  title: string;
+  yearsActive: number;
+  projectCount: number;
+  logCount: number;
+  skills?: string[];
+  summary?: string;
+}
+
 /** Portfolio builder configuration passed by the host product. */
 export interface SorenPortfolioConfig {
-  enabled: boolean;
-  dataSource?: (userId: string) => Promise<SorenPortfolioData>;
+  enabled?: boolean;
+  dataSource?: (userId: string) => Promise<PortfolioData | SorenPortfolioData>;
   pdfTemplate?: SorenPdfTemplate;
   shareTargets?: SorenShareTarget[];
+  storage?: {
+    upload: (
+      buffer: Uint8Array,
+      filename: string,
+      contentType: 'application/pdf',
+    ) => Promise<string>;
+  };
 }
 
 export type SorenCardType =
@@ -144,6 +164,7 @@ export interface SorenChatMessage {
 
 /** Portfolio PDF generation result from the server builder. */
 export interface SorenPortfolioPdfResult {
-  summary: string;
-  pdfUrl: string;
+  url: string | null;
+  filename: string;
+  generated: boolean;
 }

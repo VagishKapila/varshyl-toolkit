@@ -1,6 +1,6 @@
 {
   "name": "@varshylinc/soren-screen",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Plug-and-play Soren AI assistant screen for Varshyl products: greeting, identity cards, action grid, Q&A, portfolio builder, and voice-guided flows.",
   "author": "Vagish Kapila (Varshyl Inc.)",
   "license": "Apache-2.0",
@@ -27,6 +27,7 @@
   "type": "module",
   "files": [
     "dist",
+    "migrations",
     "LICENSE"
   ],
   "main": "./dist/index.cjs",
@@ -73,7 +74,7 @@
   "peerDependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
     "@capacitor-community/speech-recognition": "^5.0.0",
-    "@capacitor/core": "^6.0.0 || ^7.0.0",
+    "@capacitor/core": "^5.0.0 || ^6.0.0 || ^7.0.0",
     "express": "^4.21.0",
     "openai": "^4.0.0",
     "pg": "^8.11.5",
@@ -91,6 +92,7 @@
     "react-dom": { "optional": true }
   },
   "dependencies": {
+    "pdf-lib": "^1.17.0",
     "pgvector": "^0.2.0"
   },
   "devDependencies": {
