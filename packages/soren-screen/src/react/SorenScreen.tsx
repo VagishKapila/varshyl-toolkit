@@ -152,6 +152,7 @@ export function SorenScreen({
         placeholder={view === 'portfolio' ? 'Ask Soren to update your profile...' : 'Or just ask me anything...'}
         onSubmit={handleAsk}
         disabled={qaLoading}
+        speechLang={config.speechLang}
       />
     </div>
   );

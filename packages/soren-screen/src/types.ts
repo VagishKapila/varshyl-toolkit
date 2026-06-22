@@ -30,6 +30,15 @@ export interface SorenQAResult {
   outOfScope: boolean;
 }
 
+/** Q&A search result (alias used by QAEngine). */
+export type QAResult = SorenQAResult;
+
+/** Pluggable Q&A engine — keyword fallback or pgvector semantic search. */
+export interface QAEngine {
+  search(query: string): Promise<QAResult>;
+  seed(pairs: SorenQAPair[]): Promise<void>;
+}
+
 export type SorenShareTarget = 'linkedin' | 'tiktok' | 'instagram' | (string & Record<string, unknown>);
 
 export type SorenPdfTemplate = 'construction-superintendent' | (string & Record<string, unknown>);
@@ -42,12 +51,32 @@ export interface SorenPortfolioData {
   skills: string[];
 }
 
+/** Typed portfolio record for PDF generation and dataSource returns. */
+export interface PortfolioData {
+  userId: string;
+  firstName: string;
+  lastName: string;
+  title: string;
+  yearsActive: number;
+  projectCount: number;
+  logCount: number;
+  skills?: string[];
+  summary?: string;
+}
+
 /** Portfolio builder configuration passed by the host product. */
 export interface SorenPortfolioConfig {
-  enabled: boolean;
-  dataSource?: (userId: string) => Promise<SorenPortfolioData>;
+  enabled?: boolean;
+  dataSource?: (userId: string) => Promise<PortfolioData | SorenPortfolioData>;
   pdfTemplate?: SorenPdfTemplate;
   shareTargets?: SorenShareTarget[];
+  storage?: {
+    upload: (
+      buffer: Uint8Array,
+      filename: string,
+      contentType: 'application/pdf',
+    ) => Promise<string>;
+  };
 }
 
 export type SorenCardType =
@@ -101,6 +130,7 @@ export interface SorenConfig {
   qaAdapter?: SorenQAAdapter;
   portfolio?: SorenPortfolioConfig;
   serverUrl?: string;
+  speechLang?: string;
 }
 
 /** Host adapter for resolving product-specific user records. */
@@ -120,6 +150,8 @@ export interface SorenServerConfig {
   qaPairs?: SorenQAPair[];
   portfolio?: SorenPortfolioConfig;
   anthropicApiKey?: string;
+  openaiApiKey?: string;
+  pool?: import('pg').Pool;
 }
 
 /** Chat message in the Soren conversation thread. */
@@ -132,6 +164,7 @@ export interface SorenChatMessage {
 
 /** Portfolio PDF generation result from the server builder. */
 export interface SorenPortfolioPdfResult {
-  summary: string;
-  pdfUrl: string;
+  url: string | null;
+  filename: string;
+  generated: boolean;
 }

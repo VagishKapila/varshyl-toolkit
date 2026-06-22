@@ -1,5 +1,10 @@
 import { useCallback, useState } from 'react';
-import type { SorenConfig, SorenPortfolioData, SorenPortfolioPdfResult } from '../../types.js';
+import type {
+  PortfolioData,
+  SorenConfig,
+  SorenPortfolioData,
+  SorenPortfolioPdfResult,
+} from '../../types.js';
 
 const DEMO_PORTFOLIO: SorenPortfolioData = {
   projects: 47,
@@ -7,6 +12,16 @@ const DEMO_PORTFOLIO: SorenPortfolioData = {
   yearsActive: 8,
   skills: ['Concrete', 'Framing', 'Site supervision'],
 };
+
+function toCardData(raw: SorenPortfolioData | PortfolioData): SorenPortfolioData {
+  if ('projects' in raw) return raw;
+  return {
+    projects: raw.projectCount,
+    logCount: raw.logCount,
+    yearsActive: raw.yearsActive,
+    skills: raw.skills ?? [],
+  };
+}
 
 export interface UseSorenPortfolioResult {
   data: SorenPortfolioData | null;
@@ -25,7 +40,7 @@ export function useSorenPortfolio(config: SorenConfig): UseSorenPortfolioResult 
     setLoading(true);
     try {
       if (config.portfolio?.dataSource) {
-        const result = await config.portfolio.dataSource(userId);
+        const result = toCardData(await config.portfolio.dataSource(userId));
         setData(result);
         return result;
       }

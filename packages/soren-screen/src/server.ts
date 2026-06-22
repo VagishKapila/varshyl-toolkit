@@ -1,5 +1,6 @@
 export {
   createSorenRouter,
+  createQAEngine,
   searchQAPairs,
   getQAPairsForProduct,
   buildPortfolioPdf,
@@ -9,9 +10,11 @@ export {
 export type {
   CreateSorenRouterOptions,
   PortfolioBuilderOptions,
+  PortfolioPdfBuildResult,
 } from './server/index.js';
 
 export type {
+  PortfolioData,
   SorenServerConfig,
   SorenQAPair,
   SorenQAResult,

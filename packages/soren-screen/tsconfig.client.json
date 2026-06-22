@@ -9,5 +9,5 @@
     "moduleResolution": "NodeNext",
     "noEmit": true
   },
-  "include": ["src/react.ts", "src/react/**/*", "src/types.ts"]
+  "include": ["src/react.ts", "src/react/**/*", "src/client/**/*", "src/types.ts"]
 }
