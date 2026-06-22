@@ -1,5 +1,12 @@
 # @varshylinc/soren-screen
 
+## 0.2.1
+### Patch Changes
+- Raise keyword Q&A OOS threshold 0.40 → 0.50
+  (fixes Super Bowl false-positive edge case)
+- Fix PDF test: check %PDF- magic bytes instead of
+  arbitrary 5KB size gate (pdf-lib compresses ~2KB)
+
 ## 0.2.0
 ### Minor Changes
 - pgvector semantic Q&A search via OpenAI

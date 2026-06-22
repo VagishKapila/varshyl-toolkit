@@ -28,8 +28,10 @@ describe('buildPortfolioPdf', () => {
   it('generates a non-empty PDF buffer', async () => {
     const result = await buildPortfolioPdf(baseData, {});
     expect(result.pdfBuffer).toBeInstanceOf(Uint8Array);
-    expect(result.pdfBuffer!.length).toBeGreaterThan(500);
-    expect(Buffer.from(result.pdfBuffer!).subarray(0, 5).toString()).toBe('%PDF-');
+    // pdf-lib compresses to ~2KB — check magic bytes not arbitrary size
+    expect(result.pdfBuffer!.length).toBeGreaterThan(1500);
+    const header = Buffer.from(result.pdfBuffer!).toString('ascii', 0, 5);
+    expect(header).toBe('%PDF-');
   });
 
   it('PDF contains user name in content', async () => {

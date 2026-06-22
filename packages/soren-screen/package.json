@@ -1,6 +1,6 @@
 {
   "name": "@varshylinc/soren-screen",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Plug-and-play Soren AI assistant screen for Varshyl products: greeting, identity cards, action grid, Q&A, portfolio builder, and voice-guided flows.",
   "author": "Vagish Kapila (Varshyl Inc.)",
   "license": "Apache-2.0",
