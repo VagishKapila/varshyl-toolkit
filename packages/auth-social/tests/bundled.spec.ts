@@ -76,3 +76,16 @@ describeWithPostgres('bundled dist (tsup) - migrations + self-test', () => {
     expect(selfTest.tablesFound).toEqual(expect.arrayContaining(['as_credentials']));
   }, 30_000);
 });
+
+describe('published dist guards', () => {
+  it('main barrel has no react imports', () => {
+    const bundle = readFileSync(join(pkgRoot, 'dist/index.cjs'), 'utf8');
+    expect(bundle).not.toMatch(/require\('react'\)/);
+  });
+
+  it('VERSION is 0.6.0', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const m = require(join(pkgRoot, 'dist/index.cjs')) as { VERSION: string };
+    expect(m.VERSION).toBe('0.6.0');
+  });
+});
