@@ -30,6 +30,8 @@ import {
 } from './AuthDemo.js';
 import { PaymentsDemoPage } from './PaymentsDemo.js';
 import { AuthFormsDemoPage } from './AuthFormsDemo.js';
+import { SorenDemoPage } from './SorenDemo.js';
+import { HealthDashboardPage } from './HealthDashboard.js';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -141,6 +143,12 @@ function DemoNav({ whoami }: { whoami: DemoUser | null }): React.ReactElement {
         </Link>
         <Link to="/auth-forms" className="text-sm text-slate-300 hover:text-white transition-colors">
           Auth Forms
+        </Link>
+        <Link to="/soren" className="text-sm text-slate-300 hover:text-white transition-colors">
+          Soren
+        </Link>
+        <Link to="/health" className="text-sm text-slate-300 hover:text-white transition-colors">
+          Health
         </Link>
         {/* Admin nav only shown to super-admin (user 1 = Sarah in demo) */}
         {whoami?.id === 1 && (
@@ -267,6 +275,18 @@ function HomePage(): React.ReactElement {
           Mobile Payments →
         </Link>
         <Link
+          to="/soren"
+          className="px-4 py-2 bg-orange-600 text-white rounded-lg text-sm hover:bg-orange-500 transition-colors"
+        >
+          Soren Screen →
+        </Link>
+        <Link
+          to="/health"
+          className="px-4 py-2 bg-slate-800 text-white rounded-lg text-sm hover:bg-slate-700 transition-colors"
+        >
+          Health Dashboard →
+        </Link>
+        <Link
           to="/team/members"
           className="px-4 py-2 bg-orange-600 text-white rounded-lg text-sm hover:bg-orange-500 transition-colors"
         >
@@ -368,6 +388,12 @@ export default function App(): React.ReactElement {
 
       {/* Auth forms demo (SignUpForm / SignInForm / GoogleSignInButton) */}
       <Route path="/auth-forms" element={<AuthFormsDemoPage />} />
+
+      {/* Soren screen demo */}
+      <Route path="/soren" element={<SorenDemoPage />} />
+
+      {/* Toolkit health dashboard */}
+      <Route path="/health" element={<HealthDashboardPage />} />
 
       {/* Password reset (standalone, no nav) */}
       <Route path="/password-reset" element={<PasswordResetRequestPage />} />

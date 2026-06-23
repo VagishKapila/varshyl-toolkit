@@ -18,6 +18,8 @@ import {
 import { createConsentRouter } from './consent.js';
 import { createAuthRouter } from './auth-social.js';
 import { createMobilePaymentsRouter } from './mobile-payments.js';
+import { createSorenDemoRouter } from './soren.js';
+import { createHealthRouter } from './health.js';
 import type { NormalizedEvent } from '@varshylinc/mobile-payments';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -231,16 +233,11 @@ async function boot(): Promise<void> {
     }, paymentsEventCapture)
   );
 
-  // ── Health + info ──────────────────────────────────────────────────────────
-  app.get('/api/health', (_req, res) => {
-    res.json({
-      status: 'ok',
-      service: 'demo-host',
-      version: '0.1.0',
-      env: NODE_ENV,
-      uptime: Math.floor(process.uptime()),
-    });
-  });
+  // ── soren-screen router (keyword Q&A + portfolio demo) ─────────────────────
+  app.use('/soren', createSorenDemoRouter());
+
+  // ── Toolkit health dashboard (streaming NDJSON checks) ─────────────────────
+  app.use('/api/health', createHealthRouter());
 
   // ── Serve React client ─────────────────────────────────────────────────────
   const clientDist = path.join(__dirname, '../client');
@@ -265,6 +262,7 @@ async function boot(): Promise<void> {
     console.log('[boot] Endpoints:');
     console.log('[boot]   GET  /healthz                     → readiness probe');
     console.log('[boot]   GET  /api/health                  → health + info');
+    console.log('[boot]   GET  /api/health/run              → toolkit health checks (NDJSON stream)');
     console.log('[boot]   GET  /api/team/health             → team-management health');
     console.log('[boot]   POST /api/demo/login              → login as demo user { userId }');
     console.log('[boot]   POST /api/demo/logout             → logout');
@@ -278,6 +276,9 @@ async function boot(): Promise<void> {
     console.log('[boot]   POST /api/auth/signup              → auth-social: email signup');
     console.log('[boot]   POST /api/auth/signin              → auth-social: email signin');
     console.log('[boot]   POST /api/auth/signin/provider    → auth-social: social signin');
+    console.log('[boot]   GET  /soren/qa                  → soren-screen: Q&A search');
+    console.log('[boot]   GET  /soren/portfolio/:userId   → soren-screen: portfolio stats');
+    console.log('[boot]   POST /soren/portfolio/:userId/pdf → soren-screen: PDF');
     console.log('[boot]   GET  /                            → React shell');
   });
 
