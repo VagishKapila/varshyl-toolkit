@@ -16,6 +16,7 @@ describe('Varshyl input defaults', () => {
     expect(el?.getAttribute('autocorrect')).toBe('on');
     expect(el?.getAttribute('spellcheck')).toBe('true');
     expect(el?.getAttribute('autocapitalize')).toBe('sentences');
+    expect(el?.getAttribute('autocomplete')).toBe('on');
   });
 
   it('VarshylEmailInput uses email type and email autocomplete', () => {
@@ -42,14 +43,21 @@ describe('Varshyl input defaults', () => {
     expect(el?.type).toBe('search');
     expect(el?.getAttribute('autocorrect')).toBe('off');
     expect(el?.getAttribute('spellcheck')).toBe('false');
+    expect(el?.getAttribute('autocomplete')).toBe('off');
   });
 
-  it('VarshylPasswordInput uses password autocomplete', () => {
+  it('VarshylPasswordInput default mode signin has autocomplete current-password', () => {
     const { container } = render(<VarshylPasswordInput />);
     const el = container.querySelector('input');
     expect(el?.type).toBe('password');
     expect(el?.getAttribute('autocomplete')).toBe('current-password');
     expect(el?.getAttribute('autocorrect')).toBe('off');
+  });
+
+  it('VarshylPasswordInput mode signup has autocomplete new-password', () => {
+    const { container } = render(<VarshylPasswordInput mode="signup" />);
+    const el = container.querySelector('input');
+    expect(el?.getAttribute('autocomplete')).toBe('new-password');
   });
 
   it('passes through className and value', () => {

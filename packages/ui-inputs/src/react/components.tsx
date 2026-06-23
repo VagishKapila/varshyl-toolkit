@@ -9,6 +9,7 @@ export function VarshylTextInput(
       autoCorrect="on"
       spellCheck
       autoCapitalize="sentences"
+      autoComplete="on"
       {...props}
     />
   );
@@ -55,21 +56,31 @@ export function VarshylSearchInput(
       autoCorrect="off"
       autoCapitalize="none"
       spellCheck={false}
+      autoComplete="off"
       {...props}
     />
   );
 }
 
+export interface VarshylPasswordInputProps
+  extends React.InputHTMLAttributes<HTMLInputElement> {
+  /** 'signin' → current-password (default); 'signup' → new-password */
+  mode?: 'signin' | 'signup';
+}
+
 /** Password fields — no autocorrect/capitalize; password autocomplete. */
-export function VarshylPasswordInput(
-  props: React.InputHTMLAttributes<HTMLInputElement>,
-): React.ReactElement {
+export function VarshylPasswordInput({
+  mode = 'signin',
+  ...props
+}: VarshylPasswordInputProps): React.ReactElement {
+  const autoComplete = mode === 'signup' ? 'new-password' : 'current-password';
+
   return (
     <input
       type="password"
       autoCorrect="off"
       autoCapitalize="none"
-      autoComplete="current-password"
+      autoComplete={autoComplete}
       {...props}
     />
   );
