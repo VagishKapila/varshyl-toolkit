@@ -32,6 +32,7 @@ import { PaymentsDemoPage } from './PaymentsDemo.js';
 import { AuthFormsDemoPage } from './AuthFormsDemo.js';
 import { SorenDemoPage } from './SorenDemo.js';
 import { HealthDashboardPage } from './HealthDashboard.js';
+import { UIInputsDemoPage } from './UIInputsDemo.js';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -149,6 +150,9 @@ function DemoNav({ whoami }: { whoami: DemoUser | null }): React.ReactElement {
         </Link>
         <Link to="/health" className="text-sm text-slate-300 hover:text-white transition-colors">
           Health
+        </Link>
+        <Link to="/ui-inputs" className="text-sm text-slate-300 hover:text-white transition-colors">
+          UI Inputs
         </Link>
         {/* Admin nav only shown to super-admin (user 1 = Sarah in demo) */}
         {whoami?.id === 1 && (
@@ -394,6 +398,9 @@ export default function App(): React.ReactElement {
 
       {/* Toolkit health dashboard */}
       <Route path="/health" element={<HealthDashboardPage />} />
+
+      {/* UI inputs demo */}
+      <Route path="/ui-inputs" element={<UIInputsDemoPage />} />
 
       {/* Password reset (standalone, no nav) */}
       <Route path="/password-reset" element={<PasswordResetRequestPage />} />

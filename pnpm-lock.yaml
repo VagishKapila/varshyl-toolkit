@@ -59,6 +59,9 @@ importers:
       '@varshylinc/team-management':
         specifier: workspace:*
         version: link:../../packages/team-management
+      '@varshylinc/ui-inputs':
+        specifier: workspace:*
+        version: link:../../packages/ui-inputs
       bcryptjs:
         specifier: ^2.4.3
         version: 2.4.3
