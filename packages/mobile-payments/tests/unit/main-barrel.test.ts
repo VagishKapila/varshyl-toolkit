@@ -4,6 +4,7 @@ import { expectNamedExport, expectNotOnBarrel } from '../../../../vitest/barrel-
 
 describe('@varshylinc/mobile-payments main barrel', () => {
   it('exports the expected named symbols', () => {
+    expectNamedExport(Main, 'VERSION', 'const');
     expectNamedExport(Main, 'createSubscriptionStore', 'function');
     expectNamedExport(Main, 'runMigrations', 'function');
     expectNamedExport(Main, 'BOOTSTRAP_SQL', 'const');

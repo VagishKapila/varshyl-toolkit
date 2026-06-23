@@ -1,5 +1,10 @@
 # @varshylinc/auth-social
 
+## 0.5.1
+### Patch Changes
+- Add VERSION constant to main barrel
+- Ensure configureSocialAuth exported from main entry
+
 ## 0.5.0
 
 ### Added

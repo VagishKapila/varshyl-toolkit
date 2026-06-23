@@ -22,6 +22,8 @@ import {
   listPromoCodes,
 } from './server/grants.js';
 
+export const VERSION = '0.5.1' as const;
+
 export {
   createSubscriptionStore,
   runMigrations,
