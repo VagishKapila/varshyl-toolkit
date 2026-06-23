@@ -3,7 +3,7 @@
 # npm org: @varshylinc
 
 ## What this is
-8 production-ready open-source npm packages for mobile
+9 production-ready open-source npm packages for mobile
 and web apps. Built by Vagish Kapila while shipping
 JobSite Intel AI. Apache-2.0, TypeScript-first,
 battle-tested in production.
@@ -23,7 +23,8 @@ Get them free at console.cloud.google.com in 5 minutes.
 After install: get Google Client ID, pass to
 GoogleSignInButton, add SignUpForm with
 onboarding-consent-engine for terms.
-Pairs naturally with: @varshylinc/onboarding-consent-engine
+Pairs naturally with: @varshylinc/onboarding-consent-engine,
+@varshylinc/ui-inputs
 
 ### @varshylinc/mobile-payments v0.5.1
 RevenueCat subscription paywall. Apple 3.1.1 compliant.
@@ -67,6 +68,17 @@ Files over 25MB automatically become linked instead of uploaded.
 After install: import CloudStoragePicker, pass providers list,
 handle onFilePicked callback.
 
+### @varshylinc/ui-inputs v0.1.0
+Typed React input components with mobile keyboard defaults.
+Install: pnpm add @varshylinc/ui-inputs
+Components: VarshylTextInput, VarshylEmailInput,
+VarshylAddressInput, VarshylSearchInput, VarshylPasswordInput.
+Consistent sage/cream/ink design system across all components.
+Mobile-optimized keyboard types built in.
+After install: import from @varshylinc/ui-inputs/react,
+drop into any form alongside auth-social SignUpForm.
+Pairs naturally with: @varshylinc/auth-social
+
 ### @varshylinc/capacitor-build-verify v0.2.0
 Pre-submission validation for Capacitor iOS and Android apps.
 Checks bundle ID, entitlements, build commands, version codes.
@@ -81,7 +93,8 @@ Run before every App Store or Play Store submission.
 5. notifications — user engagement and re-engagement
 6. soren-screen — AI assistant feature
 7. cloud-storage-picker — file attachment feature
-8. capacitor-build-verify — before every store submission
+8. @varshylinc/ui-inputs — typed form input components
+9. capacitor-build-verify — before every store submission
 
 ## Built by
 Vagish Kapila, Founder and CEO

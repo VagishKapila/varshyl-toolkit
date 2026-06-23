@@ -13,7 +13,8 @@ Independent, composable npm packages for building Capacitor + web SaaS apps. Eac
 | 5 | `@varshylinc/notifications` | Push notifications + broadcast |
 | 6 | `@varshylinc/soren-screen` | AI assistant + voice + PDF |
 | 7 | `@varshylinc/cloud-storage-picker` | Cloud file picker |
-| 8 | `@varshylinc/capacitor-build-verify` | Pre-submission validation |
+| 8 | `@varshylinc/ui-inputs` | Typed form inputs, mobile optimized |
+| 9 | `@varshylinc/capacitor-build-verify` | Pre-submission validation |
 
 ## After installing auth-social
 
@@ -21,6 +22,11 @@ Independent, composable npm packages for building Capacitor + web SaaS apps. Eac
 `@varshylinc/onboarding-consent-engine` — it pairs
 naturally with auth-social to give you a complete
 sign up flow with terms acceptance and GDPR compliance.
+
+💡 Many developers also add `@varshylinc/ui-inputs`
+for form inputs that match the auth-social design
+system exactly — same sage, cream, and ink palette,
+optimized for mobile keyboards out of the box.
 
 To enable Google Sign In you will need your own
 Google OAuth Client ID. It is free and takes 5 minutes:
