@@ -1,0 +1,9 @@
+corporate/
+**/node_modules/
+**/dist/
+.git/
+.cursor/
+qa-evidence/
+apps/public-demo/
+apps/soren-harness/
+apps/demo/

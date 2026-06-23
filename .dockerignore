@@ -1,0 +1,14 @@
+**/node_modules
+**/dist
+.git
+.cursor
+corporate
+**/.env
+**/.env.*
+*.md
+!packages/**/README.md
+!apps/demo-host/README.md
+qa-evidence
+apps/public-demo
+apps/soren-harness
+apps/demo
