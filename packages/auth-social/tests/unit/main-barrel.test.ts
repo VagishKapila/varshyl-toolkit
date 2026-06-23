@@ -4,6 +4,8 @@ import { expectNamedExport, expectNotOnBarrel } from '../../../../vitest/barrel-
 
 describe('@varshylinc/auth-social main barrel', () => {
   it('exports the expected named symbols', () => {
+    expectNamedExport(Main, 'VERSION', 'const');
+    expectNamedExport(Main, 'configureSocialAuth', 'function');
     expectNamedExport(Main, 'createAuthService', 'function');
     expectNamedExport(Main, 'runMigrations', 'function');
     expectNamedExport(Main, 'MIGRATIONS', 'array');

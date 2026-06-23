@@ -1,5 +1,9 @@
 # @varshylinc/mobile-payments
 
+## 0.5.1
+### Patch Changes
+- Add VERSION constant to main barrel export
+
 ## 0.5.0
 
 ### Minor Changes
