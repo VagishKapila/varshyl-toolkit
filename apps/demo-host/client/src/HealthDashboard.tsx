@@ -21,7 +21,7 @@ const COLORS = {
   text: '#f3f4f6',
 };
 
-const TOTAL_CHECKS = 20;
+const TOTAL_CHECKS = 23;
 
 function statusIcon(status: HealthStatus): string {
   if (status === 'pass') return '✅';
@@ -40,7 +40,7 @@ export function HealthDashboardPage(): React.ReactElement {
     const skipped = results.filter((r) => r.status === 'skip').length;
     const autoTotal = results.filter((r) => r.status !== 'skip').length;
     const autoPass = results.filter((r) => r.status === 'pass').length;
-    const allAutoPass = autoTotal === 16 && autoPass === 16 && failed === 0;
+    const allAutoPass = autoTotal === 19 && autoPass === 19 && failed === 0;
     return { passed, failed, skipped, allAutoPass };
   }, [results]);
 
@@ -95,7 +95,7 @@ export function HealthDashboardPage(): React.ReactElement {
             Varshyl Toolkit — Health Dashboard
           </h1>
           <p style={{ color: COLORS.muted, fontSize: '0.875rem', marginBottom: '1rem' }}>
-            8 packages · 20 checks · @varshylinc
+            9 packages · 23 checks · @varshylinc
           </p>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
             <button
