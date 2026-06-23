@@ -193,6 +193,55 @@ export const HEALTH_CHECKS: HealthCheckDef[] = [
     },
   },
   {
+    name: 'ui-inputs: VERSION export',
+    run: async () => {
+      try {
+        const uiInputs = await import('@varshylinc/ui-inputs');
+        const ok = typeof uiInputs.VERSION === 'string';
+        return ok
+          ? { status: 'pass', detail: `VERSION: ${uiInputs.VERSION}` }
+          : { status: 'fail', detail: 'VERSION not found on main barrel' };
+      } catch (e) {
+        return { status: 'fail', detail: e instanceof Error ? e.message : String(e) };
+      }
+    },
+  },
+  {
+    name: 'ui-inputs: VarshylTextInput loads',
+    run: async () => {
+      try {
+        const r = await import('@varshylinc/ui-inputs/react');
+        const ok = typeof r.VarshylTextInput === 'function';
+        return ok
+          ? { status: 'pass', detail: 'VarshylTextInput: function' }
+          : { status: 'fail', detail: 'VarshylTextInput is not a function' };
+      } catch (e) {
+        return { status: 'fail', detail: e instanceof Error ? e.message : String(e) };
+      }
+    },
+  },
+  {
+    name: 'ui-inputs: all 5 components present',
+    run: async () => {
+      try {
+        const r = await import('@varshylinc/ui-inputs/react');
+        const components = [
+          'VarshylTextInput',
+          'VarshylEmailInput',
+          'VarshylAddressInput',
+          'VarshylSearchInput',
+          'VarshylPasswordInput',
+        ] as const;
+        const results = components.map((k) => ({ name: k, ok: typeof r[k] === 'function' }));
+        const allPass = results.every((x) => x.ok);
+        const detail = results.map((x) => `${x.ok ? '✅' : '❌'} ${x.name}`).join(', ');
+        return allPass ? { status: 'pass', detail } : { status: 'fail', detail };
+      } catch (e) {
+        return { status: 'fail', detail: e instanceof Error ? e.message : String(e) };
+      }
+    },
+  },
+  {
     name: 'auth-social: Apple Sign In (manual — needs device)',
     run: async () => ({
       status: 'skip',

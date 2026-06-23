@@ -23,6 +23,7 @@
     "@varshylinc/onboarding-consent-engine": "workspace:*",
     "@varshylinc/soren-screen": "0.2.1",
     "@varshylinc/team-management": "workspace:*",
+    "@varshylinc/ui-inputs": "workspace:*",
     "bcryptjs": "^2.4.3",
     "express": "^4.18.3",
     "pg": "^8.11.5"

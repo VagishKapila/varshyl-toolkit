@@ -45,6 +45,22 @@ All native props pass through (`className`, `value`, `onChange`, `placeholder`, 
 
 Every new Varshyl product uses these components — not raw inputs.
 
+## What developers usually add next
+
+These are not required — but they pair naturally
+with this package and save you from building
+them yourself:
+
+💡 `@varshylinc/auth-social` — use these input
+components inside SignUpForm and SignInForm for
+consistent styling and mobile keyboard optimization
+across your entire auth flow. They are designed
+to match perfectly.
+
+💡 `@varshylinc/onboarding-consent-engine` — pair
+with these inputs to add GDPR-compliant terms
+consent to your sign up form with one component.
+
 ## License
 
 Apache-2.0
