@@ -276,12 +276,15 @@ const KNOWN_PEER_DEPS = [
 ];
 
 function getMissingModule(err) {
-  const match = String(err.message).match(/Cannot find module '([^']+)'/);
-  return match ? match[1] : null;
+  const msg = String(err.message);
+  const mod = msg.match(/Cannot find module '([^']+)'/);
+  if (mod) return mod[1];
+  const pkg = msg.match(/Cannot find package '([^']+)'/);
+  return pkg ? pkg[1] : null;
 }
 
 function isKnownPeerMissing(err) {
-  if (err.code !== 'MODULE_NOT_FOUND') return false;
+  if (err.code !== 'MODULE_NOT_FOUND' && err.code !== 'ERR_MODULE_NOT_FOUND') return false;
   const missing = getMissingModule(err);
   if (!missing) return false;
   return KNOWN_PEER_DEPS.some(
