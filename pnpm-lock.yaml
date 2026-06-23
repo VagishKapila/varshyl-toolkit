@@ -38,9 +38,18 @@ importers:
       '@varshylinc/auth-social':
         specifier: workspace:*
         version: link:../../packages/auth-social
+      '@varshylinc/capacitor-build-verify':
+        specifier: workspace:*
+        version: link:../../packages/capacitor-build-verify
+      '@varshylinc/cloud-storage-picker':
+        specifier: workspace:*
+        version: link:../../packages/cloud-storage-picker
       '@varshylinc/mobile-payments':
         specifier: workspace:*
         version: link:../../packages/mobile-payments
+      '@varshylinc/notifications':
+        specifier: workspace:*
+        version: link:../../packages/notifications
       '@varshylinc/onboarding-consent-engine':
         specifier: workspace:*
         version: link:../../packages/onboarding-consent-engine

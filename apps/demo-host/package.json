@@ -16,8 +16,12 @@
   },
   "dependencies": {
     "@varshylinc/auth-social": "workspace:*",
+    "@varshylinc/capacitor-build-verify": "workspace:*",
+    "@varshylinc/cloud-storage-picker": "workspace:*",
     "@varshylinc/mobile-payments": "workspace:*",
+    "@varshylinc/notifications": "workspace:*",
     "@varshylinc/onboarding-consent-engine": "workspace:*",
+    "@varshylinc/soren-screen": "0.2.1",
     "@varshylinc/team-management": "workspace:*",
     "bcryptjs": "^2.4.3",
     "express": "^4.18.3",
