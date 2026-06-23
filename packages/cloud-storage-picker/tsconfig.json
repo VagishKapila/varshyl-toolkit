@@ -1,0 +1,19 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "composite": true,
+    "lib": ["ES2022", "DOM"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "noEmit": true
+  },
+  "include": [
+    "src/index.ts",
+    "src/types.ts",
+    "src/providers.ts",
+    "src/providers/**/*"
+  ],
+  "exclude": ["node_modules", "dist", "tests", "src/react.ts", "src/react"]
+}
