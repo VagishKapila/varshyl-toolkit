@@ -1,3 +1,7 @@
+export const VERSION = '0.6.0' as const;
+
+export { configureSocialAuth, getSocialAuthApiBaseUrl } from './config.js';
+
 export {
   createAuthService,
   runMigrations,

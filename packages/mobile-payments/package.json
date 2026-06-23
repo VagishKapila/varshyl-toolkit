@@ -1,6 +1,6 @@
 {
   "name": "@varshylinc/mobile-payments",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Seat-aware in-app subscriptions for Capacitor apps via RevenueCat: Apple IAP + Google Play Billing, free trials, paywall UI, and read-only enforcement on lapse.",
   "author": "Vagish Kapila (Varshyl Inc.)",
   "license": "Apache-2.0",
@@ -33,12 +33,12 @@
     "migrations",
     "LICENSE"
   ],
-  "main": "./dist/index.js",
+  "main": "./dist/index.cjs",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "require": "./dist/index.js",
+      "require": "./dist/index.cjs",
       "import": "./dist/index.js"
     },
     "./client": {
@@ -53,7 +53,7 @@
     },
     "./express": {
       "types": "./dist/express.d.ts",
-      "require": "./dist/express.js",
+      "require": "./dist/express.cjs",
       "import": "./dist/express.js"
     }
   },
@@ -63,7 +63,7 @@
   },
   "scripts": {
     "prebuild": "tsx scripts/inline-migrations.ts && tsx scripts/inline-mobile-payments-css.ts",
-    "build": "tsc -p tsconfig.json && tsc -p tsconfig.client.build.json && mkdir -p dist/client/components && cp src/client/components/*.css dist/client/components/",
+    "build": "tsup && tsc -p tsconfig.client.build.json && mkdir -p dist/client/components && cp src/client/components/*.css dist/client/components/",
     "pretypecheck": "tsx scripts/inline-migrations.ts && tsx scripts/inline-mobile-payments-css.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.client.json --noEmit",
     "pretest": "tsx scripts/inline-migrations.ts && tsx scripts/inline-mobile-payments-css.ts",

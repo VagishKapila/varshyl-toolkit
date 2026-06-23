@@ -1,0 +1,21 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx"
+  },
+  "include": [
+    "src/index.ts",
+    "src/react.ts",
+    "src/react/**/*",
+    "src/config.ts",
+    "src/types.ts",
+    "src/server/**/*",
+    "src/types/**/*"
+  ],
+  "exclude": ["node_modules", "dist", "tests", "src/client"]
+}

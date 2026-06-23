@@ -116,6 +116,24 @@ await scheduleLocalNotifications([{
 
 Transactional pushes ignore `announcementsOptIn`. Hub broadcast should filter `announcementsOptIn: true`.
 
+## What developers usually add next
+
+These are not required — but they pair naturally:
+
+💡 @varshylinc/team-management — segment broadcast
+notifications by org or user role.
+
+## Steps to complete your Firebase setup
+
+1. Create a project at console.firebase.google.com
+2. Project Settings → Service Accounts
+3. Generate new private key → download JSON
+4. Keep the JSON file secret — never commit to git
+5. Pass to configureNotifications({
+     serviceAccountJson: yourJson
+   })
+6. Mount tokensRouter for device registration
+
 ## License
 
 Apache-2.0

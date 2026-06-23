@@ -106,3 +106,15 @@ import { runVerify, formatHuman } from '@varshylinc/capacitor-build-verify';
 const report = await runVerify({ cwd: process.cwd(), preset: 'capacitor-basic' });
 console.log(formatHuman(report));
 ```
+
+## What developers usually add next
+
+These are not required — but they are the natural
+last steps before App Store submission:
+
+💡 Run pnpm build:ios (not pnpm build) before every
+iOS submission — this package validates it automatically.
+
+💡 @varshylinc/mobile-payments — if you have in-app
+purchases, verify your entitlements are configured
+before submitting.

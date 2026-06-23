@@ -2,6 +2,41 @@
 
 Independent, composable npm packages for building Capacitor + web SaaS apps. Each module ships its own server logic, React UI, SQL migrations, and adapter contract — install only what you need, pin versions independently, and keep your user data in your own database.
 
+## Quick start — recommended install order
+
+| Step | Package | What it gives you |
+|------|---------|-------------------|
+| 1 | `@varshylinc/auth-social` | Apple + Google login, sign up form |
+| 2 | `@varshylinc/onboarding-consent-engine` | Terms, GDPR/CCPA consent |
+| 3 | `@varshylinc/team-management` | Multi-user orgs (when needed) |
+| 4 | `@varshylinc/mobile-payments` | Subscriptions + grants system |
+| 5 | `@varshylinc/notifications` | Push notifications + broadcast |
+| 6 | `@varshylinc/soren-screen` | AI assistant + voice + PDF |
+| 7 | `@varshylinc/cloud-storage-picker` | Cloud file picker |
+| 8 | `@varshylinc/capacitor-build-verify` | Pre-submission validation |
+
+## After installing auth-social
+
+💡 Many developers also add
+`@varshylinc/onboarding-consent-engine` — it pairs
+naturally with auth-social to give you a complete
+sign up flow with terms acceptance and GDPR compliance.
+
+To enable Google Sign In you will need your own
+Google OAuth Client ID. It is free and takes 5 minutes:
+console.cloud.google.com → Credentials →
+Create OAuth 2.0 Client ID.
+Your credentials are private to you.
+Varshyl never sees them.
+
+## After installing mobile-payments
+
+💡 Many developers also add
+`@varshylinc/notifications` to re-engage users
+whose subscriptions lapse, and
+`@varshylinc/onboarding-consent-engine` to capture
+payment consent at sign up.
+
 ## Packages
 
 | Package | Version | Description |

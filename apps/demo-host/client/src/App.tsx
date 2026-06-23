@@ -29,6 +29,7 @@ import {
   AuthAuthedPage,
 } from './AuthDemo.js';
 import { PaymentsDemoPage } from './PaymentsDemo.js';
+import { AuthFormsDemoPage } from './AuthFormsDemo.js';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -137,6 +138,9 @@ function DemoNav({ whoami }: { whoami: DemoUser | null }): React.ReactElement {
         </Link>
         <Link to="/team/audit" className="text-sm text-slate-300 hover:text-white transition-colors">
           Audit
+        </Link>
+        <Link to="/auth-forms" className="text-sm text-slate-300 hover:text-white transition-colors">
+          Auth Forms
         </Link>
         {/* Admin nav only shown to super-admin (user 1 = Sarah in demo) */}
         {whoami?.id === 1 && (
@@ -361,6 +365,9 @@ export default function App(): React.ReactElement {
 
       {/* Mobile payments demo */}
       <Route path="/payments/demo" element={<PaymentsDemoPage />} />
+
+      {/* Auth forms demo (SignUpForm / SignInForm / GoogleSignInButton) */}
+      <Route path="/auth-forms" element={<AuthFormsDemoPage />} />
 
       {/* Password reset (standalone, no nav) */}
       <Route path="/password-reset" element={<PasswordResetRequestPage />} />

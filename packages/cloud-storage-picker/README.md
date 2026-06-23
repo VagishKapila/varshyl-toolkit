@@ -84,6 +84,22 @@ Use `getAvailableProviders()` from `@varshylinc/cloud-storage-picker/providers` 
 - Box enterprise picker
 - Thumbnail previews for linked files
 
+## What developers usually add next
+
+These are not required — but they pair naturally:
+
+💡 @varshylinc/auth-social — users should be logged
+in before picking files. Pairs naturally for any
+document workflow.
+
+## Steps to complete your setup
+
+1. Import CloudStoragePicker and getAvailableProviders
+2. Pass the providers list to the component
+3. Handle the onFilePicked callback in your code
+4. Files over 25MB automatically become linked
+   (not uploaded) — no extra config needed
+
 ## License
 
 Apache-2.0

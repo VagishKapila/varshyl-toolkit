@@ -194,6 +194,16 @@ Components ship with neutral default styling. Customize copy and legal links via
 - [@varshylinc/team-management](../team-management) — org onboarding after account creation
 - [@varshylinc/mobile-payments](../mobile-payments) — subscription paywall after onboarding
 
+## What developers usually add next
+
+These are not required — but they pair naturally:
+
+💡 @varshylinc/auth-social — use SignUpForm alongside
+this package for a complete sign up and consent flow.
+
+💡 @varshylinc/mobile-payments — capture payment
+consent at the same time as your terms consent.
+
 ## License
 
 Apache-2.0 © Vagish Kapila / Varshyl Inc.

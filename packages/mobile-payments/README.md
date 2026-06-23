@@ -231,6 +231,28 @@ Grant helpers (`hasGrantedAccess`, `grantAccess`, etc.) remain on the main packa
 
 ---
 
+## What developers usually add next
+
+These are not required — but they pair naturally
+with this package:
+
+💡 @varshylinc/onboarding-consent-engine — capture
+payment consent at sign up. Required in many regions.
+
+💡 @varshylinc/notifications — re-engage users whose
+trials are ending or subscriptions have lapsed.
+
+## Steps to complete your RevenueCat setup
+
+1. Create a free account at revenuecat.com
+2. Add your iOS app bundle ID or Android package name
+3. Upload your App Store subscription key
+4. Create a subscription product and entitlement
+5. Copy your iOS Public API Key (starts with appl_)
+6. Pass it to configureMobilePayments()
+
+---
+
 ## QA Checklist (run before App Store submission)
 
 See QA.md for the full checklist.

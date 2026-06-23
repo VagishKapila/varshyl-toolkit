@@ -8,6 +8,6 @@
     "jsx": "react-jsx",
     "noEmit": true
   },
-  "include": ["src/client/**/*", "src/client.ts", "src/types.ts", "src/config.ts", "src/types/**/*"],
+  "include": ["src/client/**/*", "src/client.ts", "src/react.ts", "src/react/**/*", "src/types.ts", "src/config.ts", "src/types/**/*"],
   "exclude": ["node_modules", "dist"]
 }

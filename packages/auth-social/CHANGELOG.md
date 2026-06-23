@@ -1,5 +1,20 @@
 # @varshylinc/auth-social
 
+## 0.6.0
+### Minor Changes
+- New ./react subpath: SignUpForm, SignInForm,
+  GoogleSignInButton, useAuthForm hook
+- GoogleSignInButton shows step-by-step setup guide
+  when googleClientId not yet configured
+- Developers always use their own Google credentials —
+  Varshyl never stores or sees them
+- Terms checkbox always unchecked by default (GDPR)
+
+## 0.5.1
+### Patch Changes
+- Add VERSION constant to main barrel
+- Ensure configureSocialAuth exported from main entry
+
 ## 0.5.0
 
 ### Added

@@ -15,6 +15,17 @@ export interface ProductAuthConfig {
   socialProvider?: SocialAuthProviderLike;
 }
 
+let socialAuthApiBaseUrl = '/api/auth';
+
+/** Configure social auth API base URL (main barrel). Use `/client` configureAuth for theme + providers. */
+export function configureSocialAuth(config: ProductAuthConfig): void {
+  socialAuthApiBaseUrl = config.apiBaseUrl.replace(/\/$/, '');
+}
+
+export function getSocialAuthApiBaseUrl(): string {
+  return socialAuthApiBaseUrl;
+}
+
 export interface AuthTheme {
   primary: string;
   primaryHover: string;
