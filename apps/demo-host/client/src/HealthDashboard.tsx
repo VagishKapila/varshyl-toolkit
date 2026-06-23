@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 type HealthStatus = 'pass' | 'fail' | 'skip';
 
@@ -83,6 +83,10 @@ export function HealthDashboardPage(): React.ReactElement {
     }
   }, []);
 
+  useEffect(() => {
+    void runChecks();
+  }, [runChecks]);
+
   const progress = running
     ? Math.round((results.length / TOTAL_CHECKS) * 100)
     : results.length > 0 ? 100 : 0;
@@ -115,12 +119,17 @@ export function HealthDashboardPage(): React.ReactElement {
             >
               {running ? 'Running…' : 'Run All Checks'}
             </button>
-            {lastRun && (
+            {lastRun && !running && (
               <span style={{ color: COLORS.muted, fontSize: '0.75rem' }}>
-                Last run: {lastRun.toLocaleString()}
+                Last run: {lastRun.toLocaleString()} — Auto-refreshes on visit
               </span>
             )}
           </div>
+          {running && (
+            <p style={{ color: COLORS.muted, fontSize: '0.8125rem', margin: '0.75rem 0 0', fontStyle: 'italic' }}>
+              Running checks...
+            </p>
+          )}
         </header>
 
         {(running || results.length > 0) && (
