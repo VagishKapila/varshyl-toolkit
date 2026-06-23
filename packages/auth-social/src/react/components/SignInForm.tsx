@@ -36,6 +36,7 @@ export function SignInForm({
       <input
         type="email"
         autoComplete="email"
+        inputMode="email"
         value={form.email}
         onChange={(e) => form.setEmail(e.currentTarget.value)}
         style={{ ...fieldStyle, marginBottom: form.errors.email ? '4px' : '12px' }}

@@ -1,6 +1,6 @@
 {
   "name": "@varshylinc/ui-inputs",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Drop-in React input and textarea wrappers with correct mobile keyboard defaults for every Varshyl product.",
   "author": "Vagish Kapila (Varshyl Inc.)",
   "license": "Apache-2.0",

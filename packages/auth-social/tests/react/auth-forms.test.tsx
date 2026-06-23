@@ -25,6 +25,30 @@ test('SignUpForm submit disabled when terms unchecked', () => {
   expect((btn as HTMLButtonElement).disabled).toBe(true);
 });
 
+test('SignUpForm email input has autocomplete email', () => {
+  const { container } = render(<SignUpForm onSubmit={async () => {}} />);
+  const email = container.querySelector('input[type="email"]');
+  expect(email?.getAttribute('autocomplete')).toBe('email');
+});
+
+test('SignUpForm password inputs have autocomplete new-password', () => {
+  const { container } = render(<SignUpForm onSubmit={async () => {}} />);
+  const passwords = container.querySelectorAll('input[autocomplete="new-password"]');
+  expect(passwords.length).toBe(2);
+});
+
+test('SignUpForm show/hide toggle does not change autocomplete attribute', () => {
+  render(<SignUpForm onSubmit={async () => {}} />);
+  const password = screen.getByPlaceholderText('Password');
+  expect(password.getAttribute('autocomplete')).toBe('new-password');
+  fireEvent.click(screen.getAllByText('Show')[0]);
+  expect(password.getAttribute('autocomplete')).toBe('new-password');
+  expect(password.getAttribute('type')).toBe('text');
+  fireEvent.click(screen.getAllByText('Hide')[0]);
+  expect(password.getAttribute('autocomplete')).toBe('new-password');
+  expect(password.getAttribute('type')).toBe('password');
+});
+
 test('SignUpForm shows error for short password', () => {
   render(<SignUpForm onSubmit={async () => {}} />);
   const pass = screen.getAllByPlaceholderText(/password/i)[0];
@@ -36,6 +60,18 @@ test('SignUpForm shows error for short password', () => {
 test('SignInForm renders correctly', () => {
   render(<SignInForm onSubmit={async () => {}} />);
   expect(screen.getByText(/Sign in/)).toBeTruthy();
+});
+
+test('SignInForm email input has autocomplete email', () => {
+  const { container } = render(<SignInForm onSubmit={async () => {}} />);
+  const email = container.querySelector('input[type="email"]');
+  expect(email?.getAttribute('autocomplete')).toBe('email');
+});
+
+test('SignInForm password input has autocomplete current-password', () => {
+  const { container } = render(<SignInForm onSubmit={async () => {}} />);
+  const password = container.querySelector('input[autocomplete="current-password"]');
+  expect(password).not.toBeNull();
 });
 
 test('GoogleSignInButton shows setup guide when empty', () => {
