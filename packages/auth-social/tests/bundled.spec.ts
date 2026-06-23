@@ -83,10 +83,10 @@ describe('published dist guards', () => {
     expect(bundle).not.toMatch(/require\('react'\)/);
   });
 
-  it('VERSION is 0.6.0', async () => {
+  it('VERSION is 0.6.1', async () => {
     const { createRequire } = await import('node:module');
     const require = createRequire(import.meta.url);
     const m = require(join(pkgRoot, 'dist/index.cjs')) as { VERSION: string };
-    expect(m.VERSION).toBe('0.6.0');
+    expect(m.VERSION).toBe('0.6.1');
   });
 });

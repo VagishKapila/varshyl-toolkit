@@ -1,5 +1,16 @@
 # @varshylinc/auth-social
 
+## 0.6.1
+### Patch Changes
+- SignUpForm: add autocomplete="email" to email input
+- SignUpForm: add autocomplete="new-password" to
+  password and confirm password inputs
+- SignInForm: add autocomplete="email" to email input
+- SignInForm: add autocomplete="current-password"
+  to password input
+- Password show/hide toggle: autocomplete attribute
+  preserved correctly when toggling visibility
+
 ## 0.6.0
 ### Minor Changes
 - New ./react subpath: SignUpForm, SignInForm,

@@ -45,7 +45,7 @@ export function SignUpForm({
         <input
           type={showPassword ? 'text' : 'password'}
           placeholder={placeholder}
-          autoComplete={placeholder.includes('Confirm') ? 'new-password' : 'new-password'}
+          autoComplete="new-password"
           value={value}
           onChange={(e) => onChange(e.currentTarget.value)}
           onBlur={onBlur}
@@ -70,6 +70,7 @@ export function SignUpForm({
       <input
         type="email"
         autoComplete="email"
+        inputMode="email"
         value={form.email}
         onChange={(e) => form.setEmail(e.currentTarget.value)}
         style={{ ...fieldStyle, marginBottom: form.errors.email ? '4px' : '12px' }}
