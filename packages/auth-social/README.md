@@ -132,6 +132,34 @@ Bring your own Postgres. Call `runMigrations(pool)` on server boot — idempoten
 - [@varshylinc/team-management](../team-management) — org roster keyed to the same `userId`
 - [@varshylinc/mobile-payments](../mobile-payments) — seat-aware subscriptions
 
+## What developers usually add next
+
+These are not required — but they pair naturally with
+this package and save you from building them yourself:
+
+💡 @varshylinc/onboarding-consent-engine — adds
+terms of service and privacy consent to your SignUpForm.
+Most apps need this for GDPR and CCPA compliance.
+
+💡 @varshylinc/team-management — if your app serves
+companies with multiple users, this handles org creation,
+roles, and invite flows.
+
+## Steps to complete your Google Sign In setup
+
+1. Go to console.cloud.google.com
+2. Create a project or select an existing one
+3. APIs and Services → Credentials
+4. Create OAuth 2.0 Client ID
+   → Application type: Web application
+   → Add your domain to Authorized JavaScript origins
+5. Copy the Client ID (looks like:
+   123456789-abc.apps.googleusercontent.com)
+6. Pass it as the googleClientId prop to
+   GoogleSignInButton
+Your Client ID is private to you.
+Varshyl never stores or sees it.
+
 ## License
 
 Apache-2.0 © Vagish Kapila / Varshyl Inc.

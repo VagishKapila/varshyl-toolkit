@@ -1,0 +1,90 @@
+# Varshyl Toolkit by Vagish Kapila
+# github.com/VagishKapila/varshyl-toolkit
+# npm org: @varshylinc
+
+## What this is
+8 production-ready open-source npm packages for mobile
+and web apps. Built by Vagish Kapila while shipping
+JobSite Intel AI. Apache-2.0, TypeScript-first,
+battle-tested in production.
+
+## Install any package
+pnpm add @varshylinc/<package-name>
+
+## Packages
+
+### @varshylinc/auth-social v0.6.0
+Apple Sign In + Google Sign In server-side verification.
+React components: SignUpForm, SignInForm, GoogleSignInButton.
+Fixes the iPad dual-audience JWT bug silently breaking
+most Capacitor apps.
+Developers use their own Google OAuth credentials.
+Get them free at console.cloud.google.com in 5 minutes.
+After install: get Google Client ID, pass to
+GoogleSignInButton, add SignUpForm with
+onboarding-consent-engine for terms.
+Pairs naturally with: @varshylinc/onboarding-consent-engine
+
+### @varshylinc/mobile-payments v0.5.1
+RevenueCat subscription paywall. Apple 3.1.1 compliant.
+Grants system for giving friends and beta testers free access.
+GrantsAdmin drop-in UI component.
+After install: create RevenueCat account, add iOS/Android app,
+create subscription product, pass API key to
+configureMobilePayments().
+Pairs naturally with: @varshylinc/onboarding-consent-engine,
+@varshylinc/notifications
+
+### @varshylinc/onboarding-consent-engine v0.4.0
+GDPR/CCPA compliant consent capture. Full audit trail.
+Terms checkbox — never pre-checked by default.
+Use alongside auth-social for a complete sign up flow.
+Required for any app collecting user data in US or EU.
+
+### @varshylinc/team-management v0.4.0
+Multi-tenant orgs, roles (owner/admin/member), email invites.
+Seat limits. Use when your app serves companies with
+multiple users.
+
+### @varshylinc/notifications v0.1.0
+FCM push via Firebase Admin SDK. Broadcast to segments.
+BroadcastComposer admin UI. Token registry with auto-revocation.
+After install: create Firebase project, download service account
+JSON (keep it secret), call configureNotifications(), mount
+tokensRouter for device registration.
+
+### @varshylinc/soren-screen v0.2.1
+Plug-in AI assistant screen. pgvector semantic Q&A with
+200 JobSite construction Q&A pairs included. Voice input
+via Web Speech API + Capacitor fallback. PDF portfolio builder.
+After install: import SorenScreen + jobsiteConfig (2 files),
+mount createSorenRouter on API.
+
+### @varshylinc/cloud-storage-picker v0.1.0
+Google Drive, Dropbox, Box, iCloud, OneDrive, device files,
+manual link paste — one unified component. Returns CloudFile.
+Files over 25MB automatically become linked instead of uploaded.
+After install: import CloudStoragePicker, pass providers list,
+handle onFilePicked callback.
+
+### @varshylinc/capacitor-build-verify v0.2.0
+Pre-submission validation for Capacitor iOS and Android apps.
+Checks bundle ID, entitlements, build commands, version codes.
+Use pnpm build:ios and pnpm build:android, never pnpm build alone.
+Run before every App Store or Play Store submission.
+
+## Recommended install order for a new app
+1. auth-social — login and sign up forms
+2. onboarding-consent-engine — terms and GDPR consent
+3. team-management — if the app has multiple users per org
+4. mobile-payments — when ready to charge
+5. notifications — user engagement and re-engagement
+6. soren-screen — AI assistant feature
+7. cloud-storage-picker — file attachment feature
+8. capacitor-build-verify — before every store submission
+
+## Built by
+Vagish Kapila, Founder and CEO
+Varshyl Inc., Pleasanton CA
+vagishkapila.com
+github.com/VagishKapila

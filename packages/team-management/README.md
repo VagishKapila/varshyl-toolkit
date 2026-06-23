@@ -150,6 +150,16 @@ Optional: `@import '@varshylinc/team-management/dist/client/components/TeamManag
 - [@varshylinc/mobile-payments](../mobile-payments) — seat billing integration (Phase 2)
 - [@varshylinc/onboarding-consent-engine](../onboarding-consent-engine) — consent at signup
 
+## What developers usually add next
+
+These are not required — but they pair naturally:
+
+💡 @varshylinc/mobile-payments — enforce seat limits
+based on the user's subscription tier.
+
+💡 @varshylinc/notifications — notify users when
+they receive a team invite.
+
 ## License
 
 Apache-2.0 © Vagish Kapila / Varshyl Inc.
