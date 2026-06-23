@@ -53,10 +53,9 @@ export function HealthDashboardPage(): React.ReactElement {
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let buffer = '';
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
+      let readResult = await reader.read();
+      while (!readResult.done) {
+        buffer += decoder.decode(readResult.value, { stream: true });
         const lines = buffer.split('\n');
         buffer = lines.pop() ?? '';
         for (const line of lines) {
@@ -65,6 +64,7 @@ export function HealthDashboardPage(): React.ReactElement {
           const item = JSON.parse(trimmed) as HealthCheckResult;
           setResults((prev) => [...prev, item]);
         }
+        readResult = await reader.read();
       }
       if (buffer.trim()) {
         const item = JSON.parse(buffer.trim()) as HealthCheckResult;
