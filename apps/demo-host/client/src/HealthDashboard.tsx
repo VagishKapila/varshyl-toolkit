@@ -121,7 +121,7 @@ export function HealthDashboardPage(): React.ReactElement {
             </button>
             {lastRun && !running && (
               <span style={{ color: COLORS.muted, fontSize: '0.75rem' }}>
-                Last run: {lastRun.toLocaleString()} — Auto-refreshes on visit
+                Last run: {lastRun.toLocaleString()} — Auto-refreshes on each visit
               </span>
             )}
           </div>
