@@ -20,6 +20,7 @@ import { createAuthRouter } from './auth-social.js';
 import { createMobilePaymentsRouter } from './mobile-payments.js';
 import { createSorenDemoRouter } from './soren.js';
 import { createHealthRouter } from './health.js';
+import createGeoAuditRouter from './geo-audit.js';
 import type { NormalizedEvent } from '@varshylinc/mobile-payments';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -239,6 +240,9 @@ async function boot(): Promise<void> {
   // ── Toolkit health dashboard (streaming NDJSON checks) ─────────────────────
   app.use('/api/health', createHealthRouter());
 
+  // ── GEO audit scorer ────────────────────────────────────────────────────────
+  app.use('/api/geo-audit', createGeoAuditRouter());
+
   // ── Serve React client ─────────────────────────────────────────────────────
   const clientDist = path.join(__dirname, '../client');
   if (NODE_ENV === 'production' || NODE_ENV === 'test') {
@@ -268,6 +272,7 @@ async function boot(): Promise<void> {
     console.log('[boot]   POST /api/demo/logout             → logout');
     console.log('[boot]   GET  /api/demo/whoami             → current session user');
     console.log('[boot]   GET  /api/demo/users              → list demo users');
+    console.log('[boot]   POST /api/geo-audit              → GEO AI discoverability score');
     console.log('[boot]   GET  /api/consent/definitions     → OCE: all consent definitions');
     console.log('[boot]   POST /api/consent/signup          → OCE: record signup consents');
     console.log('[boot]   GET  /api/consent/status/:userId  → OCE: current status');
