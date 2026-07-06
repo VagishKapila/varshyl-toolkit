@@ -116,7 +116,7 @@ async function has(path: string, snippet: string): Promise<boolean> {
   }
 }
 
-async function main(): Promise<void> {
+export async function runCli(): Promise<void> {
   const [command, ...rest] = process.argv.slice(2);
   if (!command || command === '--help' || command === '-h') {
     console.log('Usage: varshyl-geo <init|audit|appstore|validate> [args]');
@@ -129,7 +129,14 @@ async function main(): Promise<void> {
   throw new Error(`Unknown command: ${command}`);
 }
 
-void main().catch((error) => {
-  console.error(error instanceof Error ? error.message : String(error));
-  process.exit(1);
-});
+function isDirectCliExecution(): boolean {
+  const argv1 = process.argv[1] ?? '';
+  return /varshyl-geo|[\\/]cli[\\/]index\.(cjs|js|mjs|ts)$/.test(argv1);
+}
+
+if (isDirectCliExecution()) {
+  void runCli().catch((error) => {
+    console.error(error instanceof Error ? error.message : String(error));
+    process.exit(1);
+  });
+}
