@@ -1,15 +1,16 @@
 import { Router, type IRouter } from 'express';
 
 const router: IRouter = Router();
-
-// Cache so same phrases don't re-generate
 const cache = new Map<string, Buffer>();
 
-const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
+const INWORLD_API_KEY = process.env.INWORLD_API_KEY;
+const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY
+  ?? process.env.elevenlabs;
 
-// Soren's voice ID from ElevenLabs
-// Default to "Adam" (ElevenLabs free voice) if not set
-const SOREN_VOICE_ID = process.env.SOREN_VOICE_ID ?? 'pNInz6obpgDQGcFmaJgB';
+// Default Soren voice — Adrian on Inworld (calm, confident AI)
+const SOREN_VOICE_ID = process.env.SOREN_VOICE_ID ?? 'Adrian';
+const INWORLD_MODEL = 'inworld-tts-1.5-mini';
+const ELEVENLABS_VOICE_FALLBACK = 'pNInz6obpgDQGcFmaJgB';
 
 router.options('/', (_req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -31,18 +32,15 @@ router.post('/', async (req, res) => {
     return;
   }
 
-  // Limit text length for cost control
   const cleanText = text.slice(0, 500).trim();
+  const voice = voiceId ?? SOREN_VOICE_ID;
 
-  if (!ELEVENLABS_API_KEY) {
-    res.status(503).json({
-      error: 'TTS not configured',
-    });
+  if (!INWORLD_API_KEY && !ELEVENLABS_API_KEY) {
+    res.status(503).json({ error: 'TTS not configured' });
     return;
   }
 
-  // Check cache first
-  const cacheKey = `${voiceId ?? SOREN_VOICE_ID}:${cleanText}`;
+  const cacheKey = `${voice}:${cleanText}`;
   if (cache.has(cacheKey)) {
     const cached = cache.get(cacheKey)!;
     res.setHeader('Content-Type', 'audio/mpeg');
@@ -52,51 +50,83 @@ router.post('/', async (req, res) => {
   }
 
   try {
-    const response = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId ?? SOREN_VOICE_ID}`,
-      {
-        method: 'POST',
-        headers: {
-          Accept: 'audio/mpeg',
-          'Content-Type': 'application/json',
-          'xi-api-key': ELEVENLABS_API_KEY,
-        },
-        body: JSON.stringify({
-          text: cleanText,
-          model_id: 'eleven_turbo_v2',
-          voice_settings: {
-            stability: 0.5,
-            similarity_boost: 0.8,
-            style: 0.2,
-            use_speaker_boost: true,
-          },
-        }),
-      },
-    );
+    let audioBuffer: Buffer;
 
-    if (!response.ok) {
-      const err = await response.text();
-      console.error('ElevenLabs error:', err);
-      res.status(502).json({ error: 'TTS service error' });
-      return;
+    if (INWORLD_API_KEY) {
+      const response = await fetch(
+        'https://api.inworld.ai/tts/v1/voice:synthesize',
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Basic ${INWORLD_API_KEY}`,
+            'Content-Type': 'application/json',
+            Accept: 'audio/mpeg',
+          },
+          body: JSON.stringify({
+            text: cleanText,
+            voiceId: voice,
+            modelId: INWORLD_MODEL,
+          }),
+        },
+      );
+
+      if (!response.ok) {
+        const err = await response.text();
+        console.error('Inworld TTS error:', response.status, err);
+        throw new Error(`Inworld error ${response.status}`);
+      }
+
+      const arrayBuffer = await response.arrayBuffer();
+      audioBuffer = Buffer.from(arrayBuffer);
+    } else if (ELEVENLABS_API_KEY) {
+      const elVoice = voiceId ?? ELEVENLABS_VOICE_FALLBACK;
+      const response = await fetch(
+        `https://api.elevenlabs.io/v1/text-to-speech/${elVoice}`,
+        {
+          method: 'POST',
+          headers: {
+            Accept: 'audio/mpeg',
+            'Content-Type': 'application/json',
+            'xi-api-key': ELEVENLABS_API_KEY,
+          },
+          body: JSON.stringify({
+            text: cleanText,
+            model_id: 'eleven_turbo_v2',
+            voice_settings: {
+              stability: 0.5,
+              similarity_boost: 0.8,
+              style: 0.2,
+              use_speaker_boost: true,
+            },
+          }),
+        },
+      );
+
+      if (!response.ok) {
+        const err = await response.text();
+        console.error('ElevenLabs TTS error:', err);
+        throw new Error('ElevenLabs TTS error');
+      }
+
+      const arrayBuffer = await response.arrayBuffer();
+      audioBuffer = Buffer.from(arrayBuffer);
+    } else {
+      throw new Error('No TTS provider configured');
     }
 
-    const arrayBuffer = await response.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
-    // Cache (max 100 entries, evict oldest)
     if (cache.size >= 100) {
       const firstKey = cache.keys().next().value;
       if (firstKey !== undefined) cache.delete(firstKey);
     }
-    cache.set(cacheKey, buffer);
+    cache.set(cacheKey, audioBuffer);
 
     res.setHeader('Content-Type', 'audio/mpeg');
     res.setHeader('X-Cache', 'MISS');
-    res.end(buffer);
+    res.setHeader('X-Provider', INWORLD_API_KEY ? 'inworld' : 'elevenlabs');
+    res.end(audioBuffer);
   } catch (err) {
     console.error('TTS error:', err);
-    res.status(500).json({ error: 'Internal TTS error' });
+    res.status(500).json({ error: 'TTS generation failed' });
   }
 });
 
