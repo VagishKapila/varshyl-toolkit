@@ -7,8 +7,8 @@ const INWORLD_API_KEY = process.env.INWORLD_API_KEY;
 const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY
   ?? process.env.elevenlabs;
 
-// Default Soren voice — Adrian on Inworld (calm, confident AI)
-const SOREN_VOICE_ID = process.env.SOREN_VOICE_ID ?? 'Adrian';
+// Default Soren voice — Dennis on Inworld (calm, confident)
+const SOREN_VOICE_ID = process.env.SOREN_VOICE_ID ?? 'Dennis';
 const INWORLD_MODEL = 'inworld-tts-1.5-mini';
 const ELEVENLABS_VOICE_FALLBACK = 'pNInz6obpgDQGcFmaJgB';
 
