@@ -94,16 +94,16 @@ router.post('/', async (req, res) => {
 
   let contextNote = '';
   if (auditContext) {
-    const failing = auditContext.checks
-      .filter((c) => !c.passed)
-      .map((c) => c.name)
-      .join(', ');
+    const failing = auditContext?.checks
+      ?.filter((c) => !c.passed)
+      ?.map((c) => c.name)
+      ?.join(', ') ?? 'none';
     contextNote = `
 CURRENT AUDIT CONTEXT:
-Site: ${auditContext.url}
-Score: ${auditContext.score}/100 (Grade: ${auditContext.grade})
-Failing signals: ${failing || 'none'}
-Top fixes: ${auditContext.topFixes?.join(', ') || 'none'}
+Site: ${auditContext?.url ?? 'unknown'}
+Score: ${auditContext?.score ?? 0}/100 (Grade: ${auditContext?.grade ?? 'N/A'})
+Failing signals: ${failing}
+Top fixes: ${auditContext?.topFixes?.join(', ') ?? 'none'}
 `;
   }
 
