@@ -23,6 +23,7 @@ import { createHealthRouter } from './health.js';
 import createGeoAuditRouter from './geo-audit.js';
 import ttsRouter from './tts.js';
 import sorenChatRouter from './soren-chat.js';
+import fixRouter from './fix-router.js';
 import type { NormalizedEvent } from '@varshylinc/mobile-payments';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -251,6 +252,9 @@ async function boot(): Promise<void> {
   // ── Soren AI chat brain ─────────────────────────────────────────────────────
   app.use('/api/soren/chat', sorenChatRouter);
 
+  // ── Soren fix generator ─────────────────────────────────────────────────────
+  app.use('/api/soren/fix', fixRouter);
+
   // ── Serve React client ─────────────────────────────────────────────────────
   const clientDist = path.join(__dirname, '../client');
   if (NODE_ENV === 'production' || NODE_ENV === 'test') {
@@ -283,6 +287,7 @@ async function boot(): Promise<void> {
     console.log('[boot]   POST /api/geo-audit              → GEO AI discoverability score');
     console.log('[boot]   POST /api/tts                   → ElevenLabs TTS proxy');
     console.log('[boot]   POST /api/soren/chat            → Soren AI chat brain');
+    console.log('[boot]   POST /api/soren/fix             → Soren fix generator');
     console.log('[boot]   GET  /api/consent/definitions     → OCE: all consent definitions');
     console.log('[boot]   POST /api/consent/signup          → OCE: record signup consents');
     console.log('[boot]   GET  /api/consent/status/:userId  → OCE: current status');
