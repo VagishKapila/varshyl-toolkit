@@ -35,6 +35,9 @@ importers:
 
   apps/demo-host:
     dependencies:
+      '@anthropic-ai/sdk':
+        specifier: ^0.39.0
+        version: 0.39.0
       '@varshylinc/auth-social':
         specifier: workspace:*
         version: link:../../packages/auth-social
