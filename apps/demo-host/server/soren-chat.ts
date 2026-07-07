@@ -103,8 +103,8 @@ Top fixes: ${auditContext.topFixes?.join(', ') || 'none'}
 
   try {
     const response = await client.messages.create({
-      model: 'claude-haiku-4-5',
-      max_tokens: 100,
+      model: 'claude-sonnet-4-6',
+      max_tokens: 150,
       system: SOREN_SYSTEM_PROMPT + contextNote,
       messages: messages.slice(-10),
     });
