@@ -24,6 +24,11 @@ import createGeoAuditRouter from './geo-audit.js';
 import ttsRouter from './tts.js';
 import sorenChatRouter from './soren-chat.js';
 import fixRouter from './fix-router.js';
+import {
+  createCreditsRouter,
+  createCreditsWebhookHandler,
+} from './credits-router.js';
+import { runCreditsMigrations } from './credits-migrations.js';
 import type { NormalizedEvent } from '@varshylinc/mobile-payments';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -164,12 +169,36 @@ async function boot(): Promise<void> {
     process.exit(1);
   }
 
-  // 5. Seed demo data
+  // 5. Credits migrations
+  console.log('[boot] Running credits migrations...');
+  try {
+    const creditsResult = await runCreditsMigrations(pool);
+    if (creditsResult.applied.length) console.log('[boot] Credits applied:', creditsResult.applied);
+    if (creditsResult.skipped.length) console.log('[boot] Credits skipped:', creditsResult.skipped);
+    console.log('[boot] credits migrations complete ✓');
+  } catch (err) {
+    console.error('[boot] FATAL: credits migration failed:', (err as Error).message);
+    process.exit(1);
+  }
+
+  // 6. Seed demo data
   console.log('[boot] Seeding demo data...');
   await seedDemoData();
 
-  // 6. Express app
+  // 7. Express app
   const app = express();
+
+  // Stripe webhook — raw body BEFORE express.json()
+  app.post(
+    '/api/credits/webhook',
+    express.raw({ type: 'application/json' }),
+    (req, _res, next) => {
+      (req as express.Request & { rawBody?: Buffer }).rawBody = req.body as Buffer;
+      next();
+    },
+    createCreditsWebhookHandler(pool),
+  );
+
   app.use(express.json());
 
   // ── Readiness probe — responds only after all migrations + seed complete ───
@@ -255,6 +284,9 @@ async function boot(): Promise<void> {
   // ── Soren fix generator ─────────────────────────────────────────────────────
   app.use('/api/soren/fix', fixRouter);
 
+  // ── Soren credits (Stripe) ──────────────────────────────────────────────────
+  app.use('/api/credits', createCreditsRouter(pool));
+
   // ── Serve React client ─────────────────────────────────────────────────────
   const clientDist = path.join(__dirname, '../client');
   if (NODE_ENV === 'production' || NODE_ENV === 'test') {
@@ -288,6 +320,10 @@ async function boot(): Promise<void> {
     console.log('[boot]   POST /api/tts                   → ElevenLabs TTS proxy');
     console.log('[boot]   POST /api/soren/chat            → Soren AI chat brain');
     console.log('[boot]   POST /api/soren/fix             → Soren fix generator');
+    console.log('[boot]   GET  /api/credits/balance       → Soren credit balance');
+    console.log('[boot]   POST /api/credits/checkout        → Stripe checkout session');
+    console.log('[boot]   POST /api/credits/webhook         → Stripe webhook');
+    console.log('[boot]   POST /api/credits/deduct          → Deduct credits');
     console.log('[boot]   GET  /api/consent/definitions     → OCE: all consent definitions');
     console.log('[boot]   POST /api/consent/signup          → OCE: record signup consents');
     console.log('[boot]   GET  /api/consent/status/:userId  → OCE: current status');
