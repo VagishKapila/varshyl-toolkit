@@ -18,10 +18,17 @@ const CORS = (res: Response) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
 };
 
-function priceIdForCredits(credits: 5 | 25 | 100): string | undefined {
+
+function priceIdForCheckout(
+  credits?: 5 | 25 | 100,
+  option?: string,
+): string | undefined {
   if (credits === 5) return process.env.STRIPE_PRICE_5;
   if (credits === 25) return process.env.STRIPE_PRICE_25;
-  return process.env.STRIPE_PRICE_100;
+  if (credits === 100) return process.env.STRIPE_PRICE_100;
+  if (option === 'ai-package') return process.env.STRIPE_PRICE_AI_PACKAGE;
+  if (option === 'do-it-for-me') return process.env.STRIPE_PRICE_DO_IT_FOR_ME;
+  return undefined;
 }
 
 export function createCreditsWebhookHandler(pool: Pool) {
@@ -58,8 +65,13 @@ export function createCreditsWebhookHandler(pool: Pool) {
     const email = session.metadata?.email;
     const credits = parseInt(session.metadata?.credits ?? '0', 10);
 
-    if (!email || !credits) {
+    if (!email) {
       res.status(400).json({ error: 'Missing metadata' });
+      return;
+    }
+
+    if (!credits) {
+      res.json({ received: true });
       return;
     }
 
@@ -122,29 +134,33 @@ export function createCreditsRouter(pool: Pool): Router {
     const {
       email,
       credits,
+      option,
       siteUrl,
       successUrl,
       cancelUrl,
     } = req.body as {
       email: string;
-      credits: 5 | 25 | 100;
+      credits?: 5 | 25 | 100;
+      option?: 'ai-package' | 'do-it-for-me';
       siteUrl?: string;
       successUrl: string;
       cancelUrl: string;
     };
 
-    if (!email || !credits || !successUrl) {
+    if (!email || !successUrl) {
       res.status(400).json({
-        error: 'email, credits, successUrl required',
+        error: 'email, successUrl required',
       });
       return;
     }
 
-    const priceId = priceIdForCredits(credits);
+    const priceId = priceIdForCheckout(credits, option);
     if (!priceId) {
-      res.status(400).json({ error: 'Invalid credit amount' });
+      res.status(400).json({ error: 'Invalid checkout option' });
       return;
     }
+
+    const successSep = successUrl.includes('?') ? '&' : '?';
 
     try {
       const session = await stripe.checkout.sessions.create({
@@ -155,11 +171,12 @@ export function createCreditsRouter(pool: Pool): Router {
           price: priceId,
           quantity: 1,
         }],
-        success_url: `${successUrl}?session_id={CHECKOUT_SESSION_ID}`,
+        success_url: `${successUrl}${successSep}session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: cancelUrl,
         metadata: {
           email,
-          credits: credits.toString(),
+          credits: credits?.toString() ?? '0',
+          option: option ?? '',
           siteUrl: siteUrl ?? '',
           product: 'soren-fixes-it',
         },
