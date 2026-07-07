@@ -54,18 +54,21 @@ router.post('/', async (req, res) => {
 
     if (INWORLD_API_KEY) {
       const response = await fetch(
-        'https://api.inworld.ai/tts/v1/voice:synthesize',
+        'https://api.inworld.ai/tts/v1/voice',
         {
           method: 'POST',
           headers: {
             Authorization: `Basic ${INWORLD_API_KEY}`,
             'Content-Type': 'application/json',
-            Accept: 'audio/mpeg',
           },
           body: JSON.stringify({
             text: cleanText,
             voiceId: voice,
             modelId: INWORLD_MODEL,
+            audioConfig: {
+              audioEncoding: 'MP3',
+              sampleRateHertz: 44100,
+            },
           }),
         },
       );
@@ -76,8 +79,11 @@ router.post('/', async (req, res) => {
         throw new Error(`Inworld error ${response.status}`);
       }
 
-      const arrayBuffer = await response.arrayBuffer();
-      audioBuffer = Buffer.from(arrayBuffer);
+      const payload = await response.json() as { audioContent?: string };
+      if (!payload.audioContent) {
+        throw new Error('Inworld response missing audioContent');
+      }
+      audioBuffer = Buffer.from(payload.audioContent, 'base64');
     } else if (ELEVENLABS_API_KEY) {
       const elVoice = voiceId ?? ELEVENLABS_VOICE_FALLBACK;
       const response = await fetch(
