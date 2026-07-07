@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { detectPlatform } from './platform-detector.js';
 
 type Grade = 'A' | 'B' | 'C' | 'D' | 'F';
 
@@ -17,6 +18,10 @@ interface GeoAuditResult {
   checks: AuditCheck[];
   topFixes: string[];
   installCommand: 'pnpm add @varshylinc/geo';
+  platform: string;
+  platformConfidence: string;
+  platformSignals: string[];
+  fixApproach: string;
 }
 
 interface JsonLdNode {
@@ -108,17 +113,25 @@ export default function createGeoAuditRouter(): Router {
     }
 
     let pageHtml = '';
+    let pageResponse: Response | null = null;
     try {
-      const response = await fetch(baseUrl, { signal: withTimeoutSignal(10_000) });
-      if (!response.ok) {
+      pageResponse = await fetch(baseUrl, { signal: withTimeoutSignal(10_000) });
+      if (!pageResponse.ok) {
         res.status(502).json({ error: 'Cannot reach URL' });
         return;
       }
-      pageHtml = await response.text();
+      pageHtml = await pageResponse.text();
     } catch {
       res.status(502).json({ error: 'Cannot reach URL' });
       return;
     }
+
+    const headers: Record<string, string> = {};
+    pageResponse.headers.forEach((v, k) => {
+      headers[k] = v;
+    });
+
+    const platformResult = detectPlatform(pageHtml, headers);
 
     const checks: AuditCheck[] = [];
 
@@ -311,6 +324,10 @@ export default function createGeoAuditRouter(): Router {
       checks,
       topFixes,
       installCommand: 'pnpm add @varshylinc/geo',
+      platform: platformResult.platform,
+      platformConfidence: platformResult.confidence,
+      platformSignals: platformResult.signals,
+      fixApproach: platformResult.fixApproach,
     };
 
     res.json(result);
