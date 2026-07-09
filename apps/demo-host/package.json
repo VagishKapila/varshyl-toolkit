@@ -28,6 +28,7 @@
     "@varshylinc/ui-inputs": "workspace:*",
     "bcryptjs": "^2.4.3",
     "express": "^4.18.3",
+    "livekit-client": "^2.20.1",
     "pg": "^8.11.5",
     "stripe": "^22.3.0"
   },
