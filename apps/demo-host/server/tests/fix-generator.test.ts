@@ -1,93 +1,182 @@
 import { expect, test } from 'vitest';
-import { generateFixPackage } from '../fix-generator.js';
+import { generateFixPackage } from '../fix-generator/generate-fix-package.js';
+import type { GeoAudit, SiteMetadata } from '../fix-generator/types.js';
+import { buildZipBuffer } from '../fix-generator/package-zip.js';
+import { buildReadme } from '../fix-generator/readme-template.js';
 
-const wordPressSite = {
-  url: 'https://example.com',
-  productName: 'Example Product',
-  companyName: 'Example Co',
+const espnMeta: SiteMetadata = {
+  url: 'https://www.espn.com',
+  platform: 'static-html',
+  title: 'ESPN - Serving Sports Fans. Anytime. Anywhere.',
+  description: 'Visit ESPN for live scores, highlights and news.',
+  ogImage: 'https://www.espn.com/og-image.jpg',
+  orgName: 'ESPN',
+  hasH1: false,
+  hasH2: true,
+  h1Count: 0,
+  keywords: ['Sports', 'Scores', 'News'],
 };
 
-const failingChecks = [
-  { name: 'JSON-LD script', tip: 'Add JSON-LD' },
-  { name: 'Open Graph tags', tip: 'Add OG tags' },
-];
+function auditWithFailing(names: string[]): GeoAudit {
+  return {
+    url: 'https://www.espn.com',
+    score: 55,
+    platform: 'static-html',
+    checks: [
+      {
+        name: 'llms.txt',
+        passed: !names.includes('llms.txt'),
+        points: names.includes('llms.txt') ? 0 : 20,
+        maxPoints: 20,
+        tip: 'Publish llms.txt',
+      },
+      {
+        name: 'robots.txt AI crawlers',
+        passed: !names.includes('robots.txt AI crawlers'),
+        points: names.includes('robots.txt AI crawlers') ? 0 : 15,
+        maxPoints: 15,
+        tip: 'Allow AI crawlers',
+      },
+      {
+        name: 'Heading structure',
+        passed: !names.includes('Heading structure'),
+        points: names.includes('Heading structure') ? 0 : 10,
+        maxPoints: 10,
+        tip: 'Fix headings',
+      },
+      {
+        name: 'sitemap.xml',
+        passed: !names.includes('sitemap.xml'),
+        points: names.includes('sitemap.xml') ? 0 : 10,
+        maxPoints: 10,
+        tip: 'Add sitemap',
+      },
+      {
+        name: 'Open Graph tags',
+        passed: true,
+        points: 10,
+        maxPoints: 10,
+        tip: '',
+      },
+    ],
+  };
+}
 
-test('WordPress returns a PHP plugin file', () => {
-  const pkg = generateFixPackage(
-    'wordpress',
-    failingChecks,
-    wordPressSite,
-  );
-  expect(pkg.platform).toBe('wordpress');
-  expect(pkg.files[0].filename).toBe('soren-geo-fix.php');
-  expect(pkg.files[0].content).toContain('<?php');
-  expect(pkg.files[0].content).toContain('wp_head');
-});
-
-test('WordPress includes llms.txt', () => {
-  const pkg = generateFixPackage(
-    'wordpress',
-    failingChecks,
-    wordPressSite,
-  );
-  const llms = pkg.files.find((f) => f.filename === 'llms.txt');
-  expect(llms).toBeDefined();
-});
-
-test('Squarespace returns HTML snippet', () => {
-  const pkg = generateFixPackage(
-    'squarespace',
-    failingChecks,
-    wordPressSite,
-  );
-  expect(pkg.files[0].filename).toBe('head-code-snippet.html');
-  expect(pkg.files[0].content).toContain('application/ld+json');
-});
-
-test('Next.js returns layout changes', () => {
-  const pkg = generateFixPackage(
-    'nextjs',
-    failingChecks,
-    wordPressSite,
-  );
-  expect(pkg.files[0].filename).toBe('layout-changes.tsx');
-  expect(pkg.files[0].content).toContain('metadata');
-});
-
-test('creditsRequired is 5 for all platforms', () => {
-  const platforms = [
-    'wordpress',
-    'squarespace',
-    'wix',
-    'shopify',
-    'nextjs',
-    'static-html',
-  ] as const;
-  platforms.forEach((p) => {
-    const pkg = generateFixPackage(p, failingChecks, wordPressSite);
-    expect(pkg.creditsRequired).toBe(5);
+test('only generates files for failing checks', () => {
+  const result = generateFixPackage({
+    audit: auditWithFailing(['llms.txt', 'robots.txt AI crawlers', 'Heading structure']),
+    siteMetadata: espnMeta,
   });
+  const names = result.files.map((f) => f.filename);
+  expect(names).toContain('llms.txt');
+  expect(names).toContain('robots-additions.txt');
+  expect(names).toContain('heading-guidance.md');
+  expect(names).not.toContain('head-og.html');
+  expect(names).not.toContain('sitemap.xml');
 });
 
-test('sorenSays is plain English under 30 words', () => {
-  const pkg = generateFixPackage(
-    'wordpress',
-    failingChecks,
-    wordPressSite,
-  );
-  const words = pkg.sorenSays.split(' ').length;
-  expect(words).toBeLessThan(30);
-});
-
-test('all instructions have step number and title', () => {
-  const pkg = generateFixPackage(
-    'wordpress',
-    failingChecks,
-    wordPressSite,
-  );
-  pkg.instructions.forEach((ins, i) => {
-    expect(ins.step).toBe(i + 1);
-    expect(ins.title.length).toBeGreaterThan(3);
-    expect(ins.detail.length).toBeGreaterThan(5);
+test('llms.txt uses real title not bare domain', () => {
+  const result = generateFixPackage({
+    audit: auditWithFailing(['llms.txt']),
+    siteMetadata: espnMeta,
   });
+  const llms = result.files.find((f) => f.filename === 'llms.txt');
+  expect(llms?.content).toContain('ESPN - Serving Sports Fans');
+  expect(llms?.content).not.toMatch(/^# espn\.com/m);
+});
+
+test('robots-additions is additions only', () => {
+  const result = generateFixPackage({
+    audit: auditWithFailing(['robots.txt AI crawlers']),
+    siteMetadata: espnMeta,
+  });
+  const robots = result.files.find((f) => f.filename === 'robots-additions.txt');
+  expect(robots?.content).toContain('Add these lines to your existing robots.txt');
+  expect(robots?.content).not.toContain('Disallow: /');
+});
+
+test('sitemap uses real URL and today date', () => {
+  const meta: SiteMetadata = {
+    url: 'https://varshyl.com',
+    platform: 'static-html',
+    canonicalUrl: 'https://varshyl.com',
+  };
+  const result = generateFixPackage({
+    audit: auditWithFailing(['sitemap.xml']),
+    siteMetadata: meta,
+  });
+  const sitemap = result.files.find((f) => f.filename === 'sitemap.xml');
+  expect(sitemap?.content).toContain('<loc>https://varshyl.com</loc>');
+  expect(sitemap?.content).toContain(new Date().toISOString().slice(0, 10));
+});
+
+test('JSON-LD never uses SoftwareApplication price 0', () => {
+  const result = generateFixPackage({
+    audit: {
+      url: 'https://example.com',
+      score: 85,
+      platform: 'static-html',
+      checks: [
+        {
+          name: 'JSON-LD script',
+          passed: false,
+          points: 0,
+          maxPoints: 15,
+          tip: 'Add JSON-LD',
+        },
+      ],
+    },
+    siteMetadata: {
+      url: 'https://example.com',
+      platform: 'static-html',
+      title: 'Example Co',
+      orgName: 'Example Organization',
+    },
+  });
+  const jsonld = result.files.find((f) => f.filename === 'head-jsonld.html');
+  expect(jsonld?.content).not.toContain('SoftwareApplication');
+  expect(jsonld?.content).not.toContain('"price": "0"');
+  expect(jsonld?.content).toContain('Organization');
+});
+
+test('readme mentions only included fixes', () => {
+  const files = generateFixPackage({
+    audit: auditWithFailing(['sitemap.xml']),
+    siteMetadata: {
+      url: 'https://varshyl.com',
+      platform: 'static-html',
+    },
+  }).files;
+  const readme = buildReadme(
+    auditWithFailing(['sitemap.xml']),
+    { url: 'https://varshyl.com', platform: 'static-html' },
+    files,
+  );
+  expect(readme).toContain('sitemap.xml');
+  expect(readme).not.toContain('llms.txt');
+  expect(readme).toContain('$1.99');
+  expect(readme).toContain('$9.00');
+});
+
+test('prompt includes failing checks and embedded file contents', () => {
+  const generated = generateFixPackage({
+    audit: auditWithFailing(['llms.txt']),
+    siteMetadata: espnMeta,
+  });
+  expect(generated.prompt).toContain('llms.txt');
+  expect(generated.prompt).toContain('ESPN - Serving Sports Fans');
+  expect(generated.prompt).toContain('How is your website hosted?');
+  expect(generated.prompt).not.toContain('Open Graph');
+});
+
+test('zip contains readme and fix files', async () => {
+  const generated = generateFixPackage({
+    audit: auditWithFailing(['sitemap.xml']),
+    siteMetadata: { url: 'https://varshyl.com', platform: 'static-html' },
+  });
+  const zip = await buildZipBuffer([
+    { filename: 'README.md', content: generated.readme },
+    ...generated.files.map((f) => ({ filename: f.filename, content: f.content })),
+  ]);
+  expect(zip.byteLength).toBeGreaterThan(100);
 });
