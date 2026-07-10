@@ -1,30 +1,143 @@
 import { Router } from 'express';
-import { generateFixPackage } from './fix-generator.js';
+import { randomUUID } from 'node:crypto';
 import type { Platform } from './platform-detector.js';
+import {
+  buildZipBuffer,
+  CHECK_POINTS,
+  extractSiteMetadata,
+  generateFixPackage,
+  type GeoAudit,
+  type GeoAuditCheck,
+} from './fix-generator/index.js';
 
 const router: Router = Router();
 
-router.options('/', (_req, res) => {
+const zipCache = new Map<string, { buffer: Buffer; expiresAt: number }>();
+const ZIP_TTL_MS = 15 * 60 * 1000;
+
+function cors(res: import('express').Response): void {
   res.setHeader('Access-Control-Allow-Origin', '*');
+}
+
+function normalizeUrl(raw: string): string | null {
+  try {
+    const value = raw.trim();
+    if (!/^https?:\/\//i.test(value)) return null;
+    const parsed = new URL(value);
+    const path = parsed.pathname.replace(/\/+$/, '');
+    return `${parsed.origin}${path === '' ? '' : path}`;
+  } catch {
+    return null;
+  }
+}
+
+async function fetchSiteHtml(url: string): Promise<string> {
+  const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
+  if (!res.ok) throw new Error(`Cannot fetch ${url}: ${res.status}`);
+  return res.text();
+}
+
+function buildAudit(
+  url: string,
+  platform: Platform,
+  failingChecks: { name: string; tip: string }[],
+): GeoAudit {
+  const checks: GeoAuditCheck[] = failingChecks.map((fc) => ({
+    name: fc.name,
+    passed: false,
+    points: 0,
+    maxPoints: CHECK_POINTS[fc.name] ?? 0,
+    tip: fc.tip,
+  }));
+  const lost = checks.reduce((sum, c) => sum + c.maxPoints, 0);
+  const total = Object.values(CHECK_POINTS).reduce((sum, n) => sum + n, 0);
+  return {
+    url,
+    score: Math.max(0, total - lost),
+    platform,
+    checks,
+  };
+}
+
+interface FixRequestBody {
+  platform: Platform;
+  failingChecks: { name: string; tip: string }[];
+  siteInfo: { url: string };
+  tier?: 'diy' | 'ai';
+}
+
+async function buildFixResponse(body: FixRequestBody, tier: 'diy' | 'ai') {
+  const baseUrl = normalizeUrl(body.siteInfo.url);
+  if (!baseUrl) throw new Error('Invalid siteInfo.url');
+
+  const html = await fetchSiteHtml(baseUrl);
+  const siteMetadata = extractSiteMetadata(html, baseUrl, body.platform);
+  const audit = buildAudit(baseUrl, body.platform, body.failingChecks);
+  const generated = generateFixPackage({ audit, siteMetadata });
+
+  const zipEntries = [
+    { filename: 'README.md', content: generated.readme },
+    ...generated.files.map((f) => ({ filename: f.filename, content: f.content })),
+  ];
+  if (tier === 'ai') {
+    zipEntries.push({ filename: 'PROMPT.txt', content: generated.prompt });
+  }
+
+  const zipBuffer = await buildZipBuffer(zipEntries);
+  const zipId = randomUUID();
+  zipCache.set(zipId, { buffer: zipBuffer, expiresAt: Date.now() + ZIP_TTL_MS });
+
+  const files = [
+    ...generated.files.map((f) => ({
+      filename: f.filename,
+      content: f.content,
+      description: `Fixes ${f.check} (+${f.pointsRecovered} pts)`,
+    })),
+    {
+      filename: 'README.md',
+      content: generated.readme,
+      description: 'Install guide for this repair package',
+    },
+  ];
+  if (tier === 'ai') {
+    files.push({
+      filename: 'PROMPT.txt',
+      content: generated.prompt,
+      description: 'Paste into ChatGPT or Claude',
+    });
+  }
+
+  return {
+    platform: body.platform,
+    summary: `Repair package with ${generated.files.length} fix file(s)`,
+    files,
+    readme: generated.readme,
+    prompt: tier === 'ai' ? generated.prompt : undefined,
+    zipUrl: `/api/soren/fix/download/${zipId}`,
+    instructions: [],
+    sorenSays:
+      'Your repair package is ready. Apply the files, then re-run the scan.',
+    creditsRequired: 5,
+  };
+}
+
+router.options('/', (_req, res) => {
+  cors(res);
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   res.status(204).end();
 });
 
-router.post('/', (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+router.post('/', async (req, res) => {
+  cors(res);
 
-  const { platform, failingChecks, siteInfo } = req.body as {
-    platform: Platform;
-    failingChecks: { name: string; tip: string }[];
-    siteInfo: {
-      url: string;
-      productName?: string;
-      companyName?: string;
-    };
-  };
+  const body = req.body as FixRequestBody;
+  const tier =
+    (req.query.tier as string | undefined) === 'ai' || body.tier === 'ai'
+      ? 'ai'
+      : 'diy';
 
-  if (!platform || !failingChecks || !siteInfo?.url) {
+  if (!body.platform || !body.failingChecks?.length || !body.siteInfo?.url) {
     res.status(400).json({
       error: 'platform, failingChecks, and siteInfo.url required',
     });
@@ -32,39 +145,41 @@ router.post('/', (req, res) => {
   }
 
   try {
-    const fixPackage = generateFixPackage(
-      platform,
-      failingChecks,
-      siteInfo,
-    );
-    res.json(fixPackage);
+    const payload = await buildFixResponse(body, tier);
+    res.json(payload);
   } catch (err) {
     console.error('Fix generator error:', err);
     res.status(500).json({ error: 'Fix generation failed' });
   }
 });
 
+router.get('/download/:id', (req, res) => {
+  cors(res);
+  const entry = zipCache.get(req.params.id);
+  if (!entry || entry.expiresAt < Date.now()) {
+    res.status(404).json({ error: 'ZIP not found or expired' });
+    return;
+  }
+  res.setHeader('Content-Type', 'application/zip');
+  res.setHeader(
+    'Content-Disposition',
+    `attachment; filename="soren-fix-package.zip"`,
+  );
+  res.send(entry.buffer);
+});
+
 router.options('/ai-package', (_req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  cors(res);
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   res.status(204).end();
 });
 
-router.post('/ai-package', (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+router.post('/ai-package', async (req, res) => {
+  cors(res);
 
-  const { platform, failingChecks, siteInfo } = req.body as {
-    platform: Platform;
-    failingChecks: { name: string; tip: string }[];
-    siteInfo: {
-      url: string;
-      productName?: string;
-      companyName?: string;
-    };
-  };
-
-  if (!platform || !failingChecks || !siteInfo?.url) {
+  const body = req.body as FixRequestBody;
+  if (!body.platform || !body.failingChecks?.length || !body.siteInfo?.url) {
     res.status(400).json({
       error: 'platform, failingChecks, siteInfo required',
     });
@@ -72,66 +187,13 @@ router.post('/ai-package', (req, res) => {
   }
 
   try {
-    const pkg = generateFixPackage(platform, failingChecks, siteInfo);
-
-    const fixCode = pkg.files
-      .map((f) => `\n--- ${f.filename} ---\n${f.content}`)
-      .join('\n');
-
-    const steps = pkg.instructions
-      .map((s) => `${s.step}. ${s.title}: ${s.detail}`)
-      .join('\n');
-
-    const aiPromptText = `
-SOREN AI DISCOVERABILITY FIX PACKAGE
-Site: ${siteInfo.url}
-Platform: ${platform}
-Generated by Soren Fixes It (soren.varshyl.com)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-PASTE THIS INTO CHATGPT OR CLAUDE:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-I need help fixing my website's AI discoverability.
-My site is ${siteInfo.url} and it runs on ${platform}.
-
-Here are the exact issues and fix files:
-
-Failing signals:
-${failingChecks.map((c) => `- ${c.name}: ${c.tip}`).join('\n')}
-
-Fix code:
-${fixCode}
-
-Steps to apply:
-${steps}
-
-Please help me apply these fixes step by step.
-Start with the first file and guide me through it.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-WHAT'S IN THIS PACKAGE:
-${pkg.files.map((f) => `- ${f.filename}: ${f.description}`).join('\n')}
-
-HOW TO USE:
-1. Open ChatGPT (chat.openai.com) or Claude (claude.ai)
-2. Copy everything between the dashed lines above
-3. Paste it into a new conversation
-4. Your AI assistant will guide you through applying each fix
-5. After applying, return to Soren and re-run the audit
-
-Questions? Contact us at contact@jobsiteintelai.com
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Soren Fixes It · Built by Varshyl Inc · Pleasanton CA
-`.trim();
-
+    const payload = await buildFixResponse(body, 'ai');
     res.setHeader('Content-Type', 'text/plain');
     res.setHeader(
       'Content-Disposition',
-      `attachment; filename="soren-fix-${platform}.txt"`,
+      `attachment; filename="soren-fix-${body.platform}.txt"`,
     );
-    res.send(aiPromptText);
+    res.send(payload.prompt ?? '');
   } catch (err) {
     console.error('AI package error:', err);
     res.status(500).json({ error: 'AI package generation failed' });
