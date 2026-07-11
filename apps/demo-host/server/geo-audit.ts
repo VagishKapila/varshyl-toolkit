@@ -165,7 +165,7 @@ async function fetchPageHtmlWithFallback(
   baseUrl: string,
 ): Promise<{ response: Response; html: string; strategy: FetchStrategy } | null> {
   const attempts: Array<{ strategy: FetchStrategy; headers?: Record<string, string>; useNativeNoUa?: boolean }> = [
-    { strategy: 'minimal-ua', headers: { 'User-Agent': 'Soren-GEO-Audit/1.0' } },
+    { strategy: 'minimal-ua', headers: { 'User-Agent': 'curl/8.7.1' } },
     { strategy: 'no-ua', useNativeNoUa: true },
     { strategy: 'browser-ua', headers: { 'User-Agent': BROWSER_USER_AGENT } },
   ];
