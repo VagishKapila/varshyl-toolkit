@@ -1,4 +1,6 @@
 import { Router } from 'express';
+import http from 'node:http';
+import https from 'node:https';
 import { detectPlatform } from './platform-detector.js';
 import {
   AI_CATEGORY,
@@ -89,28 +91,106 @@ const BROWSER_USER_AGENT =
 
 type FetchStrategy = 'minimal-ua' | 'no-ua' | 'browser-ua';
 
-function isCloudflareChallenge(response: Response, html: string): boolean {
-  if (response.headers.has('cf-mitigated')) return true;
+function hasCfMitigatedHeader(headers: Headers | Record<string, string>): boolean {
+  if (headers instanceof Headers) return headers.has('cf-mitigated');
+  return Object.keys(headers).some((name) => name.toLowerCase() === 'cf-mitigated');
+}
+
+function isCloudflareChallenge(headers: Headers | Record<string, string>, html: string): boolean {
+  if (hasCfMitigatedHeader(headers)) return true;
   return html.toLowerCase().includes('challenges.cloudflare.com');
+}
+
+async function fetchHtmlWithoutUserAgent(
+  targetUrl: string,
+  redirectsLeft = 5,
+): Promise<{ status: number; headers: Record<string, string>; html: string } | null> {
+  const parsed = new URL(targetUrl);
+  const client = parsed.protocol === 'https:' ? https : http;
+
+  return new Promise((resolve) => {
+    const req = client.request(
+      {
+        protocol: parsed.protocol,
+        hostname: parsed.hostname,
+        port: parsed.port,
+        path: `${parsed.pathname}${parsed.search}`,
+        method: 'GET',
+        headers: {
+          Accept: 'text/html,*/*;q=0.9',
+          'Accept-Encoding': 'identity',
+          Connection: 'close',
+        },
+      },
+      (res) => {
+        const status = res.statusCode ?? 0;
+        const headers: Record<string, string> = {};
+        for (const [name, value] of Object.entries(res.headers)) {
+          if (typeof value === 'string') headers[name] = value;
+          else if (Array.isArray(value)) headers[name] = value.join(', ');
+        }
+
+        const redirectLocation = headers.location;
+        if (status >= 300 && status < 400 && redirectLocation && redirectsLeft > 0) {
+          const redirectUrl = new URL(redirectLocation, targetUrl).toString();
+          void fetchHtmlWithoutUserAgent(redirectUrl, redirectsLeft - 1).then(resolve);
+          return;
+        }
+
+        let html = '';
+        res.setEncoding('utf8');
+        res.on('data', (chunk: string) => {
+          html += chunk;
+        });
+        res.on('end', () => {
+          resolve({ status, headers, html });
+        });
+      },
+    );
+
+    req.setTimeout(10_000, () => {
+      req.destroy();
+      resolve(null);
+    });
+
+    req.on('error', () => {
+      resolve(null);
+    });
+
+    req.end();
+  });
 }
 
 async function fetchPageHtmlWithFallback(
   baseUrl: string,
 ): Promise<{ response: Response; html: string; strategy: FetchStrategy } | null> {
-  const attempts: Array<{ strategy: FetchStrategy; headers?: Record<string, string> }> = [
+  const attempts: Array<{ strategy: FetchStrategy; headers?: Record<string, string>; useNativeNoUa?: boolean }> = [
     { strategy: 'minimal-ua', headers: { 'User-Agent': 'Soren-GEO-Audit/1.0' } },
-    { strategy: 'no-ua', headers: { 'User-Agent': '' } },
+    { strategy: 'no-ua', useNativeNoUa: true },
     { strategy: 'browser-ua', headers: { 'User-Agent': BROWSER_USER_AGENT } },
   ];
 
   for (const attempt of attempts) {
     try {
-      const response = await fetch(baseUrl, {
-        signal: withTimeoutSignal(10_000),
-        headers: attempt.headers,
-      });
-      const html = await response.text();
-      const challenged = isCloudflareChallenge(response, html);
+      let response: Response;
+      let html: string;
+      let challenged: boolean;
+
+      if (attempt.useNativeNoUa) {
+        const nativeResult = await fetchHtmlWithoutUserAgent(baseUrl);
+        if (!nativeResult) continue;
+        html = nativeResult.html;
+        challenged = isCloudflareChallenge(nativeResult.headers, html);
+        response = new Response(html, { status: nativeResult.status, headers: nativeResult.headers });
+      } else {
+        response = await fetch(baseUrl, {
+          signal: withTimeoutSignal(10_000),
+          headers: attempt.headers,
+        });
+        html = await response.text();
+        challenged = isCloudflareChallenge(response.headers, html);
+      }
+
       if (response.ok && !challenged) {
         console.log(`[audit] fetched via: ${attempt.strategy}`);
         return { response, html, strategy: attempt.strategy };
