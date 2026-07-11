@@ -75,13 +75,13 @@ test('only generates files for failing checks', () => {
   expect(names).not.toContain('sitemap.xml');
 });
 
-test('llms.txt uses real title not bare domain', () => {
+test('llms.txt uses cleaned site name not bare domain', () => {
   const result = generateFixPackage({
     audit: auditWithFailing(['llms.txt']),
     siteMetadata: espnMeta,
   });
   const llms = result.files.find((f) => f.filename === 'llms.txt');
-  expect(llms?.content).toContain('ESPN - Serving Sports Fans');
+  expect(llms?.content).toMatch(/^# ESPN/m);
   expect(llms?.content).not.toMatch(/^# espn\.com/m);
 });
 
@@ -164,7 +164,7 @@ test('prompt includes failing checks and embedded file contents', () => {
     siteMetadata: espnMeta,
   });
   expect(generated.prompt).toContain('llms.txt');
-  expect(generated.prompt).toContain('ESPN - Serving Sports Fans');
+  expect(generated.prompt).toMatch(/# ESPN/);
   expect(generated.prompt).toContain('How is your website hosted?');
   expect(generated.prompt).not.toContain('Open Graph');
 });
@@ -179,4 +179,79 @@ test('zip contains readme and fix files', async () => {
     ...generated.files.map((f) => ({ filename: f.filename, content: f.content })),
   ]);
   expect(zip.byteLength).toBeGreaterThan(100);
+});
+
+test('schema and llms prefer og:site_name and strip title suffixes', () => {
+  const nbaMeta: SiteMetadata = {
+    url: 'https://www.nba.com',
+    platform: 'static-html',
+    title: 'The official site of the NBA... | NBA.com',
+    orgName: 'The official site of the NBA... | NBA.com',
+    ogSiteName: 'NBA.com',
+  };
+  const audit: GeoAudit = {
+    url: 'https://www.nba.com',
+    score: 40,
+    platform: 'static-html',
+    checks: [
+      {
+        name: 'llms.txt',
+        passed: false,
+        points: 0,
+        maxPoints: 20,
+        tip: 'Add llms.txt',
+      },
+      {
+        name: 'Schema.org entity',
+        passed: false,
+        points: 0,
+        maxPoints: 10,
+        tip: 'Add schema',
+      },
+      {
+        name: 'JSON-LD script',
+        passed: false,
+        points: 0,
+        maxPoints: 15,
+        tip: 'Add JSON-LD',
+      },
+    ],
+  };
+  const result = generateFixPackage({ audit, siteMetadata: nbaMeta });
+  const llms = result.files.find((f) => f.filename === 'llms.txt');
+  const schema = result.files.find((f) => f.filename === 'head-schema.html');
+  const jsonld = result.files.find((f) => f.filename === 'head-jsonld.html');
+
+  expect(llms?.content).toMatch(/^# NBA\.com/m);
+  expect(llms?.content).not.toContain('The official site of the NBA');
+  expect(schema?.content).toContain('"name": "NBA.com"');
+  expect(jsonld?.content).toContain('"name": "NBA.com"');
+});
+
+test('title suffix cleanup without og:site_name uses trailing brand segment', () => {
+  const meta: SiteMetadata = {
+    url: 'https://www.nba.com',
+    platform: 'static-html',
+    title: 'The official site of the NBA... | NBA.com',
+    orgName: 'The official site of the NBA... | NBA.com',
+  };
+  const result = generateFixPackage({
+    audit: {
+      url: meta.url,
+      score: 40,
+      platform: 'static-html',
+      checks: [
+        {
+          name: 'Schema.org entity',
+          passed: false,
+          points: 0,
+          maxPoints: 10,
+          tip: 'Add schema',
+        },
+      ],
+    },
+    siteMetadata: meta,
+  });
+  const schema = result.files.find((f) => f.filename === 'head-schema.html');
+  expect(schema?.content).toContain('"name": "NBA.com"');
 });

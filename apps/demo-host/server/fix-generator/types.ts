@@ -22,6 +22,7 @@ export interface SiteMetadata {
   ogTitle?: string;
   ogDescription?: string;
   ogUrl?: string;
+  ogSiteName?: string;
   twitterCard?: string;
   twitterTitle?: string;
   twitterDescription?: string;

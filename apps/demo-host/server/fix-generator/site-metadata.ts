@@ -94,6 +94,7 @@ export function extractSiteMetadata(
   const ogDescription = metaContent(html, 'property', 'og:description');
   const ogImage = metaContent(html, 'property', 'og:image');
   const ogUrl = metaContent(html, 'property', 'og:url');
+  const ogSiteName = metaContent(html, 'property', 'og:site_name');
   const twitterCard = metaContent(html, 'name', 'twitter:card');
   const twitterTitle = metaContent(html, 'name', 'twitter:title');
   const twitterDescription = metaContent(html, 'name', 'twitter:description');
@@ -130,6 +131,7 @@ export function extractSiteMetadata(
     ogTitle,
     ogDescription,
     ogUrl: ogUrl || canonicalUrl || url,
+    ogSiteName,
     twitterCard,
     twitterTitle: twitterTitle || ogTitle || title,
     twitterDescription: twitterDescription || ogDescription || description,
@@ -156,4 +158,44 @@ export function domainFromUrl(url: string): string {
   } catch {
     return url.replace(/https?:\/\//gi, '').replace(/\/$/, '');
   }
+}
+
+const TITLE_SUFFIX_SEP =
+  /\s*(?:\||\u2014|\u2013|(?<=\S)\s+-\s+(?=\S))\s*/;
+
+/** Prefer og:site_name; otherwise strip pipe/dash title suffix noise. */
+export function cleanDisplayName(
+  raw: string | undefined,
+  options?: { ogSiteName?: string; domain?: string },
+): string | undefined {
+  const og = options?.ogSiteName?.trim();
+  if (og) return og;
+
+  const text = raw?.trim();
+  if (!text) return options?.domain;
+
+  const parts = text.split(TITLE_SUFFIX_SEP).map((p) => p.trim()).filter(Boolean);
+  if (parts.length === 1) return parts[0];
+
+  const domain = options?.domain?.toLowerCase().replace(/^www\./, '');
+  const last = parts[parts.length - 1];
+
+  if (
+    last.length <= 48
+    || /\.[a-z]{2,}\b/i.test(last)
+    || (domain && last.toLowerCase().includes(domain))
+  ) {
+    return last;
+  }
+
+  return parts[0];
+}
+
+export function resolveSiteDisplayName(meta: SiteMetadata): string {
+  const domain = domainFromUrl(meta.url);
+  return (
+    cleanDisplayName(meta.orgName, { ogSiteName: meta.ogSiteName, domain })
+    || cleanDisplayName(meta.title, { ogSiteName: meta.ogSiteName, domain })
+    || domain
+  );
 }
