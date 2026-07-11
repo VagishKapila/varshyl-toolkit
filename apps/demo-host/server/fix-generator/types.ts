@@ -4,6 +4,8 @@ export interface GeoAuditCheck {
   points: number;
   maxPoints: number;
   tip: string;
+  category?: string;
+  info?: boolean;
 }
 
 export interface GeoAudit {
@@ -59,4 +61,15 @@ export const CHECK_POINTS: Record<string, number> = {
   'sitemap.xml': 10,
   'Canonical link': 5,
   'Schema.org entity': 10,
+  'Alt text': 5,
+  'Heading hierarchy': 5,
+  'Form labels': 5,
+  'Landmarks': 5,
+  'Lang attribute': 5,
+  'Strict-Transport-Security': 5,
+  'X-Content-Type-Options': 3,
+  'X-Frame-Options': 3,
+  'Content-Security-Policy': 4,
 };
+
+export const SCORABLE_MAX_POINTS = 140;

@@ -1,15 +1,16 @@
 import { Router } from 'express';
 import { detectPlatform } from './platform-detector.js';
+import {
+  AI_CATEGORY,
+  buildAccessibilityChecks,
+  buildSecurityChecks,
+  scoreFromChecks,
+  type AuditCheckResult,
+} from './geo-audit-checks.js';
 
 type Grade = 'A' | 'B' | 'C' | 'D' | 'F';
 
-interface AuditCheck {
-  name: string;
-  passed: boolean;
-  points: number;
-  maxPoints: number;
-  tip: string;
-}
+type AuditCheck = AuditCheckResult;
 
 interface GeoAuditResult {
   url: string;
@@ -141,6 +142,7 @@ export default function createGeoAuditRouter(): Router {
       points: 0,
       maxPoints: 20,
       tip: 'Publish /llms.txt with product, problem, and key-facts sections.',
+      category: AI_CATEGORY,
     };
     try {
       const llmsRes = await fetch(`${baseUrl}/llms.txt`, { signal: withTimeoutSignal(10_000) });
@@ -159,6 +161,7 @@ export default function createGeoAuditRouter(): Router {
       points: 0,
       maxPoints: 15,
       tip: 'Allow GPTBot, ClaudeBot, PerplexityBot, and anthropic-ai in robots.txt.',
+      category: AI_CATEGORY,
     };
     try {
       const robotsRes = await fetch(`${baseUrl}/robots.txt`, { signal: withTimeoutSignal(10_000) });
@@ -184,6 +187,7 @@ export default function createGeoAuditRouter(): Router {
       points: 0,
       maxPoints: 15,
       tip: 'Add <script type="application/ld+json"> with structured product metadata.',
+      category: AI_CATEGORY,
     };
     try {
       if (/<script[^>]*type=["']application\/ld\+json["'][^>]*>/i.test(pageHtml)) {
@@ -201,6 +205,7 @@ export default function createGeoAuditRouter(): Router {
       points: 0,
       maxPoints: 10,
       tip: 'Include og:title, og:description, og:image, and og:url meta tags.',
+      category: AI_CATEGORY,
     };
     try {
       const requiredOg = ['og:title', 'og:description', 'og:image', 'og:url'];
@@ -224,6 +229,7 @@ export default function createGeoAuditRouter(): Router {
       points: 0,
       maxPoints: 5,
       tip: 'Add <meta name="twitter:card" content="summary_large_image">.',
+      category: AI_CATEGORY,
     };
     try {
       if (/<meta[^>]*name=["']twitter:card["'][^>]*>/i.test(pageHtml)) {
@@ -241,6 +247,7 @@ export default function createGeoAuditRouter(): Router {
       points: 0,
       maxPoints: 10,
       tip: 'Use one clear <h1> and supporting <h2> headings for crawler comprehension.',
+      category: AI_CATEGORY,
     };
     try {
       const hasH1 = /<h1\b[^>]*>/i.test(pageHtml);
@@ -262,6 +269,7 @@ export default function createGeoAuditRouter(): Router {
       points: 0,
       maxPoints: 10,
       tip: 'Publish /sitemap.xml so AI crawlers can discover key pages quickly.',
+      category: AI_CATEGORY,
     };
     try {
       const sitemapRes = await fetch(`${baseUrl}/sitemap.xml`, { signal: withTimeoutSignal(10_000) });
@@ -280,6 +288,7 @@ export default function createGeoAuditRouter(): Router {
       points: 0,
       maxPoints: 5,
       tip: 'Add <link rel="canonical" href="..."> to reduce URL ambiguity.',
+      category: AI_CATEGORY,
     };
     try {
       if (/<link[^>]*rel=["']canonical["'][^>]*>/i.test(pageHtml)) {
@@ -297,6 +306,7 @@ export default function createGeoAuditRouter(): Router {
       points: 0,
       maxPoints: 10,
       tip: 'Include Person or Organization in JSON-LD @type to improve trust signals.',
+      category: AI_CATEGORY,
     };
     try {
       const types = parseJsonLdTypes(pageHtml);
@@ -310,9 +320,12 @@ export default function createGeoAuditRouter(): Router {
     }
     checks.push(schemaCheck);
 
-    const score = Math.max(0, Math.min(100, checks.reduce((sum, check) => sum + check.points, 0)));
+    checks.push(...buildAccessibilityChecks(pageHtml));
+    checks.push(...buildSecurityChecks(headers));
+
+    const score = scoreFromChecks(checks);
     const topFixes = checks
-      .filter((check) => !check.passed)
+      .filter((check) => !check.passed && !check.info)
       .sort((a, b) => (b.maxPoints - b.points) - (a.maxPoints - a.points))
       .slice(0, 3)
       .map((check) => check.tip);

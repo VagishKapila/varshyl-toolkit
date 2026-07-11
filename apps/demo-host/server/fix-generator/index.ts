@@ -8,4 +8,4 @@ export type {
   GenerateFixPackageResult,
   SiteMetadata,
 } from './types.js';
-export { CHECK_POINTS } from './types.js';
+export { CHECK_POINTS, SCORABLE_MAX_POINTS } from './types.js';

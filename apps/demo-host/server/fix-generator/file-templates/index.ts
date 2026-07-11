@@ -204,6 +204,201 @@ export const headSchemaTemplate: TemplateFn = (meta) => {
   };
 };
 
+export const altTextGuidanceTemplate: TemplateFn = (meta) => ({
+  filename: 'alt-text-guidance.md',
+  content: `# Alt text guidance for ${domainFromUrl(meta.url)}
+
+## Why this matters
+Screen readers and AI crawlers rely on \`alt\` text to understand images.
+Every meaningful \`<img>\` should include a descriptive \`alt\` attribute.
+
+## What to fix
+1. Find images missing \`alt\` (especially logos, hero images, and product photos).
+2. Add concise, descriptive alt text — not "image" or the filename.
+3. Use \`alt=""\` only for purely decorative images.
+
+## Examples
+\`\`\`html
+<img src="/logo.png" alt="${resolveSiteDisplayName(meta)} logo">
+<img src="/hero.jpg" alt="Team collaborating in a bright office">
+<img src="/divider.svg" alt="" role="presentation">
+\`\`\`
+
+This file is guidance only — update your HTML templates manually.
+`,
+  check: 'Alt text',
+  pointsRecovered: pointsFor('Alt text'),
+});
+
+export const headingHierarchyGuidanceTemplate: TemplateFn = (meta) => ({
+  filename: 'heading-hierarchy-guidance.md',
+  content: `# Heading hierarchy guidance for ${domainFromUrl(meta.url)}
+
+## What Soren checks
+- Exactly one \`<h1>\` per page
+- No skipped heading levels (e.g. \`<h1>\` followed by \`<h3>\` with no \`<h2>\`)
+
+## How to fix
+1. Keep one primary \`<h1>\` that describes the page topic.
+2. Use \`<h2>\` for major sections, \`<h3>\` for subsections — never skip a level.
+3. Do not use headings only for styling; use CSS for visual size.
+
+## Example structure
+\`\`\`html
+<h1>${meta.title ?? 'Your primary page topic'}</h1>
+<h2>Services</h2>
+<h3>Consulting</h3>
+<h2>Contact</h2>
+\`\`\`
+
+This file is guidance only. Soren cannot auto-write your page copy.
+`,
+  check: 'Heading hierarchy',
+  pointsRecovered: pointsFor('Heading hierarchy'),
+});
+
+export const formLabelsGuidanceTemplate: TemplateFn = (meta) => ({
+  filename: 'form-labels-guidance.md',
+  content: `# Form label guidance for ${domainFromUrl(meta.url)}
+
+## Why this matters
+Every \`<input>\`, \`<select>\`, and \`<textarea>\` needs an associated \`<label>\`
+so assistive technology can announce the field purpose.
+
+## Association patterns
+**Wrap the input inside the label:**
+\`\`\`html
+<label>
+  Email
+  <input type="email" name="email">
+</label>
+\`\`\`
+
+**Or link with \`for\` + \`id\`:**
+\`\`\`html
+<label for="email">Email</label>
+<input type="email" id="email" name="email">
+\`\`\`
+
+## Checklist
+- [ ] Every visible field has a visible label
+- [ ] \`for\` values match \`id\` values exactly
+- [ ] Placeholder text is not used as a substitute for labels
+
+This file is guidance only — update your forms manually.
+`,
+  check: 'Form labels',
+  pointsRecovered: pointsFor('Form labels'),
+});
+
+export const landmarksGuidanceTemplate: TemplateFn = (meta) => ({
+  filename: 'landmarks-guidance.md',
+  content: `# Semantic landmarks guidance for ${domainFromUrl(meta.url)}
+
+## Required landmarks
+Soren looks for these HTML5 landmark elements:
+- \`<header>\` — site or page header
+- \`<nav>\` — primary navigation
+- \`<main>\` — primary page content (one per page)
+
+## Example layout
+\`\`\`html
+<body>
+  <header>
+    <nav aria-label="Primary">
+      <a href="/">Home</a>
+    </nav>
+  </header>
+  <main>
+    <h1>${meta.title ?? 'Page title'}</h1>
+    <!-- primary content -->
+  </main>
+  <footer>...</footer>
+</body>
+\`\`\`
+
+Replace generic \`<div>\` wrappers with semantic elements where appropriate.
+`,
+  check: 'Landmarks',
+  pointsRecovered: pointsFor('Landmarks'),
+});
+
+export const langAttributeTemplate: TemplateFn = () => ({
+  filename: 'lang-attribute.html',
+  content: '<html lang="en">\n',
+  check: 'Lang attribute',
+  pointsRecovered: pointsFor('Lang attribute'),
+});
+
+export const securityHeadersGuidance = (checkName: string): TemplateFn => (meta) => ({
+  filename: 'security-headers-guidance.md',
+  content: `# Security headers guidance for ${domainFromUrl(meta.url)}
+
+## Headers Soren checks
+| Header | Purpose |
+|--------|---------|
+| Strict-Transport-Security | Force HTTPS for returning visitors |
+| X-Content-Type-Options: nosniff | Prevent MIME-type sniffing |
+| X-Frame-Options / CSP frame-ancestors | Reduce clickjacking risk |
+| Content-Security-Policy | Restrict script and resource sources |
+
+## Apache (.htaccess)
+\`\`\`apache
+Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+Header always set X-Content-Type-Options "nosniff"
+Header always set X-Frame-Options "SAMEORIGIN"
+Header always set Content-Security-Policy "default-src 'self'"
+\`\`\`
+
+## Nginx
+\`\`\`nginx
+add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+add_header X-Content-Type-Options "nosniff" always;
+add_header X-Frame-Options "SAMEORIGIN" always;
+add_header Content-Security-Policy "default-src 'self'" always;
+\`\`\`
+
+## Cloudflare
+Dashboard → SSL/TLS → enable HSTS. Use Transform Rules or Page Rules to add response headers.
+
+## Vercel (vercel.json)
+\`\`\`json
+{
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Strict-Transport-Security", "value": "max-age=31536000; includeSubDomains" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
+        { "key": "Content-Security-Policy", "value": "default-src 'self'" }
+      ]
+    }
+  ]
+}
+\`\`\`
+
+## Next.js (next.config.js)
+\`\`\`js
+async headers() {
+  return [{
+    source: '/(.*)',
+    headers: [
+      { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
+      { key: 'X-Content-Type-Options', value: 'nosniff' },
+      { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+      { key: 'Content-Security-Policy', value: "default-src 'self'" },
+    ],
+  }];
+}
+\`\`\`
+
+Tune CSP for your real asset domains before deploying to production.
+`,
+  check: checkName,
+  pointsRecovered: pointsFor(checkName),
+});
+
 export const CHECK_TEMPLATES: Record<string, TemplateFn> = {
   'llms.txt': llmsTxtTemplate,
   'robots.txt AI crawlers': robotsAdditionsTemplate,
@@ -214,6 +409,15 @@ export const CHECK_TEMPLATES: Record<string, TemplateFn> = {
   'sitemap.xml': sitemapTemplate,
   'Canonical link': headCanonicalTemplate,
   'Schema.org entity': headSchemaTemplate,
+  'Alt text': altTextGuidanceTemplate,
+  'Heading hierarchy': headingHierarchyGuidanceTemplate,
+  'Form labels': formLabelsGuidanceTemplate,
+  'Landmarks': landmarksGuidanceTemplate,
+  'Lang attribute': langAttributeTemplate,
+  'Strict-Transport-Security': securityHeadersGuidance('Strict-Transport-Security'),
+  'X-Content-Type-Options': securityHeadersGuidance('X-Content-Type-Options'),
+  'X-Frame-Options': securityHeadersGuidance('X-Frame-Options'),
+  'Content-Security-Policy': securityHeadersGuidance('Content-Security-Policy'),
 };
 
 function escapeAttr(value: string): string {

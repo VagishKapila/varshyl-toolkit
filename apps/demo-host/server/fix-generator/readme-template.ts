@@ -1,11 +1,64 @@
 import type { FixFile, GeoAudit, SiteMetadata } from './types.js';
+import { SCORABLE_MAX_POINTS } from './types.js';
 import { domainFromUrl } from './site-metadata.js';
+import {
+  ADA_CATEGORY,
+  isAdaOrSecurityCategory,
+  README_ADA_DISCLAIMER,
+  SECURITY_CATEGORY,
+} from './compliance-disclaimers.js';
 
 const CALENDLY = 'https://calendly.com/vaakapila';
 
 function projectedScore(audit: GeoAudit, files: FixFile[]): number {
   const recovered = files.reduce((sum, f) => sum + f.pointsRecovered, 0);
-  return Math.min(100, audit.score + recovered);
+  const recoveredPct = Math.round((recovered / SCORABLE_MAX_POINTS) * 100);
+  return Math.min(100, audit.score + recoveredPct);
+}
+
+function categoryForCheck(audit: GeoAudit, checkName: string): string | undefined {
+  return audit.checks.find((c) => c.name === checkName)?.category;
+}
+
+function buildFileSections(audit: GeoAudit, files: FixFile[]): string {
+  const groups = new Map<string, FixFile[]>();
+  for (const file of files) {
+    const category = categoryForCheck(audit, file.check) ?? 'AI discoverability';
+    const list = groups.get(category) ?? [];
+    list.push(file);
+    groups.set(category, list);
+  }
+
+  const order = ['AI discoverability', ADA_CATEGORY, SECURITY_CATEGORY];
+  const sections: string[] = [];
+
+  for (const category of order) {
+    const group = groups.get(category);
+    if (!group?.length) continue;
+
+    if (isAdaOrSecurityCategory(category)) {
+      sections.push(README_ADA_DISCLAIMER);
+    }
+
+    sections.push(`### ${category}\n`);
+    sections.push(
+      group
+        .map((f) => `- **${f.filename}** — fixes ${f.check} (+${f.pointsRecovered} pts)`)
+        .join('\n'),
+    );
+  }
+
+  for (const [category, group] of groups) {
+    if (order.includes(category)) continue;
+    sections.push(`### ${category}\n`);
+    sections.push(
+      group
+        .map((f) => `- **${f.filename}** — fixes ${f.check} (+${f.pointsRecovered} pts)`)
+        .join('\n'),
+    );
+  }
+
+  return sections.join('\n\n');
 }
 
 function platformInstructions(platform: string, filenames: string[]): string {
@@ -44,6 +97,26 @@ function platformInstructions(platform: string, filenames: string[]): string {
           '**heading-guidance.md:** Update page copy in the WordPress editor following the guidance.',
         );
       }
+      if (has('heading-hierarchy-guidance.md')) {
+        lines.push(
+          '**heading-hierarchy-guidance.md:** Fix heading levels in your page templates following the guidance.',
+        );
+      }
+      if (has('alt-text-guidance.md') || has('form-labels-guidance.md') || has('landmarks-guidance.md')) {
+        lines.push(
+          '**Accessibility guidance files:** Apply manually in your theme templates or page editor.',
+        );
+      }
+      if (has('lang-attribute.html')) {
+        lines.push(
+          '**lang-attribute.html:** Add the lang attribute to your root `<html>` tag.',
+        );
+      }
+      if (has('security-headers-guidance.md')) {
+        lines.push(
+          '**security-headers-guidance.md:** Configure headers in your hosting panel or server config.',
+        );
+      }
       break;
     case 'shopify':
       if (headFiles.length) {
@@ -78,6 +151,18 @@ function platformInstructions(platform: string, filenames: string[]): string {
       if (has('heading-guidance.md')) {
         lines.push('**heading-guidance.md:** Apply manually in your HTML page content.');
       }
+      if (has('heading-hierarchy-guidance.md')) {
+        lines.push('**heading-hierarchy-guidance.md:** Apply manually in your HTML page content.');
+      }
+      if (has('alt-text-guidance.md') || has('form-labels-guidance.md') || has('landmarks-guidance.md')) {
+        lines.push('**Accessibility guidance files:** Apply manually in your HTML templates.');
+      }
+      if (has('lang-attribute.html')) {
+        lines.push('**lang-attribute.html:** Add to your root `<html>` element.');
+      }
+      if (has('security-headers-guidance.md')) {
+        lines.push('**security-headers-guidance.md:** Configure via your host, CDN, or server config.');
+      }
   }
 
   return lines.length ? lines.join('\n') : 'Follow your platform docs to deploy the included files.';
@@ -99,6 +184,8 @@ export function buildReadme(
     )
     .join('\n');
 
+  const groupedFiles = buildFileSections(audit, files);
+
   return `# Soren Fixes It — Repair Package for ${domain}
 
 **Score:** ${audit.score} → projected **${projected}** (${fixCount} fix${fixCount === 1 ? '' : 'es'})
@@ -108,6 +195,8 @@ export function buildReadme(
 | File | Fixes | Points |
 |------|-------|--------|
 ${table}
+
+${groupedFiles}
 
 ## Install instructions (${audit.platform})
 

@@ -4,6 +4,7 @@ import type { Platform } from './platform-detector.js';
 import {
   buildZipBuffer,
   CHECK_POINTS,
+  SCORABLE_MAX_POINTS,
   extractSiteMetadata,
   generateFixPackage,
   type GeoAudit,
@@ -50,10 +51,10 @@ function buildAudit(
     tip: fc.tip,
   }));
   const lost = checks.reduce((sum, c) => sum + c.maxPoints, 0);
-  const total = Object.values(CHECK_POINTS).reduce((sum, n) => sum + n, 0);
+  const total = SCORABLE_MAX_POINTS;
   return {
     url,
-    score: Math.max(0, total - lost),
+    score: Math.max(0, Math.round(((total - lost) / total) * 100)),
     platform,
     checks,
   };
