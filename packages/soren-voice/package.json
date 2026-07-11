@@ -1,0 +1,35 @@
+{
+  "name": "@varshylinc/soren-voice",
+  "version": "0.1.0",
+  "description": "LiveKit voice module for Soren — plug into any Varshyl product",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./react": {
+      "import": "./dist/react.mjs",
+      "require": "./dist/react.js",
+      "types": "./dist/react.d.ts"
+    }
+  },
+  "license": "Apache-2.0",
+  "peerDependencies": {
+    "react": ">=18"
+  },
+  "dependencies": {
+    "livekit-client": "^2.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "tsup": "^8.0.0"
+  },
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit"
+  }
+}
