@@ -255,3 +255,47 @@ test('title suffix cleanup without og:site_name uses trailing brand segment', ()
   const schema = result.files.find((f) => f.filename === 'head-schema.html');
   expect(schema?.content).toContain('"name": "NBA.com"');
 });
+
+test('ADA and security failing checks include guidance and disclaimers', () => {
+  const audit: GeoAudit = {
+    url: 'https://example.com',
+    score: 50,
+    platform: 'static-html',
+    checks: [
+      {
+        name: 'Alt text',
+        passed: false,
+        points: 0,
+        maxPoints: 5,
+        tip: 'Add descriptive alt text to all images.',
+        category: 'Accessibility basics',
+      },
+      {
+        name: 'Strict-Transport-Security',
+        passed: false,
+        points: 0,
+        maxPoints: 5,
+        tip: 'Add HSTS header to enforce HTTPS.',
+        category: 'Security hardening',
+      },
+      {
+        name: 'X-Frame-Options',
+        passed: false,
+        points: 0,
+        maxPoints: 3,
+        tip: 'Add X-Frame-Options to prevent clickjacking.',
+        category: 'Security hardening',
+      },
+    ],
+  };
+  const result = generateFixPackage({
+    audit,
+    siteMetadata: { url: 'https://example.com', platform: 'static-html' },
+  });
+  const names = result.files.map((f) => f.filename);
+  expect(names).toContain('alt-text-guidance.md');
+  expect(names).toContain('security-headers-guidance.md');
+  expect(names.filter((n) => n === 'security-headers-guidance.md')).toHaveLength(1);
+  expect(result.readme).toContain('NOT LEGAL ADVICE');
+  expect(result.prompt).toContain('not a full legal compliance audit');
+});

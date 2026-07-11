@@ -15,11 +15,13 @@ export function generateFixPackage(
   const files: FixFile[] = [];
 
   for (const check of audit.checks) {
-    if (check.passed) continue;
+    if (check.passed || check.info) continue;
     const template = CHECK_TEMPLATES[check.name];
     if (!template) continue;
     const file = template(siteMetadata);
-    if (file) files.push(file);
+    if (!file) continue;
+    if (files.some((f) => f.filename === file.filename)) continue;
+    files.push(file);
   }
 
   const readme = buildReadme(audit, siteMetadata, files);
