@@ -299,3 +299,36 @@ test('ADA and security failing checks include guidance and disclaimers', () => {
   expect(result.readme).toContain('NOT LEGAL ADVICE');
   expect(result.prompt).toContain('not a full legal compliance audit');
 });
+
+test('disclaimer appears when audit checks omit category (fix API path)', () => {
+  const audit: GeoAudit = {
+    url: 'https://example.com',
+    score: 50,
+    platform: 'static-html',
+    checks: [
+      {
+        name: 'Alt text',
+        passed: false,
+        points: 0,
+        maxPoints: 5,
+        tip: 'Add descriptive alt text to all images.',
+      },
+      {
+        name: 'Strict-Transport-Security',
+        passed: false,
+        points: 0,
+        maxPoints: 5,
+        tip: 'Add HSTS header to enforce HTTPS.',
+      },
+    ],
+  };
+  const result = generateFixPackage({
+    audit,
+    siteMetadata: { url: 'https://example.com', platform: 'static-html' },
+  });
+  expect(result.readme).toContain('IMPORTANT NOTICE — NOT LEGAL ADVICE');
+  expect(result.readme).toContain('### Accessibility basics');
+  expect(result.readme).toContain('### Security hardening');
+  expect(result.prompt).toContain('not a full legal compliance audit');
+  expect(result.prompt).toContain('Shall I proceed with the technical improvements?');
+});

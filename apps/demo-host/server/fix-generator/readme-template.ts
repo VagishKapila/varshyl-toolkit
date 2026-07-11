@@ -3,7 +3,9 @@ import { SCORABLE_MAX_POINTS } from './types.js';
 import { domainFromUrl } from './site-metadata.js';
 import {
   ADA_CATEGORY,
+  categoryForCheckName,
   isAdaOrSecurityCategory,
+  isAdaOrSecurityCheck,
   README_ADA_DISCLAIMER,
   SECURITY_CATEGORY,
 } from './compliance-disclaimers.js';
@@ -16,14 +18,17 @@ function projectedScore(audit: GeoAudit, files: FixFile[]): number {
   return Math.min(100, audit.score + recoveredPct);
 }
 
-function categoryForCheck(audit: GeoAudit, checkName: string): string | undefined {
-  return audit.checks.find((c) => c.name === checkName)?.category;
+function categoryForCheck(audit: GeoAudit, checkName: string): string {
+  return (
+    audit.checks.find((c) => c.name === checkName)?.category
+    ?? categoryForCheckName(checkName)
+  );
 }
 
 function buildFileSections(audit: GeoAudit, files: FixFile[]): string {
   const groups = new Map<string, FixFile[]>();
   for (const file of files) {
-    const category = categoryForCheck(audit, file.check) ?? 'AI discoverability';
+    const category = categoryForCheck(audit, file.check);
     const list = groups.get(category) ?? [];
     list.push(file);
     groups.set(category, list);
@@ -31,13 +36,15 @@ function buildFileSections(audit: GeoAudit, files: FixFile[]): string {
 
   const order = ['AI discoverability', ADA_CATEGORY, SECURITY_CATEGORY];
   const sections: string[] = [];
+  let disclaimerShown = false;
 
   for (const category of order) {
     const group = groups.get(category);
     if (!group?.length) continue;
 
-    if (isAdaOrSecurityCategory(category)) {
+    if (isAdaOrSecurityCategory(category) && !disclaimerShown) {
       sections.push(README_ADA_DISCLAIMER);
+      disclaimerShown = true;
     }
 
     sections.push(`### ${category}\n`);
@@ -185,6 +192,7 @@ export function buildReadme(
     .join('\n');
 
   const groupedFiles = buildFileSections(audit, files);
+  const hasComplianceFixes = files.some((f) => isAdaOrSecurityCheck(f.check));
 
   return `# Soren Fixes It — Repair Package for ${domain}
 
@@ -196,7 +204,7 @@ export function buildReadme(
 |------|-------|--------|
 ${table}
 
-${groupedFiles}
+${hasComplianceFixes && !groupedFiles.includes('NOT LEGAL ADVICE') ? `${README_ADA_DISCLAIMER}\n\n` : ''}${groupedFiles}
 
 ## Install instructions (${audit.platform})
 

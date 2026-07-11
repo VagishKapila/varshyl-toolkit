@@ -1,7 +1,7 @@
 import type { FixFile, GeoAudit, SiteMetadata } from './types.js';
 import { domainFromUrl } from './site-metadata.js';
 import {
-  isAdaOrSecurityCategory,
+  isAdaOrSecurityCheck,
   PROMPT_ADA_SECURITY_INTRO,
 } from './compliance-disclaimers.js';
 
@@ -12,7 +12,9 @@ export function buildPrompt(
 ): string {
   const domain = domainFromUrl(meta.url);
   const failing = audit.checks.filter((c) => !c.passed && !c.info);
-  const hasAdaOrSecurity = failing.some((c) => isAdaOrSecurityCategory(c.category));
+  const hasAdaOrSecurity =
+    failing.some((c) => isAdaOrSecurityCheck(c.name, c.category))
+    || files.some((f) => isAdaOrSecurityCheck(f.check));
 
   const fileBlocks = files
     .map(

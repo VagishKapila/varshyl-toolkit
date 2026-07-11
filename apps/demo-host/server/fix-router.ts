@@ -4,6 +4,7 @@ import type { Platform } from './platform-detector.js';
 import {
   buildZipBuffer,
   CHECK_POINTS,
+  categoryForCheckName,
   SCORABLE_MAX_POINTS,
   extractSiteMetadata,
   generateFixPackage,
@@ -49,6 +50,7 @@ function buildAudit(
     points: 0,
     maxPoints: CHECK_POINTS[fc.name] ?? 0,
     tip: fc.tip,
+    category: categoryForCheckName(fc.name),
   }));
   const lost = checks.reduce((sum, c) => sum + c.maxPoints, 0);
   const total = SCORABLE_MAX_POINTS;

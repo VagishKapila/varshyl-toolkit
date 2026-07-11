@@ -9,3 +9,7 @@ export type {
   SiteMetadata,
 } from './types.js';
 export { CHECK_POINTS, SCORABLE_MAX_POINTS } from './types.js';
+export {
+  categoryForCheckName,
+  isAdaOrSecurityCheck,
+} from './compliance-disclaimers.js';
