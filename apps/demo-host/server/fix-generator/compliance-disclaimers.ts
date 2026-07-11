@@ -40,19 +40,13 @@ export function isAdaOrSecurityCheck(name: string, category?: string): boolean {
 export const README_ADA_DISCLAIMER = `---
 ⚠️ **IMPORTANT NOTICE — NOT LEGAL ADVICE**
 
-The accessibility and security checks below identify common technical
-signals only. They are NOT a comprehensive compliance audit. Soren
-Fixes It and Varshyl Inc. are not responsible for any legal action,
-lawsuits, fines, or compliance failures arising from reliance on
-these results. Accessibility and security requirements vary by
-jurisdiction, industry, and audience.
+These checks address common technical signals referenced by WCAG 2.1,
+ADA, OWASP, and Section 508 guidelines. This is not a legal compliance
+certification. Requirements vary by jurisdiction, industry, and audience
+— verify with a qualified accessibility specialist or legal advisor.
 
-We strongly recommend consulting a qualified accessibility specialist
-or legal advisor to ensure your website meets all applicable
-requirements including but not limited to: ADA (Americans with
-Disabilities Act), WCAG 2.1, Section 508, GDPR, CCPA, and any
-local, state, or federal regulations.
-
+Soren Fixes It and Varshyl Inc. are not responsible for any legal action,
+lawsuits, fines, or compliance failures arising from reliance on these results.
 By using this fix package you acknowledge that these are technical
 recommendations, not legal guarantees of compliance.
 ---`;

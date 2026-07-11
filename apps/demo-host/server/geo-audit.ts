@@ -7,6 +7,13 @@ import {
   scoreFromChecks,
   type AuditCheckResult,
 } from './geo-audit-checks.js';
+import {
+  buildAuditComparison,
+  gradeFromScore,
+  parseCompareQuery,
+  type AuditComparison,
+  type PreviousCheckSnapshot,
+} from './geo-audit-comparison.js';
 
 type Grade = 'A' | 'B' | 'C' | 'D' | 'F';
 
@@ -23,6 +30,7 @@ interface GeoAuditResult {
   platformConfidence: string;
   platformSignals: string[];
   fixApproach: string;
+  comparison?: AuditComparison;
 }
 
 interface JsonLdNode {
@@ -48,14 +56,6 @@ function withTimeoutSignal(ms: number): AbortSignal {
 
 function safeIncludes(source: string, fragment: string): boolean {
   return source.toLowerCase().includes(fragment.toLowerCase());
-}
-
-function gradeFromScore(score: number): Grade {
-  if (score >= 90) return 'A';
-  if (score >= 75) return 'B';
-  if (score >= 55) return 'C';
-  if (score >= 35) return 'D';
-  return 'F';
 }
 
 function parseJsonLdTypes(html: string): string[] {
@@ -101,7 +101,10 @@ export default function createGeoAuditRouter(): Router {
   });
 
   router.post('/', async (req, res) => {
-    const body = req.body as { url?: unknown };
+    const body = req.body as {
+      url?: unknown;
+      previousChecks?: PreviousCheckSnapshot[];
+    };
     if (typeof body?.url !== 'string') {
       res.status(400).json({ error: 'url must be a string' });
       return;
@@ -342,6 +345,17 @@ export default function createGeoAuditRouter(): Router {
       platformSignals: platformResult.signals,
       fixApproach: platformResult.fixApproach,
     };
+
+    const previousScore = parseCompareQuery(req.query.compare);
+    if (previousScore != null) {
+      const comparison = buildAuditComparison(
+        score,
+        checks,
+        previousScore,
+        body.previousChecks,
+      );
+      if (comparison) result.comparison = comparison;
+    }
 
     res.json(result);
   });
