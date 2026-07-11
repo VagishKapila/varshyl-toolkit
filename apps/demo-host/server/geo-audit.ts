@@ -99,7 +99,7 @@ async function fetchPageHtmlWithFallback(
 ): Promise<{ response: Response; html: string; strategy: FetchStrategy } | null> {
   const attempts: Array<{ strategy: FetchStrategy; headers?: Record<string, string> }> = [
     { strategy: 'minimal-ua', headers: { 'User-Agent': 'Soren-GEO-Audit/1.0' } },
-    { strategy: 'no-ua' },
+    { strategy: 'no-ua', headers: { 'User-Agent': '' } },
     { strategy: 'browser-ua', headers: { 'User-Agent': BROWSER_USER_AGENT } },
   ];
 
