@@ -1,6 +1,6 @@
 import type { FixFile, SiteMetadata } from '../types.js';
 import { CHECK_POINTS } from '../types.js';
-import { domainFromUrl, inferJsonLdType } from '../site-metadata.js';
+import { cleanDisplayName, domainFromUrl, inferJsonLdType, resolveSiteDisplayName } from '../site-metadata.js';
 
 type TemplateFn = (meta: SiteMetadata) => FixFile | null;
 
@@ -10,7 +10,8 @@ function pointsFor(check: string): number {
 
 export const llmsTxtTemplate: TemplateFn = (meta) => {
   const lines: string[] = [];
-  if (meta.title) lines.push(`# ${meta.title}`);
+  const displayName = resolveSiteDisplayName(meta);
+  lines.push(`# ${displayName}`);
   lines.push(`# ${meta.url}`);
   lines.push('');
   if (meta.description) {
@@ -25,7 +26,8 @@ export const llmsTxtTemplate: TemplateFn = (meta) => {
   }
   lines.push('## Key facts');
   lines.push(`URL: ${meta.url}`);
-  if (meta.orgName) lines.push(`Organization: ${meta.orgName}`);
+  const orgLabel = cleanOrgLabel(meta);
+  if (orgLabel) lines.push(`Organization: ${orgLabel}`);
   return {
     filename: 'llms.txt',
     content: `${lines.join('\n').trim()}\n`,
@@ -57,15 +59,14 @@ Allow: /
 
 export const headJsonLdTemplate: TemplateFn = (meta) => {
   const type = inferJsonLdType(meta);
+  const displayName = resolveSiteDisplayName(meta);
   const payload: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': type,
     url: meta.url,
   };
-  if (meta.title) payload.name = meta.title;
+  if (displayName) payload.name = displayName;
   if (meta.description) payload.description = meta.description;
-  if (meta.orgName && type === 'Organization') payload.name = meta.orgName;
-  if (type === 'WebSite' && meta.title) payload.name = meta.title;
 
   return {
     filename: 'head-jsonld.html',
@@ -187,13 +188,13 @@ export const headSchemaTemplate: TemplateFn = (meta) => {
   const type = meta.orgName
     ? (meta.hasAddress ? 'LocalBusiness' : 'Organization')
     : 'Organization';
+  const displayName = resolveSiteDisplayName(meta);
   const payload: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': type,
     url: meta.url,
   };
-  if (meta.orgName) payload.name = meta.orgName;
-  else if (meta.title) payload.name = meta.title;
+  if (displayName) payload.name = displayName;
 
   return {
     filename: 'head-schema.html',
@@ -217,6 +218,13 @@ export const CHECK_TEMPLATES: Record<string, TemplateFn> = {
 
 function escapeAttr(value: string): string {
   return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+}
+
+function cleanOrgLabel(meta: SiteMetadata): string | undefined {
+  const domain = domainFromUrl(meta.url);
+  const raw = meta.orgName || meta.title;
+  if (!raw) return undefined;
+  return cleanDisplayName(raw, { ogSiteName: meta.ogSiteName, domain });
 }
 
 function escapeXml(value: string): string {
