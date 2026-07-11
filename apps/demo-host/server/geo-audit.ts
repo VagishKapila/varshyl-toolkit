@@ -84,6 +84,45 @@ function parseJsonLdTypes(html: string): string[] {
   return types;
 }
 
+const BROWSER_USER_AGENT =
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36';
+
+type FetchStrategy = 'minimal-ua' | 'no-ua' | 'browser-ua';
+
+function isCloudflareChallenge(response: Response, html: string): boolean {
+  if (response.headers.has('cf-mitigated')) return true;
+  return html.toLowerCase().includes('challenges.cloudflare.com');
+}
+
+async function fetchPageHtmlWithFallback(
+  baseUrl: string,
+): Promise<{ response: Response; html: string; strategy: FetchStrategy } | null> {
+  const attempts: Array<{ strategy: FetchStrategy; headers?: Record<string, string> }> = [
+    { strategy: 'minimal-ua', headers: { 'User-Agent': 'Soren-GEO-Audit/1.0' } },
+    { strategy: 'no-ua' },
+    { strategy: 'browser-ua', headers: { 'User-Agent': BROWSER_USER_AGENT } },
+  ];
+
+  for (const attempt of attempts) {
+    try {
+      const response = await fetch(baseUrl, {
+        signal: withTimeoutSignal(10_000),
+        headers: attempt.headers,
+      });
+      const html = await response.text();
+      const challenged = isCloudflareChallenge(response, html);
+      if (response.ok && !challenged) {
+        console.log(`[audit] fetched via: ${attempt.strategy}`);
+        return { response, html, strategy: attempt.strategy };
+      }
+    } catch {
+      // Try next strategy.
+    }
+  }
+
+  return null;
+}
+
 export default function createGeoAuditRouter(): Router {
   const router = Router();
 
@@ -116,19 +155,16 @@ export default function createGeoAuditRouter(): Router {
       return;
     }
 
-    let pageHtml = '';
-    let pageResponse: Response | null = null;
-    try {
-      pageResponse = await fetch(baseUrl, { signal: withTimeoutSignal(10_000) });
-      if (!pageResponse.ok) {
-        res.status(502).json({ error: 'Cannot reach URL' });
-        return;
-      }
-      pageHtml = await pageResponse.text();
-    } catch {
-      res.status(502).json({ error: 'Cannot reach URL' });
+    const pageFetch = await fetchPageHtmlWithFallback(baseUrl);
+    if (!pageFetch) {
+      res.status(502).json({
+        error:
+          "Cannot reach URL. This site may use bot protection (like Cloudflare). The scan couldn't get through — try the $9 guided session where we can scan it together.",
+      });
       return;
     }
+    const pageResponse = pageFetch.response;
+    const pageHtml = pageFetch.html;
 
     const headers: Record<string, string> = {};
     pageResponse.headers.forEach((v, k) => {
