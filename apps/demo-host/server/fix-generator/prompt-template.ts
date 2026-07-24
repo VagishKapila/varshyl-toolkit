@@ -4,6 +4,7 @@ import {
   isAdaOrSecurityCheck,
   PROMPT_ADA_SECURITY_INTRO,
 } from './compliance-disclaimers.js';
+import { scannerUrl } from './scanner-url.js';
 
 export function buildPrompt(
   audit: GeoAudit,
@@ -68,6 +69,6 @@ WORKFLOW RULES:
 5. Never suggest edits beyond the failing checks listed.
 6. End by telling me to re-run the free Soren GEO scan to verify the new score.
 
-When all files are applied, congratulate me and remind me to rescan at soren.varshyl.com.
+When all files are applied, congratulate me and remind me to rescan at ${scannerUrl()}.
 `;
 }

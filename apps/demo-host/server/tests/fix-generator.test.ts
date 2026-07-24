@@ -219,13 +219,13 @@ test('schema and llms prefer og:site_name and strip title suffixes', () => {
   };
   const result = generateFixPackage({ audit, siteMetadata: nbaMeta });
   const llms = result.files.find((f) => f.filename === 'llms.txt');
-  const schema = result.files.find((f) => f.filename === 'head-schema.html');
   const jsonld = result.files.find((f) => f.filename === 'head-jsonld.html');
 
   expect(llms?.content).toMatch(/^# NBA\.com/m);
   expect(llms?.content).not.toContain('The official site of the NBA');
-  expect(schema?.content).toContain('"name": "NBA.com"');
   expect(jsonld?.content).toContain('"name": "NBA.com"');
+  expect(jsonld?.content).toContain('"@graph"');
+  expect(result.files.filter((f) => f.filename === 'head-jsonld.html')).toHaveLength(1);
 });
 
 test('title suffix cleanup without og:site_name uses trailing brand segment', () => {
@@ -252,8 +252,8 @@ test('title suffix cleanup without og:site_name uses trailing brand segment', ()
     },
     siteMetadata: meta,
   });
-  const schema = result.files.find((f) => f.filename === 'head-schema.html');
-  expect(schema?.content).toContain('"name": "NBA.com"');
+  const jsonld = result.files.find((f) => f.filename === 'head-jsonld.html');
+  expect(jsonld?.content).toContain('"name": "NBA.com"');
 });
 
 test('ADA and security failing checks include guidance and disclaimers', () => {

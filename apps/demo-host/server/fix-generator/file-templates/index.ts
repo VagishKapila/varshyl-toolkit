@@ -1,6 +1,6 @@
 import type { FixFile, SiteMetadata } from '../types.js';
 import { CHECK_POINTS } from '../types.js';
-import { cleanDisplayName, domainFromUrl, inferJsonLdType, resolveSiteDisplayName } from '../site-metadata.js';
+import { cleanDisplayName, domainFromUrl, resolveSiteDisplayName } from '../site-metadata.js';
 
 type TemplateFn = (meta: SiteMetadata) => FixFile | null;
 
@@ -58,15 +58,29 @@ Allow: /
 });
 
 export const headJsonLdTemplate: TemplateFn = (meta) => {
-  const type = inferJsonLdType(meta);
-  const displayName = resolveSiteDisplayName(meta);
+  const displayName = resolveStructuredEntityName(meta);
+  const organizationType = meta.hasAddress ? 'LocalBusiness' : 'Organization';
+  const graph: Array<Record<string, unknown>> = [
+    {
+      '@type': 'WebSite',
+      '@id': `${meta.url}#website`,
+      url: meta.url,
+      name: displayName,
+      ...(meta.description ? { description: meta.description } : {}),
+      publisher: { '@id': `${meta.url}#organization` },
+    },
+    {
+      '@type': organizationType,
+      '@id': `${meta.url}#organization`,
+      url: meta.url,
+      name: displayName,
+      ...(meta.description ? { description: meta.description } : {}),
+    },
+  ];
   const payload: Record<string, unknown> = {
     '@context': 'https://schema.org',
-    '@type': type,
-    url: meta.url,
+    '@graph': graph,
   };
-  if (displayName) payload.name = displayName;
-  if (meta.description) payload.description = meta.description;
 
   return {
     filename: 'head-jsonld.html',
@@ -81,7 +95,9 @@ export const headOgTemplate: TemplateFn = (meta) => {
   const title = meta.ogTitle || meta.title;
   const description = meta.ogDescription || meta.description;
   const image = meta.ogImage;
-  const ogUrl = meta.ogUrl || meta.url;
+  const ogUrl = 'CURRENT_PAGE_URL';
+  lines.push('<!-- IMPORTANT: og:url must be unique to each page URL. -->');
+  lines.push(`<!-- Example: ${meta.url.replace(/\/+$/, '')}/contact for your contact page. -->`);
   if (title) lines.push(`<meta property="og:title" content="${escapeAttr(title)}">`);
   if (description) {
     lines.push(`<meta property="og:description" content="${escapeAttr(description)}">`);
@@ -179,26 +195,15 @@ export const sitemapTemplate: TemplateFn = (meta) => {
 
 export const headCanonicalTemplate: TemplateFn = (meta) => ({
   filename: 'head-canonical.html',
-  content: `<link rel="canonical" href="${escapeAttr(meta.canonicalUrl || meta.url)}">\n`,
+  content: `<!-- IMPORTANT: Canonical URL must be unique per page. -->\n<!-- Replace CURRENT_PAGE_URL with each page's real URL (example: https://example.com/contact). -->\n<link rel="canonical" href="CURRENT_PAGE_URL">\n`,
   check: 'Canonical link',
   pointsRecovered: pointsFor('Canonical link'),
 });
 
 export const headSchemaTemplate: TemplateFn = (meta) => {
-  const type = meta.orgName
-    ? (meta.hasAddress ? 'LocalBusiness' : 'Organization')
-    : 'Organization';
-  const displayName = resolveSiteDisplayName(meta);
-  const payload: Record<string, unknown> = {
-    '@context': 'https://schema.org',
-    '@type': type,
-    url: meta.url,
-  };
-  if (displayName) payload.name = displayName;
-
   return {
-    filename: 'head-schema.html',
-    content: `<script type="application/ld+json">\n${JSON.stringify(payload, null, 2)}\n</script>\n`,
+    filename: 'head-jsonld.html',
+    content: headJsonLdTemplate(meta)?.content ?? '',
     check: 'Schema.org entity',
     pointsRecovered: pointsFor('Schema.org entity'),
   };
@@ -419,6 +424,18 @@ export const CHECK_TEMPLATES: Record<string, TemplateFn> = {
   'X-Frame-Options': securityHeadersGuidance('X-Frame-Options'),
   'Content-Security-Policy': securityHeadersGuidance('Content-Security-Policy'),
 };
+
+function resolveStructuredEntityName(meta: SiteMetadata): string {
+  const ogSiteName = meta.ogSiteName?.trim();
+  if (ogSiteName) return ogSiteName;
+  const title = meta.title?.trim();
+  if (title) return cleanDisplayName(title, { ogSiteName: undefined, domain: undefined }) ?? title;
+  const schemaName = meta.orgName?.trim();
+  if (schemaName) {
+    return cleanDisplayName(schemaName, { ogSiteName: undefined, domain: undefined }) ?? schemaName;
+  }
+  return 'REPLACE_WITH_YOUR_ORGANIZATION_NAME';
+}
 
 function escapeAttr(value: string): string {
   return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;');

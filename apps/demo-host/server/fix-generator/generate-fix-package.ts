@@ -20,7 +20,14 @@ export function generateFixPackage(
     if (!template) continue;
     const file = template(siteMetadata);
     if (!file) continue;
-    if (files.some((f) => f.filename === file.filename)) continue;
+    const existing = files.find((f) => f.filename === file.filename);
+    if (existing) {
+      existing.pointsRecovered += file.pointsRecovered;
+      if (!existing.check.includes(file.check)) {
+        existing.check = `${existing.check} + ${file.check}`;
+      }
+      continue;
+    }
     files.push(file);
   }
 
