@@ -4,6 +4,16 @@ import {
   isAdaOrSecurityCheck,
   PROMPT_ADA_SECURITY_INTRO,
 } from './compliance-disclaimers.js';
+import { scannerUrl } from './scanner-url.js';
+
+function codeFenceFor(content: string): string {
+  let longest = 0;
+  for (const match of content.matchAll(/`{3,}/g)) {
+    const len = match[0]?.length ?? 0;
+    if (len > longest) longest = len;
+  }
+  return '`'.repeat(Math.max(3, longest + 1));
+}
 
 export function buildPrompt(
   audit: GeoAudit,
@@ -18,10 +28,14 @@ export function buildPrompt(
 
   const fileBlocks = files
     .map(
-      (f) => `### ${f.filename} (fixes: ${f.check})
-\`\`\`
-${f.content.trim()}
-\`\`\``,
+      (f) => {
+        const body = f.content.trimEnd();
+        const fence = codeFenceFor(body);
+        return `### ${f.filename} (fixes: ${f.check})
+${fence}
+${body}
+${fence}`;
+      },
     )
     .join('\n\n');
 
@@ -68,6 +82,6 @@ WORKFLOW RULES:
 5. Never suggest edits beyond the failing checks listed.
 6. End by telling me to re-run the free Soren GEO scan to verify the new score.
 
-When all files are applied, congratulate me and remind me to rescan at soren.varshyl.com.
+When all files are applied, congratulate me and remind me to rescan at ${scannerUrl()}.
 `;
 }

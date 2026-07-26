@@ -9,6 +9,7 @@ import {
   README_ADA_DISCLAIMER,
   SECURITY_CATEGORY,
 } from './compliance-disclaimers.js';
+import { scannerUrl } from './scanner-url.js';
 
 const CALENDLY = 'https://calendly.com/vaakapila';
 
@@ -212,7 +213,7 @@ ${platformInstructions(audit.platform, files.map((f) => f.filename))}
 
 ## Verify
 
-Re-run the free scan at [soren.varshyl.com](https://soren.varshyl.com) to confirm your new score.
+Re-run the free scan at [${scannerUrl()}](${scannerUrl()}) to confirm your new score.
 
 ## Need help applying everything?
 
