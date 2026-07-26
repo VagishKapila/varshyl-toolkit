@@ -239,7 +239,7 @@ export default function createGeoAuditRouter(): Router {
     if (!pageFetch) {
       res.status(502).json({
         error:
-          "Cannot reach URL. This site may use bot protection (like Cloudflare). The scan couldn't get through — try the $9 guided session where we can scan it together.",
+          "Cannot reach URL. This site may use bot protection (like Cloudflare). The scan couldn't get through — try the Done-For-You guided session ($49, launch promo $39.20) where we can scan it together.",
       });
       return;
     }

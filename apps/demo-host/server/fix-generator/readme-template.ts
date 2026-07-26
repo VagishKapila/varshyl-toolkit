@@ -217,7 +217,8 @@ Re-run the free scan at [${scannerUrl()}](${scannerUrl()}) to confirm your new s
 
 ## Need help applying everything?
 
-- **AI Package — $1.99:** Paste \`PROMPT.txt\` into ChatGPT or Claude for step-by-step guidance.
-- **Do it for me — $9.00:** Book a guided fix session → ${CALENDLY}
+- **Free — $0:** DIY ZIP with only your failing checks.
+- **AI Package — ~~$29.00~~ $23.20 (20% OFF):** Paste \`PROMPT.txt\` into ChatGPT or Claude for step-by-step guidance.
+- **Done-For-You — ~~$49.00~~ $39.20 (20% OFF):** Book a guided fix session → ${CALENDLY}
 `;
 }
