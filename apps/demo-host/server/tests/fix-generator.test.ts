@@ -3,6 +3,7 @@ import { generateFixPackage } from '../fix-generator/generate-fix-package.js';
 import type { GeoAudit, SiteMetadata } from '../fix-generator/types.js';
 import { buildZipBuffer } from '../fix-generator/package-zip.js';
 import { buildReadme } from '../fix-generator/readme-template.js';
+import { scannerUrl } from '../fix-generator/scanner-url.js';
 
 const espnMeta: SiteMetadata = {
   url: 'https://www.espn.com',
@@ -331,4 +332,116 @@ test('disclaimer appears when audit checks omit category (fix API path)', () => 
   expect(result.readme).toContain('### Security hardening');
   expect(result.prompt).toContain('not a full legal compliance audit');
   expect(result.prompt).toContain('Shall I proceed with the technical improvements?');
+});
+
+test('assembled prompt file sections are complete, fenced, and not truncated', () => {
+  const result = generateFixPackage({
+    audit: {
+      url: 'https://varshylai.com',
+      score: 56,
+      platform: 'static-html',
+      checks: [
+        {
+          name: 'JSON-LD script',
+          passed: false,
+          points: 0,
+          maxPoints: 15,
+          tip: 'Add JSON-LD',
+        },
+        {
+          name: 'Form labels',
+          passed: false,
+          points: 0,
+          maxPoints: 5,
+          tip: 'Add labels',
+          category: 'Accessibility basics',
+        },
+        {
+          name: 'Landmarks',
+          passed: false,
+          points: 0,
+          maxPoints: 5,
+          tip: 'Add landmarks',
+          category: 'Accessibility basics',
+        },
+      ],
+    },
+    siteMetadata: {
+      url: 'https://varshylai.com',
+      platform: 'static-html',
+      title: 'AI Discoverability Toolkit — Make Your Website Understandable by AI',
+      description:
+        'Scan what AI understands about your website and improve discoverability.',
+    },
+  });
+
+  const prompt = result.prompt;
+  for (const file of result.files) {
+    const sectionHeader = `### ${file.filename} (fixes:`;
+    const start = prompt.indexOf(sectionHeader);
+    expect(start).toBeGreaterThanOrEqual(0);
+    const nextHeading = prompt.indexOf('\n### ', start + sectionHeader.length);
+    const workflowStart = prompt.indexOf('\nWORKFLOW RULES:', start + sectionHeader.length);
+    const endCandidates = [nextHeading, workflowStart].filter((i) => i >= 0);
+    const sectionEnd = endCandidates.length ? Math.min(...endCandidates) : prompt.length;
+    const section = prompt.slice(start, sectionEnd);
+
+    const openFenceMatch = section.match(/\n(`{3,})\n/);
+    expect(openFenceMatch).toBeTruthy();
+    const fence = openFenceMatch?.[1] ?? '```';
+    const contentStart = section.indexOf(`${fence}\n`) + fence.length + 1;
+    const contentEnd = section.indexOf(`\n${fence}`, contentStart);
+    expect(contentEnd).toBeGreaterThan(contentStart);
+    const body = section.slice(contentStart, contentEnd).trim();
+    expect(body.length).toBeGreaterThan(0);
+  }
+
+  const fenceLine = /^(`{3,})$/;
+  let openFence: string | null = null;
+  for (const line of prompt.split('\n')) {
+    const match = line.match(fenceLine);
+    if (!match) continue;
+    const fence = match[1];
+    if (openFence === null) {
+      openFence = fence;
+      continue;
+    }
+    if (fence === openFence) {
+      openFence = null;
+    }
+  }
+  expect(openFence).toBeNull();
+
+  const expectedEnding =
+    `When all files are applied, congratulate me and remind me to rescan at ${scannerUrl()}.`;
+  expect(prompt.trimEnd().endsWith(expectedEnding)).toBe(true);
+});
+
+test('varshylai json-ld uses Varshyl Inc as organization name', () => {
+  const result = generateFixPackage({
+    audit: {
+      url: 'https://varshylai.com',
+      score: 56,
+      platform: 'static-html',
+      checks: [
+        {
+          name: 'JSON-LD script',
+          passed: false,
+          points: 0,
+          maxPoints: 15,
+          tip: 'Add JSON-LD',
+        },
+      ],
+    },
+    siteMetadata: {
+      url: 'https://varshylai.com',
+      platform: 'static-html',
+      title: 'Make Your Website Understandable by AI',
+      description: 'AI discoverability scanner',
+    },
+  });
+
+  const jsonld = result.files.find((f) => f.filename === 'head-jsonld.html');
+  expect(jsonld?.content).toContain('"name": "Make Your Website Understandable by AI"');
+  expect(jsonld?.content).toContain('"name": "Varshyl Inc."');
 });

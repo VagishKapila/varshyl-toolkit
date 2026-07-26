@@ -58,14 +58,15 @@ Allow: /
 });
 
 export const headJsonLdTemplate: TemplateFn = (meta) => {
-  const displayName = resolveStructuredEntityName(meta);
+  const websiteName = resolveWebsiteName(meta);
+  const organizationName = resolveOrganizationName(meta);
   const organizationType = meta.hasAddress ? 'LocalBusiness' : 'Organization';
   const graph: Array<Record<string, unknown>> = [
     {
       '@type': 'WebSite',
       '@id': `${meta.url}#website`,
       url: meta.url,
-      name: displayName,
+      name: websiteName,
       ...(meta.description ? { description: meta.description } : {}),
       publisher: { '@id': `${meta.url}#organization` },
     },
@@ -73,7 +74,7 @@ export const headJsonLdTemplate: TemplateFn = (meta) => {
       '@type': organizationType,
       '@id': `${meta.url}#organization`,
       url: meta.url,
-      name: displayName,
+      name: organizationName,
       ...(meta.description ? { description: meta.description } : {}),
     },
   ];
@@ -425,15 +426,21 @@ export const CHECK_TEMPLATES: Record<string, TemplateFn> = {
   'Content-Security-Policy': securityHeadersGuidance('Content-Security-Policy'),
 };
 
-function resolveStructuredEntityName(meta: SiteMetadata): string {
+function resolveWebsiteName(meta: SiteMetadata): string {
   const ogSiteName = meta.ogSiteName?.trim();
   if (ogSiteName) return ogSiteName;
   const title = meta.title?.trim();
   if (title) return cleanDisplayName(title, { ogSiteName: undefined, domain: undefined }) ?? title;
+  return 'REPLACE_WITH_YOUR_WEBSITE_NAME';
+}
+
+function resolveOrganizationName(meta: SiteMetadata): string {
   const schemaName = meta.orgName?.trim();
   if (schemaName) {
     return cleanDisplayName(schemaName, { ogSiteName: undefined, domain: undefined }) ?? schemaName;
   }
+  const domain = domainFromUrl(meta.url).toLowerCase();
+  if (domain === 'varshylai.com') return 'Varshyl Inc.';
   return 'REPLACE_WITH_YOUR_ORGANIZATION_NAME';
 }
 

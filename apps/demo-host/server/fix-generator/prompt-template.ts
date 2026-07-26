@@ -6,6 +6,15 @@ import {
 } from './compliance-disclaimers.js';
 import { scannerUrl } from './scanner-url.js';
 
+function codeFenceFor(content: string): string {
+  let longest = 0;
+  for (const match of content.matchAll(/`{3,}/g)) {
+    const len = match[0]?.length ?? 0;
+    if (len > longest) longest = len;
+  }
+  return '`'.repeat(Math.max(3, longest + 1));
+}
+
 export function buildPrompt(
   audit: GeoAudit,
   meta: SiteMetadata,
@@ -19,10 +28,14 @@ export function buildPrompt(
 
   const fileBlocks = files
     .map(
-      (f) => `### ${f.filename} (fixes: ${f.check})
-\`\`\`
-${f.content.trim()}
-\`\`\``,
+      (f) => {
+        const body = f.content.trimEnd();
+        const fence = codeFenceFor(body);
+        return `### ${f.filename} (fixes: ${f.check})
+${fence}
+${body}
+${fence}`;
+      },
     )
     .join('\n\n');
 
