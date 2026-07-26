@@ -156,8 +156,9 @@ test('readme mentions only included fixes', () => {
   );
   expect(readme).toContain('sitemap.xml');
   expect(readme).not.toContain('llms.txt');
-  expect(readme).toContain('$1.99');
-  expect(readme).toContain('$9.00');
+  expect(readme).toContain('Free — $0');
+  expect(readme).toContain('~~$29.00~~ $23.20 (20% OFF)');
+  expect(readme).toContain('~~$49.00~~ $39.20 (20% OFF)');
 });
 
 test('prompt includes failing checks and embedded file contents', () => {
