@@ -71,8 +71,23 @@ function isHiddenInput(tag: string): boolean {
   return type === 'hidden' || /\bhidden\b/i.test(tag);
 }
 
+function hasElementWithId(html: string, id: string): boolean {
+  if (!id.trim()) return false;
+  const escaped = id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(`<[^>]*\\bid\\s*=\\s*["']${escaped}["'][^>]*>`, 'i').test(html);
+}
+
 function inputHasLabel(html: string, tag: string, index: number): boolean {
   const attrs = parseTagAttrs(tag);
+  const ariaLabel = attrs['aria-label']?.trim();
+  if (ariaLabel) return true;
+
+  const ariaLabelledBy = attrs['aria-labelledby']?.trim();
+  if (ariaLabelledBy) {
+    const ids = ariaLabelledBy.split(/\s+/).filter(Boolean);
+    if (ids.length > 0 && ids.every((id) => hasElementWithId(html, id))) return true;
+  }
+
   const id = attrs.id?.trim();
   if (id) {
     const labelFor = new RegExp(
@@ -194,7 +209,7 @@ export function buildAccessibilityChecks(html: string): AuditCheckResult[] {
       name: 'Form labels',
       ...labels,
       maxPoints: 5,
-      tip: 'Add a <label> for every form input.',
+      tip: 'Add a <label>, aria-label, or aria-labelledby for every form input.',
       category: ADA_CATEGORY,
     },
     {

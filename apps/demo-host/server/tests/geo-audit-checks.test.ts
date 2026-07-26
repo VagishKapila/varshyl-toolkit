@@ -27,6 +27,16 @@ test('form labels pass when inputs are wrapped in labels', () => {
   expect(checkFormLabels(html)).toEqual({ passed: true, points: 5 });
 });
 
+test('form labels pass when input has aria-label', () => {
+  const html = '<input type="text" aria-label="Website to scan">';
+  expect(checkFormLabels(html)).toEqual({ passed: true, points: 5 });
+});
+
+test('form labels pass when input has valid aria-labelledby', () => {
+  const html = '<span id="scanLabel">Website</span><input type="text" aria-labelledby="scanLabel">';
+  expect(checkFormLabels(html)).toEqual({ passed: true, points: 5 });
+});
+
 test('landmarks award partial points', () => {
   const html = '<header></header><main></main>';
   expect(checkLandmarks(html)).toEqual({ passed: false, points: 2 });

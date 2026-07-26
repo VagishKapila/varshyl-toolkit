@@ -95,15 +95,16 @@ export const headOgTemplate: TemplateFn = (meta) => {
   const lines: string[] = [];
   const title = meta.ogTitle || meta.title;
   const description = meta.ogDescription || meta.description;
-  const image = meta.ogImage;
+  const image = meta.ogImage || `${meta.url.replace(/\/+$/, '')}/og-image.png`;
   const ogUrl = 'CURRENT_PAGE_URL';
   lines.push('<!-- IMPORTANT: og:url must be unique to each page URL. -->');
   lines.push(`<!-- Example: ${meta.url.replace(/\/+$/, '')}/contact for your contact page. -->`);
+  lines.push('<!-- IMPORTANT: Replace og:image with a real 1200x630 public image URL for your page. -->');
   if (title) lines.push(`<meta property="og:title" content="${escapeAttr(title)}">`);
   if (description) {
     lines.push(`<meta property="og:description" content="${escapeAttr(description)}">`);
   }
-  if (image) lines.push(`<meta property="og:image" content="${escapeAttr(image)}">`);
+  lines.push(`<meta property="og:image" content="${escapeAttr(image)}">`);
   lines.push(`<meta property="og:url" content="${escapeAttr(ogUrl)}">`);
   lines.push('<meta property="og:type" content="website">');
   if (!lines.length) return null;

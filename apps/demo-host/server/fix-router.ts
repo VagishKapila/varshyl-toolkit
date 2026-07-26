@@ -16,6 +16,9 @@ const router: Router = Router();
 
 const zipCache = new Map<string, { buffer: Buffer; expiresAt: number }>();
 const ZIP_TTL_MS = 15 * 60 * 1000;
+const GEO_AUDIT_ENDPOINT =
+  process.env.GEO_AUDIT_ENDPOINT
+  ?? 'https://toolkit-demo-host-production-ac14.up.railway.app/api/geo-audit';
 
 function cors(res: import('express').Response): void {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -39,27 +42,80 @@ async function fetchSiteHtml(url: string): Promise<string> {
   return res.text();
 }
 
-function buildAudit(
+interface LiveAuditCheck {
+  name: string;
+  points: number;
+  maxPoints: number;
+  tip: string;
+  category?: string;
+}
+
+interface LiveAuditSnapshot {
+  score: number;
+  checks: LiveAuditCheck[];
+}
+
+export function buildAuditFromScan(
   url: string,
   platform: Platform,
   failingChecks: { name: string; tip: string }[],
+  liveAudit?: LiveAuditSnapshot | null,
 ): GeoAudit {
+  const byName = new Map(liveAudit?.checks.map((c) => [c.name, c]) ?? []);
   const checks: GeoAuditCheck[] = failingChecks.map((fc) => ({
     name: fc.name,
     passed: false,
-    points: 0,
-    maxPoints: CHECK_POINTS[fc.name] ?? 0,
-    tip: fc.tip,
-    category: categoryForCheckName(fc.name),
+    points: byName.get(fc.name)?.points ?? 0,
+    maxPoints: byName.get(fc.name)?.maxPoints ?? (CHECK_POINTS[fc.name] ?? 0),
+    tip: byName.get(fc.name)?.tip ?? fc.tip,
+    category: byName.get(fc.name)?.category ?? categoryForCheckName(fc.name),
   }));
-  const lost = checks.reduce((sum, c) => sum + c.maxPoints, 0);
-  const total = SCORABLE_MAX_POINTS;
+  const scoreFromFailedOnly = Math.max(
+    0,
+    Math.round(
+      (
+        (SCORABLE_MAX_POINTS - checks.reduce((sum, c) => sum + (c.maxPoints - c.points), 0))
+        / SCORABLE_MAX_POINTS
+      ) * 100,
+    ),
+  );
+
   return {
     url,
-    score: Math.max(0, Math.round(((total - lost) / total) * 100)),
+    score: liveAudit?.score ?? scoreFromFailedOnly,
     platform,
     checks,
   };
+}
+
+async function fetchLiveAuditSnapshot(url: string): Promise<LiveAuditSnapshot | null> {
+  try {
+    const res = await fetch(GEO_AUDIT_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url }),
+      signal: AbortSignal.timeout(12_000),
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as {
+      score?: unknown;
+      checks?: unknown;
+    };
+    if (typeof data.score !== 'number' || !Array.isArray(data.checks)) return null;
+    const checks = data.checks
+      .filter((raw): raw is LiveAuditCheck => {
+        const c = raw as Partial<LiveAuditCheck>;
+        return (
+          typeof c.name === 'string'
+          && typeof c.points === 'number'
+          && typeof c.maxPoints === 'number'
+          && typeof c.tip === 'string'
+        );
+      });
+    return { score: data.score, checks };
+  } catch {
+    return null;
+  }
 }
 
 interface FixRequestBody {
@@ -75,7 +131,8 @@ async function buildFixResponse(body: FixRequestBody, tier: 'diy' | 'ai') {
 
   const html = await fetchSiteHtml(baseUrl);
   const siteMetadata = extractSiteMetadata(html, baseUrl, body.platform);
-  const audit = buildAudit(baseUrl, body.platform, body.failingChecks);
+  const liveAudit = await fetchLiveAuditSnapshot(baseUrl);
+  const audit = buildAuditFromScan(baseUrl, body.platform, body.failingChecks, liveAudit);
   const generated = generateFixPackage({ audit, siteMetadata });
 
   const zipEntries = [

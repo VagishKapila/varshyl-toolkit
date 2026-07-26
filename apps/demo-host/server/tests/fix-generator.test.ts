@@ -4,6 +4,7 @@ import type { GeoAudit, SiteMetadata } from '../fix-generator/types.js';
 import { buildZipBuffer } from '../fix-generator/package-zip.js';
 import { buildReadme } from '../fix-generator/readme-template.js';
 import { scannerUrl } from '../fix-generator/scanner-url.js';
+import { buildAuditFromScan } from '../fix-router.js';
 
 const espnMeta: SiteMetadata = {
   url: 'https://www.espn.com',
@@ -444,4 +445,63 @@ test('varshylai json-ld uses Varshyl Inc as organization name', () => {
   const jsonld = result.files.find((f) => f.filename === 'head-jsonld.html');
   expect(jsonld?.content).toContain('"name": "Make Your Website Understandable by AI"');
   expect(jsonld?.content).toContain('"name": "Varshyl Inc."');
+});
+
+test('open graph snippet always includes og:image with replace instruction', () => {
+  const result = generateFixPackage({
+    audit: {
+      url: 'https://example.com',
+      score: 70,
+      platform: 'static-html',
+      checks: [
+        {
+          name: 'Open Graph tags',
+          passed: false,
+          points: 0,
+          maxPoints: 10,
+          tip: 'Include og:title, og:description, og:image, and og:url meta tags.',
+        },
+      ],
+    },
+    siteMetadata: {
+      url: 'https://example.com',
+      platform: 'static-html',
+      title: 'Example',
+      description: 'Example description',
+    },
+  });
+  const og = result.files.find((f) => f.filename === 'head-og.html');
+  expect(og?.content).toContain('Replace og:image with a real 1200x630 public image URL');
+  expect(og?.content).toContain('property="og:image"');
+});
+
+test('prompt current score matches scan response score', () => {
+  const audit = buildAuditFromScan(
+    'https://varshylai.com',
+    'static-html',
+    [{ name: 'robots.txt AI crawlers', tip: 'Allow AI bots.' }],
+    {
+      score: 56,
+      checks: [
+        {
+          name: 'robots.txt AI crawlers',
+          points: 7,
+          maxPoints: 15,
+          tip: 'Allow GPTBot, ClaudeBot, PerplexityBot, and anthropic-ai in robots.txt.',
+          category: 'AI discoverability',
+        },
+      ],
+    },
+  );
+
+  const generated = generateFixPackage({
+    audit,
+    siteMetadata: {
+      url: 'https://varshylai.com',
+      platform: 'static-html',
+      title: 'AI Discoverability Toolkit — Make Your Website Understandable by AI',
+      description: 'Scan what AI understands about your website.',
+    },
+  });
+  expect(generated.prompt).toContain('Current score: 56');
 });
