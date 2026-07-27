@@ -4,7 +4,6 @@ import {
   isAdaOrSecurityCheck,
   PROMPT_ADA_SECURITY_INTRO,
 } from './compliance-disclaimers.js';
-import { scannerUrl } from './scanner-url.js';
 
 function codeFenceFor(content: string): string {
   let longest = 0;
@@ -43,6 +42,24 @@ ${fence}`;
     .map((c) => `- ${c.name}: ${c.tip}`)
     .join('\n');
 
+  const workflowRules: string[] = [
+    '1. Confirm my hosting platform.',
+  ];
+  if (hasAdaOrSecurity) {
+    workflowRules.push(
+      '2. If accessibility or security fixes are included, deliver the notice above and wait for confirmation before those files.',
+    );
+    workflowRules.push('3. Walk through each file above in order.');
+    workflowRules.push('4. After each file, wait until I confirm it is applied before continuing.');
+    workflowRules.push('5. Never suggest edits beyond the failing checks listed.');
+    workflowRules.push('6. End by telling me to re-run the free Soren GEO scan to verify the new score.');
+  } else {
+    workflowRules.push('2. Walk through each file above in order.');
+    workflowRules.push('3. After each file, wait until I confirm it is applied before continuing.');
+    workflowRules.push('4. Never suggest edits beyond the failing checks listed.');
+    workflowRules.push('5. End by telling me to re-run the free Soren GEO scan to verify the new score.');
+  }
+
   const complianceBlock = hasAdaOrSecurity
     ? `
 ACCESSIBILITY / SECURITY NOTICE (required before those fixes):
@@ -74,14 +91,6 @@ FILES TO APPLY (one at a time — wait for my confirmation after each step):
 
 ${fileBlocks}
 
-WORKFLOW RULES:
-1. Confirm my hosting platform.
-2. If accessibility or security fixes are included, deliver the notice above and wait for confirmation before those files.
-3. Walk through each file above in order.
-4. After each file, wait until I confirm it is applied before continuing.
-5. Never suggest edits beyond the failing checks listed.
-6. End by telling me to re-run the free Soren GEO scan to verify the new score.
-
 HOW TO APPLY THIS:
 1. Ask me plainly: "How do you usually update your website?"
    - Site-builder login (WordPress, Wix, Squarespace, Shopify, Webflow)
@@ -104,9 +113,10 @@ HOW TO APPLY THIS:
 3. Struggle trigger:
    - If I cannot complete a step after about 2-3 exchanges, lack access, or seem stuck, stop pushing and say:
      "No problem — the team behind this tool can apply all these fixes for you. Visit varshylai.com and choose the Done-For-You option."
-4. Final step:
-   - After all fixes are done, tell me to rescan at varshylai.com/scan/ to confirm the new score.
 
-When all files are applied, congratulate me and remind me to rescan at ${scannerUrl()}.
+WORKFLOW RULES:
+${workflowRules.join('\n')}
+
+After all fixes are done, tell me to rescan at varshylai.com/scan/ to confirm the new score.
 `;
 }

@@ -3,7 +3,6 @@ import { generateFixPackage } from '../fix-generator/generate-fix-package.js';
 import type { GeoAudit, SiteMetadata } from '../fix-generator/types.js';
 import { buildZipBuffer } from '../fix-generator/package-zip.js';
 import { buildReadme } from '../fix-generator/readme-template.js';
-import { scannerUrl } from '../fix-generator/scanner-url.js';
 import { buildAuditFromScan } from '../fix-router.js';
 
 const espnMeta: SiteMetadata = {
@@ -378,6 +377,13 @@ test('assembled prompt file sections are complete, fenced, and not truncated', (
   });
 
   const prompt = result.prompt;
+  const filesIndex = prompt.indexOf('FILES TO APPLY');
+  const howToApplyIndex = prompt.indexOf('HOW TO APPLY THIS:');
+  const workflowIndex = prompt.indexOf('WORKFLOW RULES:');
+  expect(filesIndex).toBeGreaterThanOrEqual(0);
+  expect(howToApplyIndex).toBeGreaterThan(filesIndex);
+  expect(workflowIndex).toBeGreaterThan(howToApplyIndex);
+
   for (const file of result.files) {
     const sectionHeader = `### ${file.filename} (fixes:`;
     const start = prompt.indexOf(sectionHeader);
@@ -414,9 +420,10 @@ test('assembled prompt file sections are complete, fenced, and not truncated', (
   }
   expect(openFence).toBeNull();
 
-  const expectedEnding =
-    `When all files are applied, congratulate me and remind me to rescan at ${scannerUrl()}.`;
-  expect(prompt.trimEnd().endsWith(expectedEnding)).toBe(true);
+  const closingLine =
+    'After all fixes are done, tell me to rescan at varshylai.com/scan/ to confirm the new score.';
+  expect(prompt.split(closingLine)).toHaveLength(2);
+  expect(prompt.trimEnd().endsWith(closingLine)).toBe(true);
 });
 
 test('varshylai json-ld uses Varshyl Inc as organization name', () => {
@@ -515,7 +522,7 @@ test('prompt includes how-to-apply section without pricing language', () => {
 
   const prompt = generated.prompt;
   const start = prompt.indexOf('HOW TO APPLY THIS:');
-  const end = prompt.indexOf('\nWhen all files are applied, congratulate me');
+  const end = prompt.indexOf('\nWORKFLOW RULES:');
   expect(start).toBeGreaterThanOrEqual(0);
   expect(end).toBeGreaterThan(start);
 
@@ -526,6 +533,37 @@ test('prompt includes how-to-apply section without pricing language', () => {
   expect(section).toContain('Appearance → Theme File Editor');
   expect(section).toContain('File Manager');
   expect(section).toContain('varshylai.com and choose the Done-For-You option');
-  expect(section).toContain('rescan at varshylai.com/scan/');
   expect(section).not.toMatch(/\$\d/);
+});
+
+test('workflow accessibility-security step is conditional', () => {
+  const noCompliance = generateFixPackage({
+    audit: auditWithFailing(['llms.txt']),
+    siteMetadata: espnMeta,
+  }).prompt;
+  expect(noCompliance).not.toContain(
+    'If accessibility or security fixes are included, deliver the notice above and wait for confirmation before those files.',
+  );
+
+  const withCompliance = generateFixPackage({
+    audit: {
+      url: 'https://example.com',
+      score: 50,
+      platform: 'static-html',
+      checks: [
+        {
+          name: 'Alt text',
+          passed: false,
+          points: 0,
+          maxPoints: 5,
+          tip: 'Add descriptive alt text to all images.',
+          category: 'Accessibility basics',
+        },
+      ],
+    },
+    siteMetadata: { url: 'https://example.com', platform: 'static-html' },
+  }).prompt;
+  expect(withCompliance).toContain(
+    'If accessibility or security fixes are included, deliver the notice above and wait for confirmation before those files.',
+  );
 });
