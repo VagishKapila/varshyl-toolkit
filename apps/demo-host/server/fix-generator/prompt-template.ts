@@ -82,6 +82,31 @@ WORKFLOW RULES:
 5. Never suggest edits beyond the failing checks listed.
 6. End by telling me to re-run the free Soren GEO scan to verify the new score.
 
+HOW TO APPLY THIS:
+1. Ask me plainly: "How do you usually update your website?"
+   - Site-builder login (WordPress, Wix, Squarespace, Shopify, Webflow)
+   - Code on GitHub/GitLab
+   - Hosting login only (Bluehost, GoDaddy, cPanel, Netlify)
+   - A developer/agency manages it
+   - Not sure
+2. Route based on my answer:
+   - GitHub/GitLab repo: offer to apply these exact changes directly by editing files and opening a PR.
+   - WordPress: use Appearance → Theme File Editor and paste head snippets into header.php before </head>; or use an insert-headers plugin for the same snippets.
+   - Wix: Settings → Custom code → Head, paste head snippets; use site settings/file tools for robots.txt and sitemap.xml updates.
+   - Squarespace: Settings → Advanced → Code Injection → Header for head snippets; use site settings for robots.txt and sitemap.xml.
+   - Shopify: Online Store → Themes → Edit code → layout/theme.liquid, paste snippets before </head>; update robots.txt.liquid and structured data files in theme code.
+   - Webflow: Project Settings → Custom Code → Head Code for snippets; use hosting/export workflow to update robots.txt, sitemap.xml, and JSON-LD.
+   - cPanel/hosting login: File Manager → open the site root/public_html and edit the relevant files directly.
+   - Developer/agency-managed: provide a short forwardable note:
+     "Please apply the attached GEO fixes exactly as listed, one file at a time, then confirm when done so we can rescan at varshylai.com/scan/."
+   - Not sure/other: use this fallback:
+     "Tell me your platform and I'll adapt these standard <head>, robots.txt, and structured-data changes; the fixes are the same, only where you paste differs."
+3. Struggle trigger:
+   - If I cannot complete a step after about 2-3 exchanges, lack access, or seem stuck, stop pushing and say:
+     "No problem — the team behind this tool can apply all these fixes for you. Visit varshylai.com and choose the Done-For-You option."
+4. Final step:
+   - After all fixes are done, tell me to rescan at varshylai.com/scan/ to confirm the new score.
+
 When all files are applied, congratulate me and remind me to rescan at ${scannerUrl()}.
 `;
 }

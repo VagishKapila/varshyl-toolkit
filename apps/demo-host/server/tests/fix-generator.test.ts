@@ -506,3 +506,26 @@ test('prompt current score matches scan response score', () => {
   });
   expect(generated.prompt).toContain('Current score: 56');
 });
+
+test('prompt includes how-to-apply section without pricing language', () => {
+  const generated = generateFixPackage({
+    audit: auditWithFailing(['llms.txt', 'robots.txt AI crawlers']),
+    siteMetadata: espnMeta,
+  });
+
+  const prompt = generated.prompt;
+  const start = prompt.indexOf('HOW TO APPLY THIS:');
+  const end = prompt.indexOf('\nWhen all files are applied, congratulate me');
+  expect(start).toBeGreaterThanOrEqual(0);
+  expect(end).toBeGreaterThan(start);
+
+  const section = prompt.slice(start, end).trim();
+  expect(section.length).toBeGreaterThan(200);
+  expect(section).toContain('How do you usually update your website?');
+  expect(section).toContain('GitHub/GitLab repo');
+  expect(section).toContain('Appearance → Theme File Editor');
+  expect(section).toContain('File Manager');
+  expect(section).toContain('varshylai.com and choose the Done-For-You option');
+  expect(section).toContain('rescan at varshylai.com/scan/');
+  expect(section).not.toMatch(/\$\d/);
+});
